@@ -1,9 +1,12 @@
+import 'dotenv/config';
 import Koa from 'koa';
 
-const app = new Koa();
+(async function startServer() {
+  const app = new Koa();
 
-app.use(async (ctx) => {
-  ctx.body = 'Goodbye, World!';
-});
+  app.use(async (ctx) => {
+    ctx.body = 'Hello, World!';
+  });
 
-app.listen(3000);
+  app.listen(3000);
+})();
