@@ -3,38 +3,38 @@ import { MongoClient } from 'mongodb';
 import { isMongoDBOptions } from './mongodb_options';
 
 class MongoDBDataController {
-  constructor(
-    protected client: MongoClient,
-  ) {}
+  constructor(protected client: MongoClient) {}
 
   protected async makeUserCollection() {
     // Enforce required values
-    const userCollection = await this.client.db('action-bank').createCollection('users', {
-      validator: {
-        $jsonSchema: {
-          bsonType: 'object',
-          required: ['username', 'passwordHash', 'email', 'enabled'],
-          properties: {
-            username: {
-              bsonType: 'string',
-              description: 'username is required and must be a string',
-            },
-            passwordHash: {
-              bsonType: 'string',
-              description: 'passwordHash is required and must be a string',
-            },
-            email: {
-              bsonType: 'string',
-              description: 'email is required and must be a string',
-            },
-            enabled: {
-              bsonType: 'bool',
-              description: 'enabled is required and must be a boolean',
+    const userCollection = await this.client
+      .db('action-bank')
+      .createCollection('users', {
+        validator: {
+          $jsonSchema: {
+            bsonType: 'object',
+            required: ['username', 'passwordHash', 'email', 'enabled'],
+            properties: {
+              username: {
+                bsonType: 'string',
+                description: 'username is required and must be a string',
+              },
+              passwordHash: {
+                bsonType: 'string',
+                description: 'passwordHash is required and must be a string',
+              },
+              email: {
+                bsonType: 'string',
+                description: 'email is required and must be a string',
+              },
+              enabled: {
+                bsonType: 'bool',
+                description: 'enabled is required and must be a boolean',
+              },
             },
           },
         },
-      },
-    });
+      });
 
     // Enforce uniqueness
     await userCollection.createIndex({ username: 1 }, { unique: true });
@@ -70,6 +70,4 @@ class MongoDBDataController {
   }
 }
 
-export {
-  MongoDBDataController,
-};
+export { MongoDBDataController };

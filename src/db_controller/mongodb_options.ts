@@ -8,11 +8,12 @@ interface MongoDBOptions {
 }
 
 function isMongoDBOptions(value: unknown): value is MongoDBOptions {
-  if (!isRecord(value)
-    || !isString(value.username)
-    || !isString(value.password)
-    || !isString(value.url)
-    || !isString(value.port)
+  if (
+    !isRecord(value) ||
+    !isString(value.username) ||
+    !isString(value.password) ||
+    !isString(value.url) ||
+    !isString(value.port)
   ) {
     return false;
   }
@@ -20,7 +21,4 @@ function isMongoDBOptions(value: unknown): value is MongoDBOptions {
   return true;
 }
 
-export {
-  MongoDBOptions,
-  isMongoDBOptions,
-};
+export { MongoDBOptions, isMongoDBOptions };
