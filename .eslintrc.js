@@ -4,6 +4,14 @@ module.exports = {
     project: 'tsconfig.json',
     sourceType: 'module',
   },
+  settings: {
+    "import/resolver": {
+      "typescript": {
+        "alwaysTryTypes": true,
+        "project": "./tsconfig.json"
+      }
+    }
+  },
   plugins: [
     '@typescript-eslint/eslint-plugin',
     'unused-imports',
