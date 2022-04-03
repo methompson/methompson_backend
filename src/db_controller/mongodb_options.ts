@@ -1,10 +1,10 @@
-import { isRecord, isString } from '@src/utils/type_guards';
+import { isRecord, isString, isNumber } from '@src/utils/type_guards';
 
 interface MongoDBOptions {
   username: string;
   password: string;
   url: string;
-  port: string;
+  port: string | number;
 }
 
 function isMongoDBOptions(value: unknown): value is MongoDBOptions {
@@ -13,7 +13,7 @@ function isMongoDBOptions(value: unknown): value is MongoDBOptions {
     !isString(value.username) ||
     !isString(value.password) ||
     !isString(value.url) ||
-    !isString(value.port)
+    !(isString(value.port) || isNumber(value.port) || value.port === undefined)
   ) {
     return false;
   }

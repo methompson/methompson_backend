@@ -1,14 +1,25 @@
 import { MongoClient } from 'mongodb';
 
 import { isMongoDBOptions } from './mongodb_options';
+import { BlogPostController } from './blog_post_controller';
 
 class MongoDBDataController {
-  constructor(protected client: MongoClient) {}
+  protected client: MongoClient | null;
+  protected blogPostController: BlogPostController | null;
+
+  constructor() {
+    this.client = null;
+    this.blogPostController = null;
+  }
+
+  get test() {
+    return 'hey!';
+  }
 
   protected async makeUserCollection() {
     // Enforce required values
     const userCollection = await this.client
-      .db('action-bank')
+      .db('blog')
       .createCollection('users', {
         validator: {
           $jsonSchema: {
@@ -41,19 +52,21 @@ class MongoDBDataController {
     await userCollection.createIndex({ email: 1 }, { unique: true });
   }
 
-  static async make(options: unknown): Promise<MongoDBDataController> {
+  async init(options: unknown): Promise<void> {
     if (!isMongoDBOptions(options)) {
       throw new Error('Invalid MongoDB Options Parameter');
     }
 
-    const mongoDBUri = `mongodb://${options.username}:${options.password}@${options.url}:${options.port}`;
+    const port = options.port || '27017';
+
+    const mongoDBUri = `mongodb+srv://${options.username}:${options.password}@${options.url}:${port}`;
     const client = new MongoClient(mongoDBUri, {});
 
     await client.connect();
 
-    const controller = new MongoDBDataController(client);
+    this.client = client;
 
-    const collections = await client.db('action-bank').collections();
+    const collections = await client.db('blog').collections();
 
     let containsUsers = false;
     for (const col of collections) {
@@ -63,10 +76,10 @@ class MongoDBDataController {
     }
 
     if (!containsUsers) {
-      await controller.makeUserCollection();
+      await this.makeUserCollection();
     }
 
-    return controller;
+    this.blogPostController = await BlogPostController.make(this.client);
   }
 }
 

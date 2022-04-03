@@ -1,12 +1,12 @@
 import { MongoClient } from 'mongodb';
 
-class BlogController {
+class BlogPostController {
   constructor(protected client: MongoClient) {}
 
   protected async makeBlogCollection() {
     // Enforce required values
     const blogCollection = await this.client
-      .db('action-bank')
+      .db('blog')
       .createCollection('blog', {
         validator: {
           $jsonSchema: {
@@ -42,11 +42,11 @@ class BlogController {
     await blogCollection.createIndex({ slug: 1 }, { unique: true });
   }
 
-  static async make(client: MongoClient): Promise<BlogController> {
-    const blogController = new BlogController(client);
+  static async make(client: MongoClient): Promise<BlogPostController> {
+    const blogPostController = new BlogPostController(client);
 
-    const collections = await blogController.client
-      .db('action-bank')
+    const collections = await blogPostController.client
+      .db('blog')
       .collections();
 
     let containsBlog = false;
@@ -57,11 +57,11 @@ class BlogController {
     }
 
     if (!containsBlog) {
-      blogController.makeBlogCollection();
+      blogPostController.makeBlogCollection();
     }
 
-    return blogController;
+    return blogPostController;
   }
 }
 
-export { BlogController };
+export { BlogPostController };
