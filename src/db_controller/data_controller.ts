@@ -59,7 +59,10 @@ class MongoDBDataController {
 
     const port = options.port || '27017';
 
-    const mongoDBUri = `mongodb+srv://${options.username}:${options.password}@${options.url}:${port}`;
+    // const mongoDBUri = `mongodb+srv://${options.username}:${options.password}@${options.url}:${port}`;
+    const mongoDBUri = `mongodb://${options.username}:${options.password}@${options.url}:${port}`;
+
+    console.log(mongoDBUri);
     const client = new MongoClient(mongoDBUri, {});
 
     await client.connect();

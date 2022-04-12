@@ -1,13 +1,18 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+
+import { BlogModule } from './blog/blog.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
-import { BlogController } from './blog/blog.controller';
-import { BlogService } from './blog/blog.service';
+import { AuthCheckMiddlware } from './middleware/auth_check.middleware';
 
 @Module({
-  imports: [],
-  controllers: [AppController, BlogController],
-  providers: [AppService, BlogService],
+  controllers: [AppController],
+  providers: [AppService],
+  imports: [BlogModule],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(AuthCheckMiddlware).forRoutes('api');
+  }
+}

@@ -9,6 +9,8 @@ const dataController = new MongoDBDataController();
       password: process.env.MONGO_DB_PASSWORD,
       url: process.env.MONGO_DB_HOST,
     });
+
+    console.log('Data Controller initialized');
   } catch (e) {
     console.error(e);
     process.exit();

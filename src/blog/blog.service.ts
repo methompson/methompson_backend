@@ -18,4 +18,10 @@ export class BlogService {
       title: 'title',
     };
   }
+
+  findBySlug(_slug: string): Record<string, unknown> {
+    return {
+      title: 'title',
+    };
+  }
 }

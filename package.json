@@ -19,13 +19,17 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "tsup:watch": "tsup-node ./src/main.ts --watch --onSuccess \"node dist/main.js\""
+    "tsc-compile": "tsc",
+    "tsup-compile": "tsup-node ./src/main.ts",
+    "tsup-watch": "tsup-node ./src/main.ts --watch",
+    "tsup-watch-run": "tsup-node ./src/main.ts --watch --onSuccess \"node dist/main.js\""
   },
   "dependencies": {
     "@nestjs/common": "^8.0.0",
     "@nestjs/core": "^8.0.0",
     "@nestjs/platform-express": "^8.0.0",
     "dotenv": "^16.0.0",
+    "firebase-admin": "^10.0.2",
     "mongodb": "^4.4.1",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
