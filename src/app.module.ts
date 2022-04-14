@@ -1,14 +1,19 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 
 import { BlogModule } from './blog/blog.module';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 
 import { AuthCheckMiddlware } from './middleware/auth_check.middleware';
+import { makeDataController } from './db_controller';
+
+const connectionFactory = {
+  provide: 'ASYNC_CONNECTION',
+  useFactory: async () => {
+    await makeDataController();
+  },
+};
 
 @Module({
-  controllers: [AppController],
-  providers: [AppService],
+  providers: [connectionFactory],
   imports: [BlogModule],
 })
 export class AppModule implements NestModule {

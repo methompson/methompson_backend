@@ -4,13 +4,15 @@ import { isMongoDBOptions } from './mongodb_options';
 import { BlogPostController } from './blog_post_controller';
 
 class MongoDBDataController {
-  protected client: MongoClient | null;
-  protected blogPostController: BlogPostController | null;
+  protected _client: MongoClient | null;
+  protected _blogPostController: BlogPostController | null;
 
   constructor() {
-    this.client = null;
-    this.blogPostController = null;
+    this._client = null;
+    this._blogPostController = null;
   }
+
+  get blogPostController() { return this._blogPostController; }
 
   get test() {
     return 'hey!';
@@ -18,7 +20,7 @@ class MongoDBDataController {
 
   protected async makeUserCollection() {
     // Enforce required values
-    const userCollection = await this.client
+    const userCollection = await this._client
       .db('blog')
       .createCollection('users', {
         validator: {
@@ -62,12 +64,12 @@ class MongoDBDataController {
     // const mongoDBUri = `mongodb+srv://${options.username}:${options.password}@${options.url}:${port}`;
     const mongoDBUri = `mongodb://${options.username}:${options.password}@${options.url}:${port}`;
 
-    console.log(mongoDBUri);
+    // console.log(mongoDBUri);
     const client = new MongoClient(mongoDBUri, {});
 
     await client.connect();
 
-    this.client = client;
+    this._client = client;
 
     const collections = await client.db('blog').collections();
 
@@ -82,7 +84,7 @@ class MongoDBDataController {
       await this.makeUserCollection();
     }
 
-    this.blogPostController = await BlogPostController.make(this.client);
+    this._blogPostController = await BlogPostController.make(this._client);
   }
 }
 

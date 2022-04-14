@@ -1,13 +1,28 @@
-import { MongoClient } from 'mongodb';
+import { Collection, MongoClient } from 'mongodb';
+import { BlogPost, NewBlogPost } from '../models/blog_post_model';
 
 class BlogPostController {
   constructor(protected client: MongoClient) {}
+
+  get blogCollection(): Collection { return this.client.db('blog').collection('blogPosts'); }
+
+  async addPost(post: NewBlogPost) {
+    const result = await this.blogCollection.insertOne(post.toJSON());
+    console.log('result', result);
+    console.log('id', result.insertedId);
+
+    if (result.insertedId === null || result.insertedId === undefined) {
+      throw new Error('Nothing written');
+    }
+
+    return BlogPost.fromNewBlogPost(result.insertedId.toString(), post);
+  }
 
   protected async makeBlogCollection() {
     // Enforce required values
     const blogCollection = await this.client
       .db('blog')
-      .createCollection('blog', {
+      .createCollection('blogPosts', {
         validator: {
           $jsonSchema: {
             bsonType: 'object',
@@ -26,12 +41,12 @@ class BlogPostController {
                 description: 'body is required and must be a String',
               },
               authorId: {
-                bsonType: 'objectId',
-                description: 'authorId is required and must be a ObjectID',
+                bsonType: 'string',
+                description: 'authorId is required and must be a String',
               },
               dateAdded: {
-                bsonType: 'date',
-                description: 'dateAdded is required and must be a Date',
+                bsonType: 'string',
+                description: 'dateAdded is required and must be a String',
               },
             },
           },
@@ -51,7 +66,7 @@ class BlogPostController {
 
     let containsBlog = false;
     for (const col of collections) {
-      if (col.collectionName === 'blog') {
+      if (col.collectionName === 'blogPosts') {
         containsBlog = true;
       }
     }

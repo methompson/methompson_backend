@@ -1,9 +1,11 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
+
 // eslint-disable-next-line import/no-unresolved
 import { initializeApp } from 'firebase-admin/app';
 // eslint-disable-next-line import/no-unresolved
 import { getAuth } from 'firebase-admin/auth';
+
 import { AuthModel } from '../models/auth_model';
 
 const _app = initializeApp();

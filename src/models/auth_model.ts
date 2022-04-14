@@ -1,4 +1,4 @@
-class AuthModel {
+export class AuthModel {
   constructor(protected decodedToken: Record<string, unknown>) {}
 
   get token() {
@@ -12,5 +12,3 @@ class AuthModel {
     return true;
   }
 }
-
-export { AuthModel };

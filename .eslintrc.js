@@ -38,14 +38,15 @@ module.exports = {
       'error',
       2,
       {
-        'SwitchCase': 1
+        'SwitchCase': 1,
+        'FunctionExpression': 1,
       }
     ],
     '@typescript-eslint/no-unused-vars': [
       'warn',
       {
         'argsIgnorePattern': '^_',
-        'varsIgnorePattern': '^_'
+        'varsIgnorePattern': '^_',
       }
     ],
     '@typescript-eslint/no-empty-function': [
@@ -63,7 +64,7 @@ module.exports = {
     'no-multi-spaces': [
       'error',
       {
-        'ignoreEOLComments': false
+        'ignoreEOLComments': false,
       }
     ],
     'no-multiple-empty-lines': [
@@ -71,27 +72,27 @@ module.exports = {
       {
         'max': 1,
         'maxEOF': 1,
-        'maxBOF': 0
+        'maxBOF': 0,
       }
     ],
     'no-trailing-spaces': 'error',
     'brace-style': [
       'error',
-      '1tbs'
+      '1tbs',
     ],
     semi: 'error',
     'arrow-body-style': [
       'error',
-      'as-needed'
+      'as-needed',
     ],
     'arrow-parens': [
       'error',
-      'always'
+      'always',
     ],
     'no-empty': [
       'error',
       {
-        'allowEmptyCatch': true
+        'allowEmptyCatch': true,
       }
     ],
     'max-len': [
@@ -99,8 +100,8 @@ module.exports = {
       {
         'ignoreStrings': true,
         'code': 120,
-        'comments': 120
-      }
+        'comments': 120,
+      },
     ],
     'no-restricted-syntax': 0,
     'class-methods-use-this': 'off',
@@ -108,8 +109,8 @@ module.exports = {
     'no-plusplus': 'off',
     quotes: [
       'warn',
-      'single'
+      'single',
     ],
-    'import/no-named-as-default-member': 'off'
+    'import/no-named-as-default-member': 'off',
   },
 };

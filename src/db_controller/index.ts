@@ -2,9 +2,9 @@ import { MongoDBDataController } from './data_controller';
 
 const dataController = new MongoDBDataController();
 
-(async function makeDataController() {
+async function makeDataController() {
   try {
-    dataController.init({
+    await dataController.init({
       username: process.env.MONGO_DB_USERNAME,
       password: process.env.MONGO_DB_PASSWORD,
       url: process.env.MONGO_DB_HOST,
@@ -15,6 +15,9 @@ const dataController = new MongoDBDataController();
     console.error(e);
     process.exit();
   }
-})();
+}
 
-export { dataController };
+export {
+  dataController,
+  makeDataController,
+};
