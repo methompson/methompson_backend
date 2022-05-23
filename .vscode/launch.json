@@ -16,17 +16,32 @@
       ],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
-      "port": 9229
+    },
+    {
+      "name": "Debug App w/ NoAuth",
+      "request": "launch",
+      "runtimeArgs": [
+        "run-script",
+        "tsup-watch-run-noAuth"
+      ],
+      "runtimeExecutable": "npm",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "type": "node"
     },
     {
       "name": "Debug App",
-      "type": "node",
-      "request": "attach",
-      "sourceMaps": true,
-      "outFiles": [
-        "${workspaceFolder}/dist/**/*.js"
+      "request": "launch",
+      "runtimeArgs": [
+        "run-script",
+        "tsup-watch-run"
       ],
-      "port": 9229
+      "runtimeExecutable": "npm",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "type": "node"
     }
   ]
 }

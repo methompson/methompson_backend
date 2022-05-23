@@ -23,7 +23,7 @@
     "tsup-compile": "tsup-node ./src/main.ts",
     "tsup-watch": "tsup-node ./src/main.ts --watch",
     "tsup-watch-run": "tsup-node ./src/main.ts --watch --onSuccess \"node dist/main.js\"",
-    "tsup-watch-run-noAuth": "tsup-node ./src/main.ts --watch --onSuccess \"node dist/main.js noAuth --inspect-brk\""
+    "tsup-watch-run-noAuth": "tsup-node ./src/main.ts --watch --onSuccess \"node dist/main.js noAuth\""
   },
   "dependencies": {
     "@nestjs/common": "^8.0.0",
@@ -58,6 +58,7 @@
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-unused-imports": "^2.0.0",
     "jest": "^27.2.5",
+    "nodemon": "^2.0.16",
     "prettier": "^2.3.2",
     "source-map-support": "^0.5.20",
     "supertest": "^6.1.3",

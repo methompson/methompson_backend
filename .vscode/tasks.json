@@ -1,0 +1,21 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "tsup-watch",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "npm: tsup-watch",
+			"detail": "tsup-node ./src/main.ts --watch"
+		},
+		{
+			"type": "npm",
+			"script": "tsup-compile",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "npm: tsup-compile",
+			"detail": "tsup-node ./src/main.ts"
+		}
+	]
+}
