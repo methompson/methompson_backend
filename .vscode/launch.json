@@ -18,5 +18,15 @@
       "internalConsoleOptions": "neverOpen",
       "port": 9229
     },
+    {
+      "name": "Debug App",
+      "type": "node",
+      "request": "attach",
+      "sourceMaps": true,
+      "outFiles": [
+        "${workspaceFolder}/dist/**/*.js"
+      ],
+      "port": 9229
+    }
   ]
 }

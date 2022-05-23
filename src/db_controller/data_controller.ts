@@ -12,7 +12,9 @@ class MongoDBDataController {
     this._blogPostController = null;
   }
 
-  get blogPostController() { return this._blogPostController; }
+  get blogPostController() {
+    return this._blogPostController;
+  }
 
   get test() {
     return 'hey!';

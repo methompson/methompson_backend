@@ -1,6 +1,6 @@
 {
   "entry": [
-    "./src/index.ts"
+    "./src/main.ts"
   ],
   "splitting": false,
   "sourcemap": true,

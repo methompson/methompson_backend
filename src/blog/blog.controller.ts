@@ -1,4 +1,12 @@
-import { Controller, Get, HttpException, HttpStatus, Post, Req, Res } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  HttpException,
+  HttpStatus,
+  Post,
+  Req,
+  Res,
+} from '@nestjs/common';
 import { Request, Response } from 'express';
 import { InvalidInputError } from '../errors/invalid_input_error';
 
@@ -26,10 +34,6 @@ export class BlogController {
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ): Promise<Record<string, unknown>> {
-    // console.log('post request', request);
-    // console.log('post request body', request.body);
-    // console.log('Auth Value', response.locals?.auth?.authorized);
-
     if (!(response.locals?.auth?.authorized ?? false)) {
       throw new HttpException('Not Authorized', HttpStatus.UNAUTHORIZED);
     }
@@ -38,7 +42,10 @@ export class BlogController {
       await this.blogService.addBlogPost(request.body);
     } catch (e) {
       if (e instanceof InvalidInputError) {
-        throw new HttpException('Invalid New Blog Post Input', HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          'Invalid New Blog Post Input',
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       console.log(e);

@@ -78,8 +78,6 @@ describe('BlogPost', () => {
       expect(BlogPost.isBlogPostInterface(alias)).toBe(false);
     });
   });
-
-
 });
 
 describe('NewBlogPost', () => {

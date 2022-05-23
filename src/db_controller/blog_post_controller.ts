@@ -4,7 +4,15 @@ import { BlogPost, NewBlogPost } from '../models/blog_post_model';
 class BlogPostController {
   constructor(protected client: MongoClient) {}
 
-  get blogCollection(): Collection { return this.client.db('blog').collection('blogPosts'); }
+  get blogCollection(): Collection {
+    return this.client.db('blog').collection('blogPosts');
+  }
+
+  async findAll(): Promise<BlogPost[]> {
+    const result = await this.blogCollection.find().toArray();
+
+    return [];
+  }
 
   async addPost(post: NewBlogPost) {
     const result = await this.blogCollection.insertOne(post.toJSON());

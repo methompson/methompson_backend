@@ -27,21 +27,21 @@ module.exports = {
     node: true,
     jest: true,
   },
-  ignorePatterns: ['.eslintrc.js'],
+  ignorePatterns: ['.eslintrc.js', 'jest.config.*'],
   rules: {
     '@typescript-eslint/interface-name-prefix': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/no-empty-interface': 'warn',
-    '@typescript-eslint/indent': [
-      'error',
-      2,
-      {
-        'SwitchCase': 1,
-        'FunctionExpression': 1,
-      }
-    ],
+    // '@typescript-eslint/indent': [
+    //   'error',
+    //   2,
+    //   {
+    //     'SwitchCase': 1,
+    //     'FunctionExpression': 1,
+    //   }
+    // ],
     '@typescript-eslint/no-unused-vars': [
       'warn',
       {

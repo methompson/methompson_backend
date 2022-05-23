@@ -22,15 +22,15 @@
     "tsc-compile": "tsc",
     "tsup-compile": "tsup-node ./src/main.ts",
     "tsup-watch": "tsup-node ./src/main.ts --watch",
-    "tsup-watch-run": "tsup-node ./src/main.ts --watch --onSuccess \"node dist/main.js\""
+    "tsup-watch-run": "tsup-node ./src/main.ts --watch --onSuccess \"node dist/main.js\"",
+    "tsup-watch-run-noAuth": "tsup-node ./src/main.ts --watch --onSuccess \"node dist/main.js noAuth --inspect-brk\""
   },
   "dependencies": {
-    "@babel/preset-env": "^7.16.11",
-    "@babel/preset-typescript": "^7.16.7",
     "@nestjs/common": "^8.0.0",
     "@nestjs/core": "^8.0.0",
     "@nestjs/platform-express": "^8.0.0",
     "dotenv": "^16.0.0",
+    "ejs": "^3.1.7",
     "firebase-admin": "^10.0.2",
     "mongodb": "^4.4.1",
     "reflect-metadata": "^0.1.13",
@@ -38,6 +38,8 @@
     "rxjs": "^7.2.0"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.16.11",
+    "@babel/preset-typescript": "^7.16.7",
     "@nestjs/cli": "^8.0.0",
     "@nestjs/schematics": "^8.0.0",
     "@nestjs/testing": "^8.0.0",
@@ -62,8 +64,7 @@
     "ts-jest": "^27.0.3",
     "ts-loader": "^9.2.3",
     "ts-node": "^10.0.0",
-    "tsconfig-paths": "^3.10.1",
-    "tsup": "^5.12.2",
+    "tsup": "^5.12.8",
     "typescript": "^4.3.5"
   }
 }
