@@ -1,17 +1,39 @@
 import { Collection, MongoClient } from 'mongodb';
-import { BlogPost, NewBlogPost } from '../models/blog_post_model';
+import { BlogPost, NewBlogPost } from '@src/models/blog_post_model';
 
-class BlogPostController {
+class BlogPostDBController {
   constructor(protected client: MongoClient) {}
 
   get blogCollection(): Collection {
     return this.client.db('blog').collection('blogPosts');
   }
 
-  async findAll(): Promise<BlogPost[]> {
-    const result = await this.blogCollection.find().toArray();
+  async getPosts(page: number, pagination: number): Promise<BlogPost[]> {
+    const skip = pagination * (page - 1);
 
-    return [];
+    const result = await this.blogCollection
+      .find()
+      .skip(skip)
+      .limit(pagination)
+      .toArray();
+
+    const output = [];
+
+    for (const r of result) {
+      try {
+        output.push(BlogPost.fromMongoDB(r));
+      } catch (e) {
+        console.error('Invalid Blog Post', e);
+      }
+    }
+
+    return output;
+  }
+
+  async getPostBySlug(slug: string): Promise<BlogPost> {
+    const result = await this.blogCollection.findOne({ slug });
+
+    return await BlogPost.fromMongoDB(result);
   }
 
   async addPost(post: NewBlogPost) {
@@ -65,8 +87,8 @@ class BlogPostController {
     await blogCollection.createIndex({ slug: 1 }, { unique: true });
   }
 
-  static async make(client: MongoClient): Promise<BlogPostController> {
-    const blogPostController = new BlogPostController(client);
+  static async make(client: MongoClient): Promise<BlogPostDBController> {
+    const blogPostController = new BlogPostDBController(client);
 
     const collections = await blogPostController.client
       .db('blog')
@@ -87,4 +109,4 @@ class BlogPostController {
   }
 }
 
-export { BlogPostController };
+export { BlogPostDBController };

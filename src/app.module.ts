@@ -2,7 +2,7 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 
 import { BlogModule } from './blog/blog.module';
 
-import { AuthCheckMiddlware } from './middleware/auth_check.middleware';
+import { authCheckMiddlewareFactory } from './middleware/auth_check.middleware';
 import { makeDataController } from './db_controller';
 
 const connectionFactory = {
@@ -18,6 +18,6 @@ const connectionFactory = {
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(AuthCheckMiddlware).forRoutes('api');
+    consumer.apply(authCheckMiddlewareFactory()).forRoutes('api');
   }
 }

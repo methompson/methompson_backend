@@ -18,17 +18,18 @@
       "internalConsoleOptions": "neverOpen",
     },
     {
-      "name": "Debug App w/ NoAuth",
+      "name": "Debug App w/ No Auth",
       "request": "launch",
       "runtimeArgs": [
         "run-script",
-        "tsup-watch-run-noAuth"
+        "tsup-watch-run-noauth"
       ],
       "runtimeExecutable": "npm",
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "type": "node"
+      "type": "node",
+      "outputCapture": "std"
     },
     {
       "name": "Debug App",
@@ -41,7 +42,8 @@
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "type": "node"
+      "type": "node",
+      "outputCapture": "std"
     }
   ]
 }
