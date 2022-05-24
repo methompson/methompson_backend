@@ -17,7 +17,4 @@ async function makeDataController() {
   }
 }
 
-export {
-  dataController,
-  makeDataController,
-};
+export { dataController, makeDataController };

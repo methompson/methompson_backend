@@ -1,5 +1,6 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
+import { decode } from 'jsonwebtoken';
 
 // eslint-disable-next-line import/no-unresolved
 import { initializeApp } from 'firebase-admin/app';
@@ -11,10 +12,9 @@ import { AuthModel } from '../models/auth_model';
 const _app = initializeApp();
 
 @Injectable()
-export class AuthCheckMiddlware implements NestMiddleware {
+class AuthCheckMiddlware implements NestMiddleware {
   async use(req: Request, res: Response, next: NextFunction) {
     const authHeader = req.header('authorization');
-    console.log('Header', authHeader);
     let token = {};
 
     try {
@@ -27,4 +27,34 @@ export class AuthCheckMiddlware implements NestMiddleware {
 
     next();
   }
+}
+
+@Injectable()
+class NoAuthCheckMiddlware implements NestMiddleware {
+  async use(req: Request, res: Response, next: NextFunction) {
+    const authHeader = req.header('authorization');
+
+    const token = decode(authHeader) ?? {};
+
+    res.locals.auth = new AuthModel(token);
+
+    next();
+  }
+}
+
+export function authCheckMiddlewareFactory() {
+  let auth = true;
+  process.argv.forEach((el) => {
+    if (el === 'noauth') {
+      auth = false;
+    }
+  });
+
+  if (auth) {
+    return AuthCheckMiddlware;
+  }
+
+  console.log('No Auth');
+
+  return NoAuthCheckMiddlware;
 }

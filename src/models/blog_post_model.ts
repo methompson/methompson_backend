@@ -1,6 +1,7 @@
 import { isString, isRecord, isStringArray } from '@src/utils/type_guards';
 import { isValidDate, ValidDate } from '@src/utils/valid_date';
 import { InvalidInputError } from '@src/errors/invalid_input_error';
+import { WithId, Document } from 'mongodb';
 
 interface NewBlogPostInterface {
   title: string;
@@ -130,17 +131,22 @@ class NewBlogPost {
     }
 
     // If dateUpdated IS a string, but is not a valid date, return false
-    if (isString(value.dateUpdated) && !isValidDate(new Date(value.dateUpdated))) {
+    if (
+      isString(value.dateUpdated) &&
+      !isValidDate(new Date(value.dateUpdated))
+    ) {
       return false;
     }
 
-    return isString(value.title)
-      && isString(value.slug)
-      && isString(value.body)
-      && isString(value.authorId)
-      && isStringArray(value.tags)
-      && ((isString(value.updateAuthorId) && isString(value.dateUpdated))
-        || (value.updateAuthorId === undefined && value.dateUpdated === undefined));
+    return (
+      isString(value.title) &&
+      isString(value.slug) &&
+      isString(value.body) &&
+      isString(value.authorId) &&
+      isStringArray(value.tags) &&
+      ((isString(value.updateAuthorId) && isString(value.dateUpdated)) ||
+        (value.updateAuthorId === undefined && value.dateUpdated === undefined))
+    );
   }
 }
 
@@ -162,10 +168,30 @@ class BlogPost extends NewBlogPost {
     return this._id;
   }
 
+  static fromJSON(input: unknown): BlogPost {
+    if (!BlogPost.isBlogPostInterface(input)) {
+      throw new InvalidInputError('Invalid Blog Post Input');
+    }
+
+    const newBP = NewBlogPost.fromJSON(input);
+
+    return BlogPost.fromNewBlogPost(input.id, newBP);
+  }
+
+  static fromMongoDB(input: WithId<Document>): BlogPost {
+    return BlogPost.fromJSON({
+      ...input,
+      id: input._id.toString(),
+    });
+  }
+
   static isBlogPostInterface(value: unknown): value is BlogPostInterface {
-    return isRecord(value)
-      && isString(value.id)
-      && NewBlogPost.isNewBlogPostInterface(value)
+    console.log(isRecord(value) && isString(value.id));
+    return (
+      isRecord(value) &&
+      isString(value.id) &&
+      NewBlogPost.isNewBlogPostInterface(value)
+    );
   }
 
   static fromNewBlogPost(id: string, input: NewBlogPost): BlogPost {
@@ -185,7 +211,4 @@ class BlogPost extends NewBlogPost {
   }
 }
 
-export {
-  NewBlogPost,
-  BlogPost,
-};
+export { NewBlogPost, BlogPost };

@@ -16,7 +16,34 @@
       ],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
-      "port": 9229
     },
+    {
+      "name": "Debug App w/ No Auth",
+      "request": "launch",
+      "runtimeArgs": [
+        "run-script",
+        "tsup-watch-run-noauth"
+      ],
+      "runtimeExecutable": "npm",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "type": "node",
+      "outputCapture": "std"
+    },
+    {
+      "name": "Debug App",
+      "request": "launch",
+      "runtimeArgs": [
+        "run-script",
+        "tsup-watch-run"
+      ],
+      "runtimeExecutable": "npm",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "type": "node",
+      "outputCapture": "std"
+    }
   ]
 }

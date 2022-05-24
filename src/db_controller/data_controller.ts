@@ -1,21 +1,19 @@
 import { MongoClient } from 'mongodb';
 
 import { isMongoDBOptions } from './mongodb_options';
-import { BlogPostController } from './blog_post_controller';
+import { BlogPostDBController } from './blog_post_db_controller';
 
 class MongoDBDataController {
   protected _client: MongoClient | null;
-  protected _blogPostController: BlogPostController | null;
+  protected _blogPostController: BlogPostDBController | null;
 
   constructor() {
     this._client = null;
     this._blogPostController = null;
   }
 
-  get blogPostController() { return this._blogPostController; }
-
-  get test() {
-    return 'hey!';
+  get blogPostController() {
+    return this._blogPostController;
   }
 
   protected async makeUserCollection() {
@@ -84,7 +82,7 @@ class MongoDBDataController {
       await this.makeUserCollection();
     }
 
-    this._blogPostController = await BlogPostController.make(this._client);
+    this._blogPostController = await BlogPostDBController.make(this._client);
   }
 }
 
