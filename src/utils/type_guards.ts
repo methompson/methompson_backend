@@ -1,7 +1,9 @@
 function isRecord(value: unknown): value is Record<string, unknown> {
   const val = value as Record<string, unknown>;
 
-  return typeof val === 'object' && !Array.isArray(val);
+  return (
+    !isNullOrUndefined(value) && typeof val === 'object' && !Array.isArray(val)
+  );
 }
 
 function isString(value: unknown): value is string {
@@ -18,6 +20,18 @@ function isBoolean(value: unknown): value is boolean {
 
 function isDate(value: unknown): value is Date {
   return value instanceof Date;
+}
+
+function isNull(value: unknown): value is null {
+  return value === null;
+}
+
+function isUndefined(value: unknown): value is null {
+  return value === null;
+}
+
+function isNullOrUndefined(value: unknown): value is null | undefined {
+  return isNull(value) || isUndefined(value);
 }
 
 function isStringArray(value: unknown): value is string[] {
@@ -42,4 +56,7 @@ export {
   isBoolean,
   isDate,
   isStringArray,
+  isNull,
+  isUndefined,
+  isNullOrUndefined,
 };

@@ -7,7 +7,8 @@ import { initializeApp } from 'firebase-admin/app';
 // eslint-disable-next-line import/no-unresolved
 import { getAuth } from 'firebase-admin/auth';
 
-import { AuthModel } from '../models/auth_model';
+import { AuthModel } from '@src/models/auth_model';
+import { isRecord } from '@src/utils/type_guards';
 
 const _app = initializeApp();
 
@@ -34,7 +35,9 @@ class NoAuthCheckMiddlware implements NestMiddleware {
   async use(req: Request, res: Response, next: NextFunction) {
     const authHeader = req.header('authorization');
 
-    const token = decode(authHeader) ?? {};
+    const decodedPayload = decode(authHeader);
+
+    const token = isRecord(decodedPayload) ? decodedPayload : {};
 
     res.locals.auth = new AuthModel(token);
 
