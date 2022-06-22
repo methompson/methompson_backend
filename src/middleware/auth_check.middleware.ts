@@ -15,13 +15,15 @@ const _app = initializeApp();
 @Injectable()
 class AuthCheckMiddlware implements NestMiddleware {
   async use(req: Request, res: Response, next: NextFunction) {
-    const authHeader = req.header('authorization');
+    const authHeader = req.header('authorization') ?? '';
+
     let token = {};
 
     try {
       token = await getAuth().verifyIdToken(authHeader);
     } catch (e) {
-      console.log('No authorization header', e);
+      // uncomment this for better logging later on
+      // console.log('No authorization header', e);
     }
 
     res.locals.auth = new AuthModel(token);
