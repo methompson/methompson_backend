@@ -1,5 +1,6 @@
-import { Collection, MongoClient } from 'mongodb';
+import { Collection, MongoClient, MongoServerError } from 'mongodb';
 import { BlogPost, NewBlogPost } from '@src/models/blog_post_model';
+import { InvalidInputError } from '../errors/invalid_input_error';
 
 class BlogPostDBController {
   constructor(protected client: MongoClient) {}
@@ -36,16 +37,31 @@ class BlogPostDBController {
     return await BlogPost.fromMongoDB(result);
   }
 
-  async addPost(post: NewBlogPost) {
-    const result = await this.blogCollection.insertOne(post.toJSON());
-    console.log('result', result);
-    console.log('id', result.insertedId);
+  async addPost(post: NewBlogPost): Promise<BlogPost> {
+    try {
+      const result = await this.blogCollection.insertOne(post.toJSON());
+      console.log('result', result);
+      console.log('id', result.insertedId);
 
-    if (result.insertedId === null || result.insertedId === undefined) {
-      throw new Error('Nothing written');
+      if (result.insertedId === null || result.insertedId === undefined) {
+        throw new Error('Nothing written');
+      }
+
+      return BlogPost.fromNewBlogPost(result.insertedId.toString(), post);
+    } catch (e) {
+      if (e instanceof MongoServerError) {
+        if (e.code === 11000) {
+          throw new InvalidInputError(
+            `Duplicate Key Error. The following keys must be unique: ${Object.keys(
+              e.keyPattern,
+            )}`,
+          );
+        }
+      }
+
+      console.log('Add blog error', e);
+      throw new Error('Add blog error');
     }
-
-    return BlogPost.fromNewBlogPost(result.insertedId.toString(), post);
   }
 
   protected async makeBlogCollection() {

@@ -14,13 +14,13 @@ export class BlogService {
     return await dataController.blogPostController.getPostBySlug(slug);
   }
 
-  async addBlogPost(requestBody: unknown) {
+  async addBlogPost(requestBody: unknown): Promise<BlogPost> {
     if (!NewBlogPost.isNewBlogPostInterface(requestBody)) {
       throw new InvalidInputError('Invalid requesty body');
     }
 
     const newPost = NewBlogPost.fromJSON(requestBody);
 
-    await dataController.blogPostController.addPost(newPost);
+    return dataController.blogPostController.addPost(newPost);
   }
 }

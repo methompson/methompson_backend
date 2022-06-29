@@ -15,6 +15,7 @@ interface NewBlogPostInterface {
 }
 
 interface BlogPostInterface {
+  [key: string]: unknown;
   id: string;
   title: string;
   slug: string;
@@ -97,6 +98,10 @@ class NewBlogPost {
   static fromJSON(input: unknown): NewBlogPost {
     if (!NewBlogPost.isNewBlogPostInterface(input)) {
       throw new InvalidInputError('Invalid Blog Post Input');
+    }
+
+    if (input.slug.length === 0) {
+      throw new InvalidInputError('Invalid Slug');
     }
 
     const options: BlogPostInputOptions = {};

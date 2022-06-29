@@ -74,8 +74,10 @@ export class BlogController {
       throw new HttpException('Not Authorized', HttpStatus.UNAUTHORIZED);
     }
 
+    let blogPost: BlogPost;
+
     try {
-      await this.blogService.addBlogPost(request.body);
+      blogPost = await this.blogService.addBlogPost(request.body);
     } catch (e) {
       if (e instanceof InvalidInputError) {
         throw new HttpException(
@@ -89,8 +91,6 @@ export class BlogController {
       throw new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    return {
-      hello: 'world',
-    };
+    return blogPost.toJSON();
   }
 }
