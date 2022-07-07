@@ -22,7 +22,7 @@
       "request": "launch",
       "runtimeArgs": [
         "run-script",
-        "tsup-watch-run-noauth"
+        "dev_noauth"
       ],
       "runtimeExecutable": "npm",
       "skipFiles": [
@@ -36,7 +36,7 @@
       "request": "launch",
       "runtimeArgs": [
         "run-script",
-        "tsup-watch-run"
+        "dev"
       ],
       "runtimeExecutable": "npm",
       "skipFiles": [

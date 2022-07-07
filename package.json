@@ -19,11 +19,11 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "tsc-compile": "tsc",
-    "tsup-compile": "tsup-node ./src/main.ts",
-    "tsup-watch": "tsup-node ./src/main.ts --watch",
-    "tsup-watch-run": "tsup-node ./src/main.ts --watch --onSuccess \"node dist/main.js\"",
-    "tsup-watch-run-noauth": "tsup-node ./src/main.ts --watch --onSuccess \"node dist/main.js noauth\""
+    "tsc_compile": "tsc",
+    "tsup_compile": "tsup-node ./src/main.ts",
+    "tsup_watch": "tsup-node ./src/main.ts --watch",
+    "dev": "tsup-node ./src/main.ts --watch --onSuccess \"node dist/main.js\"",
+    "dev_noauth": "tsup-node ./src/main.ts --watch --onSuccess \"node dist/main.js noauth\""
   },
   "dependencies": {
     "@nestjs/common": "^8.0.0",

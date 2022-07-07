@@ -2,6 +2,11 @@ import { Collection, MongoClient, MongoServerError } from 'mongodb';
 import { BlogPost, NewBlogPost } from '@src/models/blog_post_model';
 import { InvalidInputError } from '../errors/invalid_input_error';
 
+interface BlogPostRequestOutput {
+  posts: BlogPost[];
+  morePages: boolean;
+}
+
 class BlogPostDBController {
   constructor(protected client: MongoClient) {}
 
@@ -9,18 +14,24 @@ class BlogPostDBController {
     return this.client.db('blog').collection('blogPosts');
   }
 
-  async getPosts(page: number, pagination: number): Promise<BlogPost[]> {
+  async getPosts(
+    page: number,
+    pagination: number,
+  ): Promise<BlogPostRequestOutput> {
     const skip = pagination * (page - 1);
 
-    const result = await this.blogCollection
-      .find()
-      .skip(skip)
-      .limit(pagination)
+    // We get one more just to check if there exist any more posts AFTER this result.
+    const aggregation = await this.blogCollection
+      .aggregate([
+        { $sort: { dateAdded: -1 } },
+        { $skip: skip },
+        { $limit: pagination + 1 },
+      ])
       .toArray();
 
     const output = [];
 
-    for (const r of result) {
+    for (const r of aggregation) {
       try {
         output.push(BlogPost.fromMongoDB(r));
       } catch (e) {
@@ -28,7 +39,15 @@ class BlogPostDBController {
       }
     }
 
-    return output;
+    // We check if there are more posts than the pagination value.
+    // If there are, that means the user can hit 'next' and get more posts.
+    const morePages = output.length > pagination;
+
+    // We slice the output so that the end result is equal to the pagination.
+    return {
+      posts: output.slice(0, pagination),
+      morePages,
+    };
   }
 
   async getPostBySlug(slug: string): Promise<BlogPost> {

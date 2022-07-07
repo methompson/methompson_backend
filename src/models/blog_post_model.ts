@@ -190,10 +190,10 @@ class BlogPost extends NewBlogPost {
     return BlogPost.fromNewBlogPost(input.id, newBP);
   }
 
-  static fromMongoDB(input: WithId<Document>): BlogPost {
+  static fromMongoDB(input: WithId<Document> | Document): BlogPost {
     return BlogPost.fromJSON({
       ...input,
-      id: input._id.toString(),
+      id: input?._id?.toString(),
     });
   }
 
