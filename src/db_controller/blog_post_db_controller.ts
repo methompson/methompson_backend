@@ -2,12 +2,12 @@ import { Collection, MongoClient, MongoServerError } from 'mongodb';
 import { BlogPost, NewBlogPost } from '@src/models/blog_post_model';
 import { InvalidInputError } from '../errors/invalid_input_error';
 
-interface BlogPostRequestOutput {
+export interface BlogPostRequestOutput {
   posts: BlogPost[];
   morePages: boolean;
 }
 
-class BlogPostDBController {
+export class BlogPostDBController {
   constructor(protected client: MongoClient) {}
 
   get blogCollection(): Collection {
@@ -143,5 +143,3 @@ class BlogPostDBController {
     return blogPostController;
   }
 }
-
-export { BlogPostDBController };

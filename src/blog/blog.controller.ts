@@ -13,13 +13,20 @@ import { InvalidInputError } from '@src/errors/invalid_input_error';
 import { BlogPost } from '@src/models/blog_post_model';
 import { BlogService } from './blog.service';
 import { isString } from '@src/utils/type_guards';
+import { BlogPostRequestOutput } from '@src/db_controller/blog_post_db_controller';
+import { LoggerService } from '@src/logger/logger.service';
 
 @Controller({ path: 'api/blog' })
 export class BlogController {
-  constructor(private blogService: BlogService) {}
+  constructor(
+    private blogService: BlogService,
+    private loggerService: LoggerService,
+  ) {}
 
   @Get()
-  async getPosts(@Req() request: Request): Promise<BlogPost[]> {
+  async getPosts(@Req() request: Request): Promise<BlogPostRequestOutput> {
+    this.loggerService.addLog();
+
     const pageQP = request.query?.page;
     const paginationQP = request.query?.pagination;
 

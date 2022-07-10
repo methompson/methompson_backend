@@ -1,19 +1,12 @@
 import { MongoClient } from 'mongodb';
 
 import { isMongoDBOptions } from './mongodb_options';
-import { BlogPostDBController } from './blog_post_db_controller';
 
 export class MongoDBDataController {
   protected _client: MongoClient | null;
-  protected _blogPostController: BlogPostDBController | null;
 
   constructor() {
     this._client = null;
-    this._blogPostController = null;
-  }
-
-  get blogPostController() {
-    return this._blogPostController;
   }
 
   protected async makeUserCollection() {
@@ -81,7 +74,5 @@ export class MongoDBDataController {
     if (!containsUsers) {
       await this.makeUserCollection();
     }
-
-    this._blogPostController = await BlogPostDBController.make(this._client);
   }
 }

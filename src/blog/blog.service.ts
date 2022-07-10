@@ -3,10 +3,11 @@ import { Injectable } from '@nestjs/common';
 import { NewBlogPost, BlogPost } from '@src/models/blog_post_model';
 import { dataController } from '@src/db_controller';
 import { InvalidInputError } from '@src/errors/invalid_input_error';
+import { BlogPostRequestOutput } from '@src/db_controller/blog_post_db_controller';
 
 @Injectable()
 export class BlogService {
-  async getPosts(page = 1, pagination = 10): Promise<BlogPost[]> {
+  async getPosts(page = 1, pagination = 10): Promise<BlogPostRequestOutput> {
     return dataController.blogPostController.getPosts(page, pagination);
   }
 
