@@ -1,5 +1,6 @@
 import {
   Controller,
+  Inject,
   Get,
   HttpException,
   HttpStatus,
@@ -9,18 +10,22 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 
-import { InvalidInputError } from '@src/errors/invalid_input_error';
 import { BlogPost } from '@src/models/blog_post_model';
-import { BlogService } from './blog.service';
+import { BlogPostRequestOutput } from '@src/data_controller/blog/blog_post_controller';
+import { InvalidInputError } from '@src/errors/invalid_input_error';
 import { isString } from '@src/utils/type_guards';
-import { BlogPostRequestOutput } from '@src/db_controller/blog_post_db_controller';
-import { LoggerService } from '@src/logger/logger.service';
+
+import { BlogService } from '@src/blog/blog.service';
+import { LoggerService } from '@src/logger/logger.console.service';
+import { DataControllerService } from '@src/data_controller/data_controller.service';
 
 @Controller({ path: 'api/blog' })
 export class BlogController {
   constructor(
     private blogService: BlogService,
     private loggerService: LoggerService,
+    @Inject('DATA_CONTROLLER')
+    private dataControllerService: DataControllerService,
   ) {}
 
   @Get()
@@ -47,7 +52,11 @@ export class BlogController {
       }
     }
 
-    return this.blogService.getPosts(page, pagination);
+    return this.blogService.getPosts(
+      page,
+      pagination,
+      this.dataControllerService,
+    );
   }
 
   @Get(':slug')
@@ -59,7 +68,10 @@ export class BlogController {
     }
 
     try {
-      return await this.blogService.findBySlug(slug);
+      return await this.blogService.findBySlug(
+        slug,
+        this.dataControllerService,
+      );
     } catch (e) {
       console.log('Caught');
       if (e instanceof InvalidInputError) {
@@ -84,7 +96,10 @@ export class BlogController {
     let blogPost: BlogPost;
 
     try {
-      blogPost = await this.blogService.addBlogPost(request.body);
+      blogPost = await this.blogService.addBlogPost(
+        request.body,
+        this.dataControllerService,
+      );
     } catch (e) {
       if (e instanceof InvalidInputError) {
         throw new HttpException(

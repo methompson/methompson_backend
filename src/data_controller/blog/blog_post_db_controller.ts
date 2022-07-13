@@ -1,11 +1,8 @@
 import { Collection, MongoClient, MongoServerError } from 'mongodb';
-import { BlogPost, NewBlogPost } from '@src/models/blog_post_model';
-import { InvalidInputError } from '../errors/invalid_input_error';
 
-export interface BlogPostRequestOutput {
-  posts: BlogPost[];
-  morePages: boolean;
-}
+import { BlogPost, NewBlogPost } from '@src/models/blog_post_model';
+import { InvalidInputError } from '@src/errors/invalid_input_error';
+import { BlogPostRequestOutput } from '@src/data_controller/blog/blog_post_controller';
 
 export class BlogPostDBController {
   constructor(protected client: MongoClient) {}
