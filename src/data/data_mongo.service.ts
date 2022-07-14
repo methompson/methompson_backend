@@ -1,13 +1,13 @@
 import { Global, Injectable } from '@nestjs/common';
 import { MongoClient } from 'mongodb';
 
-import { isMongoDBOptions } from '~/src/utils/mongodb_options';
-import { BlogPostDBController } from '@src/data_controller/blog/blog_post_db_controller';
-import { DataControllerService } from '@src/data_controller/data_controller.service';
+import { isMongoDBOptions } from '@/src/utils/mongodb_options';
+import { BlogPostDBController } from '@/src/data/blog/blog_post_db_controller';
+import { DataService } from '@/src/data/data.service';
 
 @Global()
 @Injectable()
-export class MongoDBDataController extends DataControllerService {
+export class MongoDBDataService extends DataService {
   constructor(
     protected _client: MongoClient,
     protected _blogPostController: BlogPostDBController,
@@ -53,7 +53,7 @@ export class MongoDBDataController extends DataControllerService {
     await userCollection.createIndex({ email: 1 }, { unique: true });
   }
 
-  static async init(options: unknown): Promise<MongoDBDataController> {
+  static async init(options: unknown): Promise<MongoDBDataService> {
     if (!isMongoDBOptions(options)) {
       throw new Error('Invalid MongoDB Options Parameter');
     }
@@ -83,6 +83,6 @@ export class MongoDBDataController extends DataControllerService {
 
     const blogPostController = await BlogPostDBController.make(client);
 
-    return new MongoDBDataController(client, blogPostController);
+    return new MongoDBDataService(client, blogPostController);
   }
 }

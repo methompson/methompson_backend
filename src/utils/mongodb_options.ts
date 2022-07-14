@@ -1,4 +1,4 @@
-import { isRecord, isString, isNumber } from '@src/utils/type_guards';
+import { isRecord, isString, isNumber } from '@/src/utils/type_guards';
 
 interface MongoDBOptions {
   username: string;

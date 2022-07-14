@@ -1,8 +1,8 @@
 import { Collection, MongoClient, MongoServerError } from 'mongodb';
 
-import { BlogPost, NewBlogPost } from '@src/models/blog_post_model';
-import { InvalidInputError } from '@src/errors/invalid_input_error';
-import { BlogPostRequestOutput } from '@src/data_controller/blog/blog_post_controller';
+import { BlogPost, NewBlogPost } from '@/src/models/blog_post_model';
+import { InvalidInputError } from '@/src/errors/invalid_input_error';
+import { BlogPostRequestOutput } from '@/src/data/blog/blog_post_controller';
 
 export class BlogPostDBController {
   constructor(protected client: MongoClient) {}
@@ -53,9 +53,9 @@ export class BlogPostDBController {
     return await BlogPost.fromMongoDB(result);
   }
 
-  async addPost(post: NewBlogPost): Promise<BlogPost> {
+  async addPost(newPost: NewBlogPost): Promise<BlogPost> {
     try {
-      const result = await this.blogCollection.insertOne(post.toJSON());
+      const result = await this.blogCollection.insertOne(newPost.toJSON());
       console.log('result', result);
       console.log('id', result.insertedId);
 
@@ -63,7 +63,7 @@ export class BlogPostDBController {
         throw new Error('Nothing written');
       }
 
-      return BlogPost.fromNewBlogPost(result.insertedId.toString(), post);
+      return BlogPost.fromNewBlogPost(result.insertedId.toString(), newPost);
     } catch (e) {
       if (e instanceof MongoServerError) {
         if (e.code === 11000) {

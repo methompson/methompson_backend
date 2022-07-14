@@ -7,8 +7,8 @@ import { initializeApp } from 'firebase-admin/app';
 // eslint-disable-next-line import/no-unresolved
 import { getAuth } from 'firebase-admin/auth';
 
-import { AuthModel } from '@src/models/auth_model';
-import { isRecord } from '@src/utils/type_guards';
+import { AuthModel } from '@/src/models/auth_model';
+import { isRecord } from '@/src/utils/type_guards';
 
 const _app = initializeApp();
 

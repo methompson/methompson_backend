@@ -1,10 +1,15 @@
 import { Module } from '@nestjs/common';
 
 import { BlogController } from './blog.controller';
-import { BlogService } from './blog.service';
+import { MongoBlogService } from './blog_mongo.service';
+
+const blogServiceFactory = {
+  provide: 'BLOG_SERVICE',
+  useFactory: async () => new MongoBlogService(),
+};
 
 @Module({
   controllers: [BlogController],
-  providers: [BlogService],
+  providers: [blogServiceFactory],
 })
 export class BlogModule {}

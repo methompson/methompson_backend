@@ -1,4 +1,4 @@
-import { BlogPost, NewBlogPost } from '@src/models/blog_post_model';
+import { BlogPost, NewBlogPost } from '@/src/models/blog_post_model';
 
 describe('BlogPost', () => {
   describe('constructor', () => {});
