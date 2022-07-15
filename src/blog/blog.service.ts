@@ -1,11 +1,14 @@
-import { BlogPost } from '@/src/models/blog_post_model';
-import { BlogPostRequestOutput } from '@/src/data/blog/blog_post_controller';
 import { Injectable } from '@nestjs/common';
+
+import { BlogPost } from '@/src/models/blog_post_model';
+
+export interface BlogPostRequestOutput {
+  posts: BlogPost[];
+  morePages: boolean;
+}
 
 @Injectable()
 export abstract class BlogService {
-  constructor() {}
-
   abstract getPosts(
     page: number,
     pagination: number,

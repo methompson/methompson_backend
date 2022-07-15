@@ -5,10 +5,9 @@ import { LoggerModule } from '@/src/logger/logger.module';
 
 import { authCheckMiddlewareFactory } from '@/src/middleware/auth_check.middleware';
 import { RequestLogMiddleware } from '@/src/middleware/request_log.middleware';
-import { DataModule } from '@/src/data/data.module';
 
 @Module({
-  imports: [LoggerModule, DataModule, BlogModule],
+  imports: [LoggerModule, BlogModule],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

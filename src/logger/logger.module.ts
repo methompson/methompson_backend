@@ -1,10 +1,15 @@
 import { Module, Global } from '@nestjs/common';
 
-import { LoggerService } from '@/src/logger/logger.console.service';
+import { LoggerConsoleService } from '@/src/logger/logger.console.service';
+
+const loggerServiceFactory = {
+  provide: 'LOGGER_SERVICE',
+  useFactory: async () => new LoggerConsoleService(),
+};
 
 @Global()
 @Module({
-  providers: [LoggerService],
-  exports: [LoggerService],
+  providers: [loggerServiceFactory],
+  exports: [loggerServiceFactory],
 })
 export class LoggerModule {}

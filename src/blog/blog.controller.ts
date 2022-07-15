@@ -11,19 +11,19 @@ import {
 import { Request, Response } from 'express';
 
 import { BlogPost } from '@/src/models/blog_post_model';
-import { BlogPostRequestOutput } from '@/src/data/blog/blog_post_controller';
 import { InvalidInputError } from '@/src/errors/invalid_input_error';
 import { isString } from '@/src/utils/type_guards';
 
-import { BlogService } from '@/src/blog/blog.service';
-import { LoggerService } from '@/src/logger/logger.console.service';
+import { BlogService, BlogPostRequestOutput } from '@/src/blog/blog.service';
+import { LoggerService } from '@/src/logger/logger.service';
 
 @Controller({ path: 'api/blog' })
 export class BlogController {
   constructor(
     @Inject('BLOG_SERVICE')
-    private blogService: BlogService,
-    private loggerService: LoggerService,
+    private readonly blogService: BlogService,
+    @Inject('LOGGER_SERVICE')
+    private readonly loggerService: LoggerService,
   ) {}
 
   @Get()
@@ -64,7 +64,7 @@ export class BlogController {
     try {
       return await this.blogService.findBySlug(slug);
     } catch (e) {
-      console.log('Caught');
+      console.error('Caught');
       if (e instanceof InvalidInputError) {
         throw new HttpException('No Blog Post', HttpStatus.NOT_FOUND);
       }

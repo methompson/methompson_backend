@@ -10,7 +10,6 @@ export abstract class MongoDBClientInterface {
     // const mongoDBUri = `mongodb+srv://${options.username}:${options.password}@${options.url}:${port}`;
     const mongoDBUri = `mongodb://${username}:${password}@${url}:${port}`;
 
-    // console.log(mongoDBUri);
     const client = new MongoClient(mongoDBUri, {});
 
     await client.connect();

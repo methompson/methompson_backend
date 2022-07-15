@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import { LoggerService } from '@/src/logger/logger.service';
 
 @Injectable()
-export class LoggerService {
+export class LoggerConsoleService implements LoggerService {
   async addRequestLog() {
     console.log('addRequestLog');
   }

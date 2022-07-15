@@ -5,8 +5,7 @@ import { MongoClient, MongoServerError } from 'mongodb';
 
 import { NewBlogPost, BlogPost } from '@/src/models/blog_post_model';
 import { InvalidInputError } from '@/src/errors/invalid_input_error';
-import { BlogPostRequestOutput } from '@/src/data/blog/blog_post_controller';
-import { BlogService } from '@/src/blog/blog.service';
+import { BlogService, BlogPostRequestOutput } from '@/src/blog/blog.service';
 import { MongoDBClientInterface } from '@/src/utils/mongodb_client_class';
 
 @Injectable()
@@ -19,7 +18,6 @@ export class MongoBlogService
   }
 
   async getMongoClient(): Promise<MongoClient> {
-    console.log('Getting Blog Client');
     const port = '27017';
     const username = process.env.MONGO_DB_USERNAME;
     const password = process.env.MONGO_DB_PASSWORD;
@@ -27,8 +25,8 @@ export class MongoBlogService
 
     // const mongoDBUri = `mongodb+srv://${options.username}:${options.password}@${options.url}:${port}`;
     const mongoDBUri = `mongodb://${username}:${password}@${url}:${port}`;
-
     // console.log(mongoDBUri);
+
     const client = new MongoClient(mongoDBUri, {});
 
     await client.connect();
@@ -42,7 +40,6 @@ export class MongoBlogService
   }
 
   async getPosts(page = 1, pagination = 10): Promise<BlogPostRequestOutput> {
-    console.log('getting Posts');
     const blogCollection = await this.getBlogCollection();
     const skip = pagination * (page - 1);
 
@@ -94,8 +91,6 @@ export class MongoBlogService
 
     try {
       const result = await blogCollection.insertOne(newPost.toJSON());
-      console.log('result', result);
-      console.log('id', result.insertedId);
 
       if (result.insertedId === null || result.insertedId === undefined) {
         throw new Error('Nothing written');
@@ -113,7 +108,7 @@ export class MongoBlogService
         }
       }
 
-      console.log('Add blog error', e);
+      console.error('Add blog error', e);
       throw new Error('Add blog error');
     }
   }

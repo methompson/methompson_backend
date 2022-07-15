@@ -5,6 +5,4 @@ class InvalidInputError extends Error {
   }
 }
 
-export {
-  InvalidInputError,
-};
+export { InvalidInputError };
