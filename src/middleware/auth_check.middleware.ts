@@ -23,8 +23,7 @@ class AuthCheckMiddlware implements NestMiddleware {
       token = await getAuth().verifyIdToken(authHeader);
     } catch (e) {
       // uncomment this for better logging later on
-      // console.log('No authorization header', e);
-      console.error(e);
+      // console.error('No Authorization Header', e);
     }
 
     res.locals.auth = new AuthModel(token);

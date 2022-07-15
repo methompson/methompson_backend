@@ -1,7 +1,7 @@
 /* eslint-disable brace-style */
 
 import { Injectable } from '@nestjs/common';
-import { MongoClient, MongoServerError } from 'mongodb';
+import { Collection, Document, MongoServerError } from 'mongodb';
 
 import { NewBlogPost, BlogPost } from '@/src/models/blog_post_model';
 import { InvalidInputError } from '@/src/errors/invalid_input_error';
@@ -17,30 +17,55 @@ export class MongoBlogService
     super();
   }
 
-  async getMongoClient(): Promise<MongoClient> {
-    const port = '27017';
-    const username = process.env.MONGO_DB_USERNAME;
-    const password = process.env.MONGO_DB_PASSWORD;
-    const url = process.env.MONGO_DB_HOST;
+  protected async makeBlogCollection() {
+    const client = await this.getMongoClient();
 
-    // const mongoDBUri = `mongodb+srv://${options.username}:${options.password}@${options.url}:${port}`;
-    const mongoDBUri = `mongodb://${username}:${password}@${url}:${port}`;
-    // console.log(mongoDBUri);
+    // Enforce required values
+    const blogCollection = await client
+      .db('blog')
+      .createCollection('blogPosts', {
+        validator: {
+          $jsonSchema: {
+            bsonType: 'object',
+            required: ['title', 'slug', 'body', 'authorId', 'dateAdded'],
+            properties: {
+              title: {
+                bsonType: 'string',
+                description: 'title is required and must be a String',
+              },
+              slug: {
+                bsonType: 'string',
+                description: 'slug is required and must be a String',
+              },
+              body: {
+                bsonType: 'string',
+                description: 'body is required and must be a String',
+              },
+              authorId: {
+                bsonType: 'string',
+                description: 'authorId is required and must be a String',
+              },
+              dateAdded: {
+                bsonType: 'string',
+                description: 'dateAdded is required and must be a String',
+              },
+            },
+          },
+        },
+      });
 
-    const client = new MongoClient(mongoDBUri, {});
-
-    await client.connect();
-
-    return client;
+    // Enforce uniqueness
+    await blogCollection.createIndex({ slug: 1 }, { unique: true });
   }
 
-  async getBlogCollection() {
-    const mongoClient = await this.getMongoClient();
-    return mongoClient.db('blog').collection('blogPosts');
+  protected get blogCollection(): Promise<Collection<Document>> {
+    return this.getMongoClient().then((mongoClient) =>
+      mongoClient.db('blog').collection('blogPosts'),
+    );
   }
 
   async getPosts(page = 1, pagination = 10): Promise<BlogPostRequestOutput> {
-    const blogCollection = await this.getBlogCollection();
+    const blogCollection = await this.blogCollection;
     const skip = pagination * (page - 1);
 
     // We get one more just to check if there exist any more posts AFTER this result.
@@ -74,14 +99,14 @@ export class MongoBlogService
   }
 
   async findBySlug(slug: string): Promise<BlogPost> {
-    const blogCollection = await this.getBlogCollection();
+    const blogCollection = await this.blogCollection;
     const result = await blogCollection.findOne({ slug });
 
     return await BlogPost.fromMongoDB(result);
   }
 
   async addBlogPost(requestBody: unknown): Promise<BlogPost> {
-    const blogCollection = await this.getBlogCollection();
+    const blogCollection = await this.blogCollection;
 
     if (!NewBlogPost.isNewBlogPostInterface(requestBody)) {
       throw new InvalidInputError('Invalid requesty body');

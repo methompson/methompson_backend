@@ -115,8 +115,4 @@ const defaultUserTypes: UserMap = {
   viewer: new UserType('viewer', Math.pow(2, 4)),
 };
 
-export {
-  UserType,
-  UserTypeMap,
-  defaultUserTypes,
-};
+export { UserType, UserTypeMap, defaultUserTypes };

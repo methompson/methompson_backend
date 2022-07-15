@@ -11,7 +11,6 @@ export abstract class MongoDBClientInterface {
     const mongoDBUri = `mongodb://${username}:${password}@${url}:${port}`;
 
     const client = new MongoClient(mongoDBUri, {});
-
     await client.connect();
 
     return client;
