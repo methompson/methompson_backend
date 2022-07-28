@@ -15,7 +15,7 @@ const loggerServiceFactory = {
       // TODO Develop a file based logger
     }
 
-    new LoggerConsoleService();
+    return new LoggerConsoleService();
   },
   inject: [ConfigService],
 };
