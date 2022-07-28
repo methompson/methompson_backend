@@ -1,12 +1,17 @@
 import { Injectable } from '@nestjs/common';
+import { Request } from 'express';
 
 @Injectable()
 export abstract class LoggerService {
-  abstract addRequestLog(): Promise<void>;
+  get isoTime() {
+    return new Date().toISOString();
+  }
 
-  abstract addLog(): Promise<void>;
+  abstract addRequestLog(req: Request): Promise<void>;
 
-  abstract addErrorLog(): Promise<void>;
+  abstract addLog(msg: unknown): Promise<void>;
 
-  abstract addWarningLog(): Promise<void>;
+  abstract addErrorLog(msg: unknown): Promise<void>;
+
+  abstract addWarningLog(msg: unknown): Promise<void>;
 }

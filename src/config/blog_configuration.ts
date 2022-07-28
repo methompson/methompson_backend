@@ -5,7 +5,7 @@ export function blogConfiguration() {
     blogType: 'memory',
   };
 
-  if (process.env.blogType === 'memory') {
+  if (process.env.BLOG_TYPE === 'memory') {
     return defaultBlogConfig;
   }
 

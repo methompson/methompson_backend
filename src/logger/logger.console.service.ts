@@ -1,21 +1,30 @@
 import { Injectable } from '@nestjs/common';
+import { Request } from 'express';
+
 import { LoggerService } from '@/src/logger/logger.service';
 
 @Injectable()
-export class LoggerConsoleService implements LoggerService {
-  async addRequestLog() {
-    console.log('addRequestLog');
+export class LoggerConsoleService extends LoggerService {
+  async addRequestLog(req: Request) {
+    const requestType = req.method;
+    const path = req.path;
+    const remoteAddress =
+      req.header['x-forwarded-for'] ?? req.socket.remoteAddress;
+
+    console.log(
+      `${this.isoTime} - ${remoteAddress} - ${requestType} - ${path}`,
+    );
   }
 
-  async addLog() {
-    console.log('addLog');
+  async addLog(msg: unknown) {
+    console.log(`${this.isoTime} - addLog - ${msg}`);
   }
 
-  async addErrorLog() {
-    console.error('addErrorLog');
+  async addErrorLog(msg: unknown) {
+    console.error(`${this.isoTime} - addErrorLog - ${msg}`);
   }
 
-  async addWarningLog() {
-    console.warn('addWarningLog');
+  async addWarningLog(msg: unknown) {
+    console.warn(`${this.isoTime} - addWarningLog - ${msg}`);
   }
 }

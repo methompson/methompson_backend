@@ -10,7 +10,7 @@ export class RequestLogMiddleware implements NestMiddleware {
   ) {}
 
   async use(req: Request, res: Response, next: NextFunction) {
-    this.loggerSerivce.addRequestLog();
+    this.loggerSerivce.addRequestLog(req);
     next();
   }
 }

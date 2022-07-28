@@ -28,8 +28,6 @@ export class BlogController {
 
   @Get()
   async getPosts(@Req() request: Request): Promise<BlogPostRequestOutput> {
-    this.loggerService.addLog();
-
     const pageQP = request.query?.page;
     const paginationQP = request.query?.pagination;
 
@@ -50,7 +48,12 @@ export class BlogController {
       }
     }
 
-    return this.blogService.getPosts(page, pagination);
+    try {
+      return this.blogService.getPosts(page, pagination);
+    } catch (e) {
+      this.loggerService.addErrorLog(e);
+      throw e;
+    }
   }
 
   @Get(':slug')
