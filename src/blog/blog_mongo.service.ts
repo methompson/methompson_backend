@@ -1,20 +1,22 @@
 /* eslint-disable brace-style */
 
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Collection, Document, MongoServerError } from 'mongodb';
 
 import { NewBlogPost, BlogPost } from '@/src/models/blog_post_model';
 import { InvalidInputError } from '@/src/errors/invalid_input_error';
 import { BlogService, BlogPostRequestOutput } from '@/src/blog/blog.service';
 import { MongoDBClientInterface } from '@/src/utils/mongodb_client_class';
+import { isString } from '@/src/utils/type_guards';
 
 @Injectable()
 export class MongoBlogService
   extends MongoDBClientInterface
   implements BlogService
 {
-  constructor() {
-    super();
+  constructor(url: string, username: string, password: string, port: string) {
+    super(url, username, password, port);
   }
 
   protected async makeBlogCollection() {
@@ -106,8 +108,6 @@ export class MongoBlogService
   }
 
   async addBlogPost(requestBody: unknown): Promise<BlogPost> {
-    const blogCollection = await this.blogCollection;
-
     if (!NewBlogPost.isNewBlogPostInterface(requestBody)) {
       throw new InvalidInputError('Invalid requesty body');
     }
@@ -115,6 +115,7 @@ export class MongoBlogService
     const newPost = NewBlogPost.fromJSON(requestBody);
 
     try {
+      const blogCollection = await this.blogCollection;
       const result = await blogCollection.insertOne(newPost.toJSON());
 
       if (result.insertedId === null || result.insertedId === undefined) {
@@ -138,5 +139,21 @@ export class MongoBlogService
     }
   }
 
-  // static init(dataService: DataService) {}
+  static initFromConfig(configService: ConfigService) {
+    const url = configService.get('url');
+    const username = configService.get('username');
+    const password = configService.get('password');
+    const port = configService.get('port');
+
+    if (
+      !isString(url) ||
+      !isString(username) ||
+      !isString(password) ||
+      !isString(port)
+    ) {
+      throw new Error('Invalid input');
+    }
+
+    return new MongoBlogService(url, username, password, port);
+  }
 }
