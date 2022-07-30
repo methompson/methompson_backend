@@ -3,8 +3,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import { LoggerModule } from '@/src/logger/logger.module';
 import { BlogController } from './blog.controller';
-import { MongoBlogService } from './blog_mongo.service';
-import { InMemoryBlogService } from './blog_memory.service';
+import { MongoBlogService } from './blog.mongo.service';
+import { InMemoryBlogService } from './blog.memory.service';
 
 const blogServiceFactory = {
   provide: 'BLOG_SERVICE',
@@ -13,7 +13,7 @@ const blogServiceFactory = {
     console.log('blog type', type);
 
     if (type === 'mongo_db') {
-      return MongoBlogService.initFromConfig(configService);
+      return await MongoBlogService.initFromConfig(configService);
     }
 
     return new InMemoryBlogService();

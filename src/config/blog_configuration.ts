@@ -1,6 +1,7 @@
 import { isString } from '@/src/utils/type_guards';
 
 export function blogConfiguration() {
+  console.log('blogConfiguration');
   const defaultBlogConfig = {
     blogType: 'memory',
   };

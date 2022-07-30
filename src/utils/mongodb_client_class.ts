@@ -1,6 +1,6 @@
 import { MongoClient } from 'mongodb';
 
-export abstract class MongoDBClientInterface {
+export class MongoDBClient {
   constructor(
     protected url: string,
     protected username: string,

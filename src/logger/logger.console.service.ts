@@ -4,7 +4,11 @@ import { Request } from 'express';
 import { LoggerService } from '@/src/logger/logger.service';
 
 @Injectable()
-export class LoggerConsoleService extends LoggerService {
+export class LoggerConsoleService implements LoggerService {
+  get isoTime() {
+    return new Date().toISOString();
+  }
+
   async addRequestLog(req: Request) {
     const requestType = req.method;
     const path = req.path;

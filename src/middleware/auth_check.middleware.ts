@@ -1,22 +1,17 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { decode } from 'jsonwebtoken';
-
-// eslint-disable-next-line import/no-unresolved
-import { initializeApp } from 'firebase-admin/app';
 // eslint-disable-next-line import/no-unresolved
 import { getAuth } from 'firebase-admin/auth';
 
 import { AuthModel } from '@/src/models/auth_model';
 import { isRecord } from '@/src/utils/type_guards';
-
-const _app = initializeApp();
-
 @Injectable()
 class AuthCheckMiddlware implements NestMiddleware {
   async use(req: Request, res: Response, next: NextFunction) {
     const authHeader = req.header('authorization') ?? '';
 
+    console.log('authHeader', authHeader);
     let token = {};
 
     try {

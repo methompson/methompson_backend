@@ -1,5 +1,3 @@
-/* eslint-disable brace-style */
-
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Collection, Document, MongoServerError } from 'mongodb';
@@ -7,25 +5,39 @@ import { Collection, Document, MongoServerError } from 'mongodb';
 import { NewBlogPost, BlogPost } from '@/src/models/blog_post_model';
 import { InvalidInputError } from '@/src/errors/invalid_input_error';
 import { BlogService, BlogPostRequestOutput } from '@/src/blog/blog.service';
-import { MongoDBClientInterface } from '@/src/utils/mongodb_client_class';
+import { MongoDBClient } from '@/src/utils/mongodb_client_class';
 import { isString } from '@/src/utils/type_guards';
 
+const blogPostsCollectionName = 'blogPosts';
+
 @Injectable()
-export class MongoBlogService
-  extends MongoDBClientInterface
-  implements BlogService
-{
-  constructor(url: string, username: string, password: string, port: string) {
-    super(url, username, password, port);
+export class MongoBlogService extends BlogService {
+  constructor(protected mongoDBClient: MongoDBClient) {
+    super();
+  }
+
+  protected async containsBlogCollection(): Promise<boolean> {
+    const client = await this.mongoDBClient.getMongoClient();
+    const collections = await client.db('blog').collections();
+
+    let containsBlog = false;
+    collections.forEach((col) => {
+      if (col.collectionName === blogPostsCollectionName) {
+        containsBlog = true;
+      }
+    });
+
+    return containsBlog;
   }
 
   protected async makeBlogCollection() {
-    const client = await this.getMongoClient();
+    console.log('Making Blog Collection');
+    const client = await this.mongoDBClient.getMongoClient();
 
     // Enforce required values
     const blogCollection = await client
       .db('blog')
-      .createCollection('blogPosts', {
+      .createCollection(blogPostsCollectionName, {
         validator: {
           $jsonSchema: {
             bsonType: 'object',
@@ -61,9 +73,11 @@ export class MongoBlogService
   }
 
   protected get blogCollection(): Promise<Collection<Document>> {
-    return this.getMongoClient().then((mongoClient) =>
-      mongoClient.db('blog').collection('blogPosts'),
-    );
+    return this.mongoDBClient
+      .getMongoClient()
+      .then((mongoClient) =>
+        mongoClient.db('blog').collection(blogPostsCollectionName),
+      );
   }
 
   async getPosts(page = 1, pagination = 10): Promise<BlogPostRequestOutput> {
@@ -139,7 +153,7 @@ export class MongoBlogService
     }
   }
 
-  static initFromConfig(configService: ConfigService) {
+  static async initFromConfig(configService: ConfigService) {
     const url = configService.get('url');
     const username = configService.get('username');
     const password = configService.get('password');
@@ -154,6 +168,14 @@ export class MongoBlogService
       throw new Error('Invalid input');
     }
 
-    return new MongoBlogService(url, username, password, port);
+    const client = new MongoDBClient(url, username, password, port);
+    const service = new MongoBlogService(client);
+
+    if (!(await service.containsBlogCollection())) {
+      console.log('Does not contain a blog Collection');
+      await service.makeBlogCollection();
+    }
+
+    return service;
   }
 }

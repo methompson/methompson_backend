@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { MongoDBClientInterface } from '@/src/utils/mongodb_client_class';
+import { MongoDBClient } from '@/src/utils/mongodb_client_class';
 
 @Injectable()
-export class UserService extends MongoDBClientInterface {
+export class UserService extends MongoDBClient {
   protected async makeUserCollection() {
     const client = await this.getMongoClient();
 

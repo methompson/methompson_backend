@@ -3,10 +3,6 @@ import { Request } from 'express';
 
 @Injectable()
 export abstract class LoggerService {
-  get isoTime() {
-    return new Date().toISOString();
-  }
-
   abstract addRequestLog(req: Request): Promise<void>;
 
   abstract addLog(msg: unknown): Promise<void>;
