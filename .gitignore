@@ -3,7 +3,7 @@
 /node_modules
 
 .env
-config.yaml
+package-lock.json
 
 # Logs
 logs
