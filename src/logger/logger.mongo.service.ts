@@ -1,16 +1,13 @@
-import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
 import { Collection, Document } from 'mongodb';
 
-import { LoggerService } from '@/src/logger/logger.service';
+import { LoggerController } from '@/src/logger/logger.controller';
 import { MongoDBClient } from '@/src/utils/mongodb_client_class';
-import { isString } from '@/src/utils/type_guards';
 
 const loggingCollectionName = 'logging';
 
-@Injectable()
-export class MongoLoggerService implements LoggerService {
+export class MongoLoggerController implements LoggerController {
   constructor(protected mongoDBClient: MongoDBClient) {}
 
   protected async containsLoggerCollection(): Promise<boolean> {
@@ -104,23 +101,9 @@ export class MongoLoggerService implements LoggerService {
 
   static async initFromConfig(
     configService: ConfigService,
-  ): Promise<MongoLoggerService> {
-    const url = configService.get('url');
-    const username = configService.get('username');
-    const password = configService.get('password');
-    const port = configService.get('port');
-
-    if (
-      !isString(url) ||
-      !isString(username) ||
-      !isString(password) ||
-      !isString(port)
-    ) {
-      throw new Error('Invalid input');
-    }
-
-    const client = new MongoDBClient(url, username, password, port);
-    const service = new MongoLoggerService(client);
+  ): Promise<MongoLoggerController> {
+    const client = MongoDBClient.fromConfiguration(configService);
+    const service = new MongoLoggerController(client);
 
     if (!(await service.containsLoggerCollection())) {
       console.log('Does not contain a logger Collection');

@@ -6,7 +6,7 @@ import { LoggerService } from '@/src/logger/logger.service';
 @Injectable()
 export class RequestLogMiddleware implements NestMiddleware {
   constructor(
-    @Inject('LOGGER_SERVICE') private readonly loggerSerivce: LoggerService,
+    @Inject('LOGGER_SERVICE') protected readonly loggerSerivce: LoggerService,
   ) {}
 
   async use(req: Request, res: Response, next: NextFunction) {

@@ -1,6 +1,9 @@
 # compiled output
-/dist
+dist
 /node_modules
+firebase.json
+/docker/artifacts
+/scripts/docker_run.sh
 
 .env
 package-lock.json

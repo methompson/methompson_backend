@@ -1,22 +1,27 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
-import { LoggerConsoleService } from '@/src/logger/logger.console.service';
-import { MongoLoggerService } from './logger.mongo.service';
+import { LoggerService } from '@/src/logger/logger.service';
+import { LoggerConsoleController } from '@/src/logger/logger.console.service';
+import { MongoLoggerController } from './logger.mongo.service';
+import { LoggerController } from '@/src/logger/logger.controller';
 
 const loggerServiceFactory = {
   provide: 'LOGGER_SERVICE',
   useFactory: async (configService: ConfigService) => {
-    const type = configService.get('loggingType');
-    console.log('log type', type);
+    const loggerServices: LoggerController[] = [];
 
-    if (type === 'mongo_db') {
-      return await MongoLoggerService.initFromConfig(configService);
-    } else if (type === 'file') {
-      // TODO Develop a file based logger
+    if (configService.get('console_logging')) {
+      loggerServices.push(new LoggerConsoleController());
     }
 
-    return new LoggerConsoleService();
+    if (configService.get('db_logging')) {
+      loggerServices.push(
+        await MongoLoggerController.initFromConfig(configService),
+      );
+    }
+
+    return new LoggerService(loggerServices);
   },
   inject: [ConfigService],
 };

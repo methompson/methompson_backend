@@ -6,7 +6,6 @@ import { NewBlogPost, BlogPost } from '@/src/models/blog_post_model';
 import { InvalidInputError } from '@/src/errors/invalid_input_error';
 import { BlogService, BlogPostRequestOutput } from '@/src/blog/blog.service';
 import { MongoDBClient } from '@/src/utils/mongodb_client_class';
-import { isString } from '@/src/utils/type_guards';
 
 const blogPostsCollectionName = 'blogPosts';
 
@@ -154,21 +153,7 @@ export class MongoBlogService extends BlogService {
   }
 
   static async initFromConfig(configService: ConfigService) {
-    const url = configService.get('url');
-    const username = configService.get('username');
-    const password = configService.get('password');
-    const port = configService.get('port');
-
-    if (
-      !isString(url) ||
-      !isString(username) ||
-      !isString(password) ||
-      !isString(port)
-    ) {
-      throw new Error('Invalid input');
-    }
-
-    const client = new MongoDBClient(url, username, password, port);
+    const client = MongoDBClient.fromConfiguration(configService);
     const service = new MongoBlogService(client);
 
     if (!(await service.containsBlogCollection())) {

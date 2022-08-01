@@ -1,24 +1,38 @@
+import { ConfigService } from '@nestjs/config';
 import { MongoClient } from 'mongodb';
+
+import { isString } from '@/src/utils/type_guards';
 
 export class MongoDBClient {
   constructor(
     protected url: string,
     protected username: string,
     protected password: string,
-    protected port: string,
+    protected mongoUseSrv?: boolean,
   ) {}
 
   async getMongoClient(): Promise<MongoClient> {
-    // const port = '27017';
-    // const username = process.env.MONGO_DB_USERNAME;
-    // const password = process.env.MONGO_DB_PASSWORD;
-    // const url = process.env.MONGO_DB_HOST;
+    const protocol = this.mongoUseSrv ?? false ? 'mongodb+srv' : 'mongodb';
 
-    // const mongoDBUri = `mongodb+srv://${options.username}:${options.password}@${options.url}:${port}`;
-    const mongoDBUri = `mongodb://${this.username}:${this.password}@${this.url}:${this.port}`;
+    const mongoDBUri = `${protocol}://${this.username}:${this.password}@${this.url}`;
 
     const client = new MongoClient(mongoDBUri, {});
     await client.connect();
+
+    return client;
+  }
+
+  static fromConfiguration(configService: ConfigService): MongoDBClient {
+    const url = configService.get('url');
+    const username = configService.get('username');
+    const password = configService.get('password');
+    const mongoUseSrv = configService.get('mongoUseSrv');
+
+    if (!isString(url) || !isString(username) || !isString(password)) {
+      throw new Error('Invalid input');
+    }
+
+    const client = new MongoDBClient(url, username, password, mongoUseSrv);
 
     return client;
   }

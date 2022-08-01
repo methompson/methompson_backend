@@ -10,23 +10,18 @@ export function blogConfiguration() {
     return defaultBlogConfig;
   }
 
-  const port = process.env.MONGO_DB_PORT ?? '27017';
   const username = process.env.MONGO_DB_USERNAME;
   const password = process.env.MONGO_DB_PASSWORD;
   const url = process.env.MONGO_DB_HOST;
+  const mongoUseSrv = process.env.MONGO_USE_SRV === 'true';
 
-  if (
-    isString(port) &&
-    isString(username) &&
-    isString(password) &&
-    isString(url)
-  ) {
+  if (isString(username) && isString(password) && isString(url)) {
     return {
       blogType: 'mongo_db',
-      port,
       username,
       password,
       url,
+      mongoUseSrv,
     };
   }
 
