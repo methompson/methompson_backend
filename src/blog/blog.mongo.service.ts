@@ -16,8 +16,8 @@ export class MongoBlogService extends BlogService {
   }
 
   protected async containsBlogCollection(): Promise<boolean> {
-    const client = await this.mongoDBClient.getMongoClient();
-    const collections = await client.db('blog').collections();
+    const db = await this.mongoDBClient.db;
+    const collections = await db.collections();
 
     let containsBlog = false;
     collections.forEach((col) => {
@@ -31,52 +31,48 @@ export class MongoBlogService extends BlogService {
 
   protected async makeBlogCollection() {
     console.log('Making Blog Collection');
-    const client = await this.mongoDBClient.getMongoClient();
+    const db = await this.mongoDBClient.db;
 
     // Enforce required values
-    const blogCollection = await client
-      .db('blog')
-      .createCollection(blogPostsCollectionName, {
-        validator: {
-          $jsonSchema: {
-            bsonType: 'object',
-            required: ['title', 'slug', 'body', 'authorId', 'dateAdded'],
-            properties: {
-              title: {
-                bsonType: 'string',
-                description: 'title is required and must be a String',
-              },
-              slug: {
-                bsonType: 'string',
-                description: 'slug is required and must be a String',
-              },
-              body: {
-                bsonType: 'string',
-                description: 'body is required and must be a String',
-              },
-              authorId: {
-                bsonType: 'string',
-                description: 'authorId is required and must be a String',
-              },
-              dateAdded: {
-                bsonType: 'string',
-                description: 'dateAdded is required and must be a String',
-              },
+    const blogCollection = await db.createCollection(blogPostsCollectionName, {
+      validator: {
+        $jsonSchema: {
+          bsonType: 'object',
+          required: ['title', 'slug', 'body', 'authorId', 'dateAdded'],
+          properties: {
+            title: {
+              bsonType: 'string',
+              description: 'title is required and must be a String',
+            },
+            slug: {
+              bsonType: 'string',
+              description: 'slug is required and must be a String',
+            },
+            body: {
+              bsonType: 'string',
+              description: 'body is required and must be a String',
+            },
+            authorId: {
+              bsonType: 'string',
+              description: 'authorId is required and must be a String',
+            },
+            dateAdded: {
+              bsonType: 'string',
+              description: 'dateAdded is required and must be a String',
             },
           },
         },
-      });
+      },
+    });
 
     // Enforce uniqueness
     await blogCollection.createIndex({ slug: 1 }, { unique: true });
   }
 
   protected get blogCollection(): Promise<Collection<Document>> {
-    return this.mongoDBClient
-      .getMongoClient()
-      .then((mongoClient) =>
-        mongoClient.db('blog').collection(blogPostsCollectionName),
-      );
+    return this.mongoDBClient.db.then((db) =>
+      db.collection(blogPostsCollectionName),
+    );
   }
 
   async getPosts(page = 1, pagination = 10): Promise<BlogPostRequestOutput> {

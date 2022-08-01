@@ -11,8 +11,8 @@ export class MongoLoggerController implements LoggerController {
   constructor(protected mongoDBClient: MongoDBClient) {}
 
   protected async containsLoggerCollection(): Promise<boolean> {
-    const client = await this.mongoDBClient.getMongoClient();
-    const collections = await client.db('blog').collections();
+    const db = await this.mongoDBClient.db;
+    const collections = await db.collections();
 
     let containsLogging = false;
     collections.forEach((col) => {
@@ -26,43 +26,39 @@ export class MongoLoggerController implements LoggerController {
 
   protected async makeLoggerCollection() {
     console.log('Making Logger Collection');
-    const client = await this.mongoDBClient.getMongoClient();
+    const db = await this.mongoDBClient.db;
 
     // Enforce required values
-    const blogCollection = await client
-      .db('blog')
-      .createCollection(loggingCollectionName, {
-        validator: {
-          $jsonSchema: {
-            bsonType: 'object',
-            required: ['date', 'message', 'type'],
-            properties: {
-              date: {
-                bsonType: 'date',
-                description: 'date is required and must be a Date',
-              },
-              MessageEvent: {
-                bsonType: 'string',
-                description: 'message is required and must be a String',
-              },
-              type: {
-                bsonType: 'string',
-                description: 'type is required and must be a String',
-              },
+    const blogCollection = await db.createCollection(loggingCollectionName, {
+      validator: {
+        $jsonSchema: {
+          bsonType: 'object',
+          required: ['date', 'message', 'type'],
+          properties: {
+            date: {
+              bsonType: 'date',
+              description: 'date is required and must be a Date',
+            },
+            MessageEvent: {
+              bsonType: 'string',
+              description: 'message is required and must be a String',
+            },
+            type: {
+              bsonType: 'string',
+              description: 'type is required and must be a String',
             },
           },
         },
-      });
+      },
+    });
 
     await blogCollection.createIndex({ date: 1 });
   }
 
   protected get loggerCollection(): Promise<Collection<Document>> {
-    return this.mongoDBClient
-      .getMongoClient()
-      .then((mongoClient) =>
-        mongoClient.db('blog').collection(loggingCollectionName),
-      );
+    return this.mongoDBClient.db.then((db) =>
+      db.collection(loggingCollectionName),
+    );
   }
 
   protected async addLogToDB(msg: string, type: string, date?: Date) {

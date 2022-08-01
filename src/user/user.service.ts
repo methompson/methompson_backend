@@ -4,10 +4,10 @@ import { MongoDBClient } from '@/src/utils/mongodb_client_class';
 @Injectable()
 export class UserService extends MongoDBClient {
   protected async makeUserCollection() {
-    const client = await this.getMongoClient();
+    const db = await this.db;
 
     // Enforce required values
-    const userCollection = await client.db('blog').createCollection('users', {
+    const userCollection = await db.createCollection('users', {
       validator: {
         $jsonSchema: {
           bsonType: 'object',

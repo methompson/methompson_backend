@@ -1,6 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
+import { mongodbConfiguration } from '@/src/config/mongodb_configuration';
 import { blogConfiguration } from '@/src/config/blog_configuration';
 import { logConfiguration } from '@/src/config/log_configuration';
 import { authConfiguration } from '@/src/config/auth_configuration';
@@ -16,7 +17,12 @@ import { RequestLogMiddleware } from '@/src/middleware/request_log.middleware';
     LoggerModule,
     BlogModule,
     ConfigModule.forRoot({
-      load: [blogConfiguration, logConfiguration, authConfiguration],
+      load: [
+        mongodbConfiguration,
+        blogConfiguration,
+        logConfiguration,
+        authConfiguration,
+      ],
     }),
   ],
 })
