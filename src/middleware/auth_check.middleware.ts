@@ -12,7 +12,7 @@ class AuthCheckMiddlware implements NestMiddleware {
   async use(req: Request, res: Response, next: NextFunction) {
     const authHeader = req.header('authorization') ?? '';
 
-    console.log('authHeader', authHeader);
+    // console.log('authHeader', authHeader);
     let token = {};
 
     try {
@@ -55,7 +55,7 @@ export function authCheckMiddlewareFactory() {
     return AuthCheckMiddlware;
   }
 
-  console.log('No Auth');
+  console.log('No Auth Middleware Used');
 
   return NoAuthCheckMiddlware;
 }

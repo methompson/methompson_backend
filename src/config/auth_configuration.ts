@@ -3,7 +3,7 @@ import { initializeApp } from 'firebase-admin/app';
 
 export function authConfiguration() {
   const _app = initializeApp();
-  console.log('After calling initalizeApp');
+  console.log('Firebase Authentiation Initialized');
 
   return {};
 }

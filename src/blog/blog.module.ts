@@ -10,7 +10,6 @@ const blogServiceFactory = {
   provide: 'BLOG_SERVICE',
   useFactory: async (configService: ConfigService) => {
     const type = configService.get('blogType');
-    console.log('blog type', type);
 
     if (type === 'mongo_db') {
       return await MongoBlogService.initFromConfig(configService);

@@ -52,9 +52,7 @@ export class BlogController {
     }
 
     try {
-      const posts = this.blogService.getPosts(page, pagination);
-      console.log('Sending Posts');
-      return posts;
+      return this.blogService.getPosts(page, pagination);
     } catch (e) {
       this.loggerService.addErrorLog(e);
       throw e;

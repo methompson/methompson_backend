@@ -22,8 +22,6 @@ export class RequestLogInterceptor implements NestInterceptor {
     context: ExecutionContext,
     next: CallHandler,
   ): Promise<Observable<any>> {
-    console.log('Interceptor Start');
-
     return next.handle().pipe(
       tap(() => {
         const httpSwitch = context.switchToHttp();
