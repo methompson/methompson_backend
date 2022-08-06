@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 
 import { LoggerController } from '@/src/logger/logger.controller';
 
@@ -9,7 +9,7 @@ export class LoggerConsoleController implements LoggerController {
     return new Date().toISOString();
   }
 
-  async addRequestLog(req: Request) {
+  async addRequestLog(req: Request, res: Response) {
     const requestType = req.method;
     const path = req.path;
     const remoteAddress =

@@ -6,6 +6,7 @@ import { getAuth } from 'firebase-admin/auth';
 
 import { AuthModel } from '@/src/models/auth_model';
 import { isRecord } from '@/src/utils/type_guards';
+
 @Injectable()
 class AuthCheckMiddlware implements NestMiddleware {
   async use(req: Request, res: Response, next: NextFunction) {

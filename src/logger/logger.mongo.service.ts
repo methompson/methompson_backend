@@ -1,5 +1,5 @@
 import { ConfigService } from '@nestjs/config';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { Collection, Document } from 'mongodb';
 
 import { LoggerController } from '@/src/logger/logger.controller';
@@ -33,19 +33,15 @@ export class MongoLoggerController implements LoggerController {
       validator: {
         $jsonSchema: {
           bsonType: 'object',
-          required: ['date', 'message', 'type'],
+          required: ['date', 'logType'],
           properties: {
             date: {
               bsonType: 'date',
               description: 'date is required and must be a Date',
             },
-            MessageEvent: {
+            logType: {
               bsonType: 'string',
-              description: 'message is required and must be a String',
-            },
-            type: {
-              bsonType: 'string',
-              description: 'type is required and must be a String',
+              description: 'logType is required and must be a String',
             },
           },
         },
@@ -61,26 +57,36 @@ export class MongoLoggerController implements LoggerController {
     );
   }
 
-  protected async addLogToDB(msg: string, type: string, date?: Date) {
+  protected async addLogToDB(msg: string, logType: string, date?: Date) {
     const _date = date ?? new Date();
     const loggerCollection = await this.loggerCollection;
-    loggerCollection.insertOne({
+    await loggerCollection.insertOne({
       date: _date,
       message: msg,
-      type: type,
+      logType,
     });
   }
 
-  async addRequestLog(req: Request) {
-    const requestType = req.method;
+  async addRequestLog(req: Request, res: Response) {
+    const method = req.method;
     const path = req.path;
     const remoteAddress =
       req.header['x-forwarded-for'] ?? req.socket.remoteAddress;
 
-    await this.addLogToDB(
-      `${remoteAddress} - ${requestType} - ${path}`,
-      'request',
-    );
+    const _date = new Date();
+    const loggerCollection = await this.loggerCollection;
+    const statusCode = res.statusCode ?? '';
+
+    await loggerCollection.insertOne({
+      date: _date,
+      logType: 'request',
+      method,
+      remoteAddress,
+      path,
+      statusCode,
+    });
+
+    // await this.addLogToDB(`${remoteAddress} - ${method} - ${path}`, 'request');
   }
 
   async addLog(msg: unknown) {

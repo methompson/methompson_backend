@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 
 import { LoggerController } from './logger.controller';
 
@@ -7,11 +7,11 @@ import { LoggerController } from './logger.controller';
 export class LoggerService {
   constructor(protected loggerControllers: LoggerController[]) {}
 
-  async addRequestLog(req: Request): Promise<void> {
+  async addRequestLog(req: Request, res: Response): Promise<void> {
     const promises: Promise<void>[] = [];
 
     for (const logger of this.loggerControllers) {
-      promises.push(logger.addRequestLog(req));
+      promises.push(logger.addRequestLog(req, res));
     }
 
     try {

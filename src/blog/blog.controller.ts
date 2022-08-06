@@ -7,6 +7,7 @@ import {
   Post,
   Req,
   Res,
+  UseInterceptors,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 
@@ -16,7 +17,9 @@ import { isString } from '@/src/utils/type_guards';
 
 import { BlogService, BlogPostRequestOutput } from '@/src/blog/blog.service';
 import { LoggerService } from '@/src/logger/logger.service';
+import { RequestLogInterceptor } from '../middleware/request_log.interceptor';
 
+@UseInterceptors(RequestLogInterceptor)
 @Controller({ path: 'api/blog' })
 export class BlogController {
   constructor(
@@ -49,7 +52,9 @@ export class BlogController {
     }
 
     try {
-      return this.blogService.getPosts(page, pagination);
+      const posts = this.blogService.getPosts(page, pagination);
+      console.log('Sending Posts');
+      return posts;
     } catch (e) {
       this.loggerService.addErrorLog(e);
       throw e;
