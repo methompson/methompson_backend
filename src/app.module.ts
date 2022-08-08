@@ -1,5 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 
 import { mongodbConfiguration } from '@/src/config/mongodb_configuration';
 import { blogConfiguration } from '@/src/config/blog_configuration';
@@ -23,6 +24,7 @@ import { authCheckMiddlewareFactory } from '@/src/middleware/auth_check.middlewa
         authConfiguration,
       ],
     }),
+    ScheduleModule.forRoot(),
   ],
 })
 export class AppModule implements NestModule {

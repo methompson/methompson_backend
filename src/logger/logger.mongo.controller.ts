@@ -97,6 +97,17 @@ export class MongoLoggerController implements LoggerController {
     return this.addLogToDB(`${msg}`, 'error');
   }
 
+  async cycleLogs() {
+    const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+
+    const col = await this.loggerCollection;
+    col.deleteMany({
+      date: {
+        $lte: twoWeeksAgo,
+      },
+    });
+  }
+
   async addWarningLog(msg: unknown) {
     return this.addLogToDB(`${msg}`, 'warning');
   }

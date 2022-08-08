@@ -50,4 +50,18 @@ export class LoggerService {
 
     await Promise.all(promises);
   }
+
+  async cycleLogs() {
+    const promises: Promise<void>[] = [];
+
+    for (const logger of this.loggerControllers) {
+      promises.push(logger.cycleLogs());
+    }
+
+    try {
+      await Promise.all(promises);
+    } catch (e) {
+      console.error(e);
+    }
+  }
 }

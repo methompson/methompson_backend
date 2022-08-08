@@ -8,4 +8,6 @@ export abstract class LoggerController {
   abstract addErrorLog(msg: unknown): Promise<void>;
 
   abstract addWarningLog(msg: unknown): Promise<void>;
+
+  abstract cycleLogs(): Promise<void>;
 }

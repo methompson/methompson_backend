@@ -31,4 +31,6 @@ export class LoggerConsoleController implements LoggerController {
   async addWarningLog(msg: unknown) {
     console.warn(`${this.isoTime} - addWarningLog - ${msg}`);
   }
+
+  async cycleLogs() {}
 }
