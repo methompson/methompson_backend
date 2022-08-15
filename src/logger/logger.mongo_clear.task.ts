@@ -8,7 +8,7 @@ export class LoggerMongoClearTaskService {
     @Inject('LOGGER_SERVICE') protected readonly loggerService: LoggerService,
   ) {}
 
-  @Cron('45 * * * * *')
+  @Cron('0 0 * * * *')
   async handleCron() {
     console.log('Cycling Logs');
 

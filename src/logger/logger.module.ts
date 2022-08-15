@@ -23,7 +23,10 @@ const loggerServiceFactory = {
       );
     }
 
-    loggerServices.push(await FileLoggerController.init());
+    if (configService.get('file_logging')) {
+      console.log('Adding File Logging');
+      loggerServices.push(await FileLoggerController.init());
+    }
 
     return new LoggerService(loggerServices);
   },

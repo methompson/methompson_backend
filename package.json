@@ -42,11 +42,12 @@
     "uuid": "^8.3.2"
   },
   "devDependencies": {
+    "@babel/plugin-proposal-decorators": "^7.18.10",
     "@babel/preset-env": "^7.16.11",
     "@babel/preset-typescript": "^7.16.7",
     "@nestjs/cli": "^8.0.0",
     "@nestjs/schematics": "^8.0.0",
-    "@nestjs/testing": "^8.0.0",
+    "@nestjs/testing": "^8.4.7",
     "@swc/core": "^1.2.162",
     "@types/cron": "^2.0.0",
     "@types/express": "^4.17.13",

@@ -2,7 +2,6 @@ import * as fsPromises from 'fs/promises';
 import { FileHandle } from 'fs/promises';
 import { Stats } from 'fs';
 
-import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
 
 import { LoggerController } from '@/src/logger/logger.controller';
@@ -12,6 +11,8 @@ const FILE_NAME = 'blog.log';
 const TOTAL_OLD_LOGS = 5;
 const MAX_LOG_SIZE_IN_BYTES = 512 * 1024;
 
+// TODO look into a writestream and queue for writing logs
+
 export class FileLoggerController implements LoggerController {
   constructor(protected fileHandle: FileHandle) {}
 
@@ -19,7 +20,7 @@ export class FileLoggerController implements LoggerController {
     return new Date().toISOString();
   }
 
-  async addRequestLog(req: Request, res: Response) {
+  async addRequestLog(req: Request, _res: Response) {
     const requestType = req.method;
     const path = req.path;
     const remoteAddress =
@@ -46,18 +47,25 @@ export class FileLoggerController implements LoggerController {
     const basePath = `${FILE_PATH}/${FILE_NAME}`;
     const fileStat = await FileLoggerController.getFileStat(basePath);
 
-    if (fileStat !== null) {
-      // Size in bytes
-      const size = fileStat.size;
-      if (size < MAX_LOG_SIZE_IN_BYTES) {
-        return;
-      }
+    // If fileStat is null, we close the old fileHandle (what's it pointing to?)
+    // then we create a new one and go from there.
+    if (fileStat === null) {
+      this.fileHandle.close();
+      this.fileHandle = await FileLoggerController.makeFileHandle();
+      return;
     }
 
+    // Size in bytes
+    const size = fileStat.size;
+    if (size < MAX_LOG_SIZE_IN_BYTES) {
+      return;
+    }
     // console.log(fileStat);
 
+    // Close the current file handle
     this.fileHandle.close();
 
+    // We cycle through all the old logs and
     for (let i = TOTAL_OLD_LOGS - 1; i > 0; i--) {
       const filePath = `${basePath}.${i}`;
 
@@ -87,11 +95,9 @@ export class FileLoggerController implements LoggerController {
   }
 
   static async makeFileHandle(): Promise<FileHandle> {
-    try {
-      await fsPromises.mkdir(FILE_PATH, {
-        recursive: true,
-      });
-    } catch (e) {}
+    await fsPromises.mkdir(FILE_PATH, {
+      recursive: true,
+    });
 
     const filePath = `${FILE_PATH}/${FILE_NAME}`;
 

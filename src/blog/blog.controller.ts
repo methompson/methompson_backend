@@ -21,7 +21,7 @@ import { RequestLogInterceptor } from '../middleware/request_log.interceptor';
 
 @UseInterceptors(RequestLogInterceptor)
 @Controller({ path: 'api/blog' })
-export class BlogController {
+class BlogController {
   constructor(
     @Inject('BLOG_SERVICE')
     private readonly blogService: BlogService,
@@ -52,9 +52,11 @@ export class BlogController {
     }
 
     try {
-      return this.blogService.getPosts(page, pagination);
+      return await this.blogService.getPosts(page, pagination);
+      // return posts;
     } catch (e) {
-      this.loggerService.addErrorLog(e);
+      console.log('getPosts threw');
+      await this.loggerService.addErrorLog(e);
       throw e;
     }
   }
@@ -110,3 +112,5 @@ export class BlogController {
     return blogPost.toJSON();
   }
 }
+
+export { BlogController };
