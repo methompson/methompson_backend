@@ -1,10 +1,11 @@
 import { Request, Response } from 'express';
+import { HttpException, HttpStatus } from '@nestjs/common';
 
 import { BlogController } from '@/src/blog/blog.controller';
-import { BlogService, BlogPostRequestOutput } from '@/src/blog/blog.service';
 import { InMemoryBlogService } from '@/src/blog/blog.memory.service';
 import { LoggerService } from '@/src/logger/logger.service';
 import { BlogPost } from '@/src/models/blog_post_model';
+import { InvalidInputError } from '@/src/errors/invalid_input_error';
 
 // jest.mock('express');
 
@@ -173,7 +174,286 @@ describe('BlogController', () => {
     });
   });
 
-  describe('findBySlug', () => {});
+  describe('findBySlug', () => {
+    test('Returns the value returned by findBySlug', async () => {
+      const blogService = new InMemoryBlogService();
+      const loggerService = new LoggerService([]);
 
-  describe('addNewPost', () => {});
+      const controller = new BlogController(blogService, loggerService);
+
+      const slug = 'slug';
+
+      const req = {
+        params: {
+          slug,
+        },
+      } as unknown as Request;
+
+      const findBySlugSpy = jest.spyOn(blogService, 'findBySlug');
+      findBySlugSpy.mockImplementationOnce(async () => post1);
+
+      const value = await controller.findBySlug(req);
+
+      expect(value.toJSON()).toStrictEqual(post1.toJSON());
+
+      expect(findBySlugSpy).toHaveBeenCalledTimes(1);
+      expect(findBySlugSpy).toHaveBeenCalledWith(slug);
+    });
+
+    test('throws an error if no slug is provided', async () => {
+      const blogService = new InMemoryBlogService();
+      const loggerService = new LoggerService([]);
+
+      const controller = new BlogController(blogService, loggerService);
+
+      const req = {
+        params: {},
+      } as unknown as Request;
+
+      expect(() => controller.findBySlug(req)).rejects.toThrow(
+        new HttpException('Invalid Slug', HttpStatus.BAD_REQUEST),
+      );
+    });
+
+    test('throws an error if the slug is an empty string', async () => {
+      const blogService = new InMemoryBlogService();
+      const loggerService = new LoggerService([]);
+
+      const controller = new BlogController(blogService, loggerService);
+
+      const req = {
+        params: {
+          slug: '',
+        },
+      } as unknown as Request;
+
+      expect(() => controller.findBySlug(req)).rejects.toThrow(
+        new HttpException('Invalid Slug', HttpStatus.BAD_REQUEST),
+      );
+    });
+
+    test('Does not run findBySlug if slug is invalid', async () => {
+      expect.assertions(1);
+
+      const blogService = new InMemoryBlogService();
+      const loggerService = new LoggerService([]);
+
+      const controller = new BlogController(blogService, loggerService);
+
+      const req = {
+        params: {},
+      } as unknown as Request;
+
+      const findBySlugSpy = jest.spyOn(blogService, 'findBySlug');
+      findBySlugSpy.mockImplementationOnce(async () => post1);
+
+      try {
+        await controller.findBySlug(req);
+      } catch (e) {
+        expect(findBySlugSpy).not.toHaveBeenCalled();
+      }
+    });
+
+    test('Throws an error if findBySlug throws an error', async () => {
+      const blogService = new InMemoryBlogService();
+      const loggerService = new LoggerService([]);
+
+      const controller = new BlogController(blogService, loggerService);
+
+      const req = {
+        params: {
+          slug: 'slug',
+        },
+      } as unknown as Request;
+
+      const findBySlugSpy = jest.spyOn(blogService, 'findBySlug');
+      findBySlugSpy.mockImplementationOnce(async () => {
+        throw new Error('Test Error');
+      });
+
+      expect(() => controller.findBySlug(req)).rejects.toThrow(
+        new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+      );
+    });
+
+    test('Throws a specific error if findBySlug throws an InvalidInputError', async () => {
+      const blogService = new InMemoryBlogService();
+      const loggerService = new LoggerService([]);
+
+      const controller = new BlogController(blogService, loggerService);
+
+      const req = {
+        params: {
+          slug: 'slug',
+        },
+      } as unknown as Request;
+
+      const findBySlugSpy = jest.spyOn(blogService, 'findBySlug');
+      findBySlugSpy.mockImplementationOnce(async () => {
+        throw new InvalidInputError('Test Error');
+      });
+
+      expect(() => controller.findBySlug(req)).rejects.toThrow(
+        new HttpException('No Blog Post', HttpStatus.NOT_FOUND),
+      );
+    });
+  });
+
+  describe('addNewPost', () => {
+    test('Returns a blog post returned by addBlogPost', async () => {
+      const blogService = new InMemoryBlogService();
+      const loggerService = new LoggerService([]);
+
+      const controller = new BlogController(blogService, loggerService);
+
+      const postData = post1.toJSON();
+
+      const req = {
+        body: postData,
+      } as unknown as Request;
+
+      const res = {
+        locals: { auth: { authorized: true } },
+      } as unknown as Response;
+
+      const addBlogPostSpy = jest.spyOn(blogService, 'addBlogPost');
+      addBlogPostSpy.mockImplementationOnce(async () => post1);
+
+      const value = await controller.addNewPost(req, res);
+
+      expect(value.toJSON()).toStrictEqual(post1.toJSON());
+
+      expect(addBlogPostSpy).toHaveBeenCalledTimes(1);
+      expect(addBlogPostSpy).toHaveBeenCalledWith(postData);
+    });
+
+    test('Throws an error if the user is not authorized', async () => {
+      expect.assertions(2);
+
+      const blogService = new InMemoryBlogService();
+      const loggerService = new LoggerService([]);
+
+      const controller = new BlogController(blogService, loggerService);
+
+      const postData = post1.toJSON();
+
+      const req = {
+        body: postData,
+      } as unknown as Request;
+
+      const res = {
+        locals: { auth: { authorized: false } },
+      } as unknown as Response;
+
+      const addBlogPostSpy = jest.spyOn(blogService, 'addBlogPost');
+
+      try {
+        await controller.addNewPost(req, res);
+      } catch (e) {
+        expect(e).toStrictEqual(
+          new HttpException('Not Authorized', HttpStatus.UNAUTHORIZED),
+        );
+        expect(addBlogPostSpy).not.toHaveBeenCalled();
+      }
+    });
+
+    test('Throws an error if authorized is not part of the response', async () => {
+      expect.assertions(2);
+
+      const blogService = new InMemoryBlogService();
+      const loggerService = new LoggerService([]);
+
+      const controller = new BlogController(blogService, loggerService);
+
+      const postData = post1.toJSON();
+
+      const req = {
+        body: postData,
+      } as unknown as Request;
+
+      const res = {
+        locals: { auth: { authorized: false } },
+      } as unknown as Response;
+
+      const addBlogPostSpy = jest.spyOn(blogService, 'addBlogPost');
+
+      try {
+        await controller.addNewPost(req, res);
+      } catch (e) {
+        expect(e).toStrictEqual(
+          new HttpException('Not Authorized', HttpStatus.UNAUTHORIZED),
+        );
+        expect(addBlogPostSpy).not.toHaveBeenCalled();
+      }
+    });
+
+    test('Throws a specific error if addBlogPost throws an InvalidInputError', async () => {
+      expect.assertions(2);
+
+      const blogService = new InMemoryBlogService();
+      const loggerService = new LoggerService([]);
+
+      const controller = new BlogController(blogService, loggerService);
+
+      const postData = post1.toJSON();
+
+      const req = {
+        body: postData,
+      } as unknown as Request;
+
+      const res = {
+        locals: { auth: { authorized: true } },
+      } as unknown as Response;
+
+      const addBlogPostSpy = jest.spyOn(blogService, 'addBlogPost');
+      addBlogPostSpy.mockImplementationOnce(() => {
+        throw new InvalidInputError('');
+      });
+
+      try {
+        await controller.addNewPost(req, res);
+      } catch (e) {
+        expect(e).toStrictEqual(
+          new HttpException(
+            'Invalid New Blog Post Input',
+            HttpStatus.BAD_REQUEST,
+          ),
+        );
+        expect(addBlogPostSpy).toHaveBeenCalledTimes(1);
+      }
+    });
+
+    test('Throws an error if addBlogPost throws an error', async () => {
+      expect.assertions(2);
+
+      const blogService = new InMemoryBlogService();
+      const loggerService = new LoggerService([]);
+
+      const controller = new BlogController(blogService, loggerService);
+
+      const postData = post1.toJSON();
+
+      const req = {
+        body: postData,
+      } as unknown as Request;
+
+      const res = {
+        locals: { auth: { authorized: true } },
+      } as unknown as Response;
+
+      const addBlogPostSpy = jest.spyOn(blogService, 'addBlogPost');
+      addBlogPostSpy.mockImplementationOnce(() => {
+        throw new Error('');
+      });
+
+      try {
+        await controller.addNewPost(req, res);
+      } catch (e) {
+        expect(e).toStrictEqual(
+          new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+        );
+        expect(addBlogPostSpy).toHaveBeenCalledTimes(1);
+      }
+    });
+  });
 });

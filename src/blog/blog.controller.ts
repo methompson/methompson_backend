@@ -21,7 +21,7 @@ import { RequestLogInterceptor } from '../middleware/request_log.interceptor';
 
 @UseInterceptors(RequestLogInterceptor)
 @Controller({ path: 'api/blog' })
-class BlogController {
+export class BlogController {
   constructor(
     @Inject('BLOG_SERVICE')
     private readonly blogService: BlogService,
@@ -53,9 +53,7 @@ class BlogController {
 
     try {
       return await this.blogService.getPosts(page, pagination);
-      // return posts;
     } catch (e) {
-      console.log('getPosts threw');
       await this.loggerService.addErrorLog(e);
       throw e;
     }
@@ -72,7 +70,6 @@ class BlogController {
     try {
       return await this.blogService.findBySlug(slug);
     } catch (e) {
-      console.error('Caught');
       if (e instanceof InvalidInputError) {
         throw new HttpException('No Blog Post', HttpStatus.NOT_FOUND);
       }
@@ -87,15 +84,13 @@ class BlogController {
   async addNewPost(
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
-  ): Promise<Record<string, unknown>> {
+  ): Promise<BlogPost> {
     if (!(response.locals?.auth?.authorized ?? false)) {
       throw new HttpException('Not Authorized', HttpStatus.UNAUTHORIZED);
     }
 
-    let blogPost: BlogPost;
-
     try {
-      blogPost = await this.blogService.addBlogPost(request.body);
+      return await this.blogService.addBlogPost(request.body);
     } catch (e) {
       if (e instanceof InvalidInputError) {
         throw new HttpException(
@@ -108,9 +103,5 @@ class BlogController {
 
       throw new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
     }
-
-    return blogPost.toJSON();
   }
 }
-
-export { BlogController };
