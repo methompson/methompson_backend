@@ -96,7 +96,7 @@ module.exports = {
       }
     ],
     'max-len': [
-      1,
+      "warn",
       {
         'ignoreStrings': true,
         'code': 120,

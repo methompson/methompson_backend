@@ -7,8 +7,6 @@ import { LoggerService } from '@/src/logger/logger.service';
 import { BlogPost } from '@/src/models/blog_post_model';
 import { InvalidInputError } from '@/src/errors/invalid_input_error';
 
-// jest.mock('express');
-
 const post1 = new BlogPost(
   'id1',
   'title1',
@@ -30,6 +28,9 @@ const post2 = new BlogPost(
   new Date('2022-08-10'),
   {},
 );
+
+const errorSpy = jest.spyOn(console, 'error');
+errorSpy.mockImplementation(() => {});
 
 describe('BlogController', () => {
   describe('getPosts', () => {
