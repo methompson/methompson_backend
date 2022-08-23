@@ -8,6 +8,12 @@ import {
   ImageResizeOptions,
   UploadedFile,
 } from '@/src/image/image_data_types';
+import { isNumber } from '../utils/type_guards';
+
+interface ImageDimensions {
+  x: number;
+  y: number;
+}
 
 export class ImageWriter {
   constructor(private savedImagePath: string) {}
@@ -17,17 +23,31 @@ export class ImageWriter {
       throw new HttpException('No Image File Provided', HttpStatus.BAD_REQUEST);
     }
 
-    const { fields, imageFiles } = parsedData;
+    const { ops, imageFiles } = parsedData;
+
+    const opsFinal = {
+      thumb: {
+        identifier: 'thumb',
+        resize: true,
+        maxSize: 128,
+        stripMeta: true,
+      },
+      ...ops,
+    };
 
     const conversionPromises = imageFiles.map(async (imageFile) => {
       const newFilename = uuidv4();
-      const resizeOptions = ImageResizeOptions.fromWebFields(
-        newFilename,
-        fields,
-      );
+      const promises: Promise<unknown>[] = [];
 
-      await this.makeAndRunResizeScript(imageFile, resizeOptions);
-      await this.makeAndRunThumbnailScript(imageFile, newFilename);
+      Object.keys(opsFinal).forEach((key) => {
+        const op = opsFinal[key];
+        const resizeOptions = ImageResizeOptions.fromWebFields(newFilename, op);
+
+        promises.push(this.makeAndRunResizeScript(imageFile, resizeOptions));
+      });
+
+      await Promise.all(promises);
+
       await this.makeAndRunDeleteScript(imageFile);
     });
 
@@ -45,10 +65,10 @@ export class ImageWriter {
     imageFile: UploadedFile,
     resizeOptions: ImageResizeOptions,
   ) {
-    const script = this.buildResizeScript(imageFile, resizeOptions);
+    const result = this.buildResizeScript(imageFile, resizeOptions);
 
     await new Promise((resolve, reject) => {
-      exec(script, (err, _stdout, stderr) => {
+      exec(result.script, (err, _stdout, stderr) => {
         if (err) {
           reject(err);
         }
@@ -60,27 +80,39 @@ export class ImageWriter {
         resolve(null);
       });
     });
+
+    const dimensions = await this.getFileDimensions(result.newFilepath);
+    console.log(result.newFilename, `${dimensions.x}x${dimensions.y}`);
   }
 
-  /**
-   * Takes a UploadedFile object and file name and constructs an ImageResizeOptions
-   * object to make a thumbnail image.
-   *
-   * @param {UploadedFile} imageFile image file data that's used for path and name
-   * @param {string} newFilename the new file name that will be used for conversions
-   * @returns {Promise} Resolves when the resize script is resolved
-   */
-  async makeAndRunThumbnailScript(
-    imageFile: UploadedFile,
-    newFilename: string,
-  ) {
-    const thumbResizeOptions = new ImageResizeOptions(newFilename + '_thumb', {
-      resize: true,
-      maxSize: 128,
-      stripMeta: true,
-    });
+  async getFileDimensions(filepath: string): Promise<ImageDimensions> {
+    const script = `magick identify -format "%w,%h" ${filepath}`;
 
-    return this.makeAndRunResizeScript(imageFile, thumbResizeOptions);
+    return await new Promise((resolve, reject) => {
+      exec(script, (err, stdout, stderr) => {
+        if (err || stderr) {
+          reject(new Error('image size script failed'));
+        }
+
+        const split = stdout.split(',');
+
+        if (split.length !== 2) {
+          reject(new Error('Image Size returned invalid value'));
+        }
+
+        const x = parseInt(split[0], 10);
+        const y = parseInt(split[1], 10);
+
+        if (Number.isNaN(x) || Number.isNaN(y)) {
+          reject(new Error('Image Size returned invalid value'));
+        }
+
+        resolve({
+          x,
+          y,
+        });
+      });
+    });
   }
 
   /**
@@ -110,22 +142,20 @@ export class ImageWriter {
    * @param {ImageResizeOptions} options the options used to construct an ImageMagick shell script
    * @returns {string} the ImageMagick shell script meant to run in a POSIX shell
    */
-  buildResizeScript(
-    imageFile: UploadedFile,
-    options: ImageResizeOptions,
-  ): string {
-    // console.log('options', options);
+  buildResizeScript(imageFile: UploadedFile, options: ImageResizeOptions) {
+    const { filepath } = imageFile;
+    const newFilename = this.getNewFileName(imageFile, options);
+    const newFilepath = `${this.savedImagePath}/${newFilename}`;
 
-    const filepath = imageFile.filepath;
-
-    // If we get here, we should just move the file from the original location
+    // If we get here, we should just copy the file from the original location
     // to the new location.
     if (options.doNotConvert) {
-      return `mv ${filepath} ${this.savedImagePath}/${options.newFilename}.${imageFile.nameComponents}`;
+      return {
+        newFilename,
+        newFilepath,
+        script: `cp ${filepath} ${newFilepath}`,
+      };
     }
-
-    const newFileExtension = options.newFormat ?? 'jpg';
-    const newFilename = options.newFilename;
 
     let script = `magick ${filepath}`;
     script += ' -quality 90';
@@ -139,9 +169,18 @@ export class ImageWriter {
       script += ' -strip';
     }
 
-    script += ` "${this.savedImagePath}/${newFilename}.${newFileExtension}"`;
+    script += ` "${newFilepath}"`;
 
-    return script;
+    return { newFilename, newFilepath, script };
+  }
+
+  getNewFileName(imageFile: UploadedFile, options: ImageResizeOptions) {
+    let ext = options.newFileNameInfo.ext;
+    if (options.doNotConvert) {
+      ext = imageFile.nameComponents.extension;
+    }
+
+    return `${options.newFileNameInfo.name}.${ext}`;
   }
 
   /**

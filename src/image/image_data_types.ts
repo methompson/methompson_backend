@@ -1,6 +1,6 @@
 import formidable from 'formidable';
 
-import { isString } from '@/src/utils/type_guards';
+import { isNumber, isString } from '@/src/utils/type_guards';
 
 interface FilenameComponents {
   name: string;
@@ -67,7 +67,7 @@ export class UploadedFile {
 
 export type ParsedFilesAndFields = {
   imageFiles: UploadedFile[];
-  fields: Record<string, string | string[]>;
+  ops: Record<string, Record<string, unknown>>;
 };
 
 export enum ImageType {
@@ -79,9 +79,10 @@ export enum ImageType {
   tiff = 'tiff',
 }
 
-interface ResizeOptionsInterface {
+interface ImageResizeOptionsInterface {
+  identifier?: string;
   newFormat?: ImageType | null;
-  doNotConvert?: boolean;
+  retainImage?: boolean;
   resize?: boolean;
   stripMeta?: boolean;
   maxSize?: number | null;
@@ -96,9 +97,9 @@ interface ResizeOptionsInterface {
  * - Remove Meta Data
  */
 export class ImageResizeOptions {
-  // doNotConvert should supersede any process. When set to true, the rest of the
+  // retainImage should supersede any process. When set to true, the rest of the
   // functions should be ignored and no script should be run
-  protected _doNotConvert: boolean;
+  protected _retainImage: boolean;
 
   // If the user wants to convert to a specific image format (e.g. png), they can
   // use this value to do that. Otherwise, it will default to jpg.
@@ -116,9 +117,13 @@ export class ImageResizeOptions {
   // whatever value it wants.
   protected _maxSize: number | null;
 
-  constructor(protected _newFilename: string, options: ResizeOptionsInterface) {
+  constructor(
+    protected _identifier: string,
+    protected _newFilename: string,
+    options: ImageResizeOptionsInterface,
+  ) {
     this._newFormat = options.newFormat ?? null;
-    this._doNotConvert = options.doNotConvert ?? false;
+    this._retainImage = options.retainImage ?? false;
     this._stripMeta = options.stripMeta ?? false;
     this._resize = options.resize ?? false;
     this._maxSize = options.maxSize ?? null;
@@ -128,7 +133,7 @@ export class ImageResizeOptions {
     return this._newFilename;
   }
   get doNotConvert() {
-    return this._doNotConvert;
+    return this._retainImage;
   }
   get newFormat() {
     return this._newFormat;
@@ -142,42 +147,61 @@ export class ImageResizeOptions {
   get maxSize() {
     return this._maxSize;
   }
+  get identifier() {
+    return this._identifier;
+  }
+
+  get newFileNameInfo() {
+    const ext = this.newFormat ?? 'jpg';
+    let name = this.newFilename;
+
+    if (this.identifier.length > 0) {
+      name += '_' + this.identifier;
+    }
+
+    return { ext, name };
+  }
 
   static fromWebFields(
     newFilename: string,
-    fields: formidable.Fields,
+    op: Record<string, unknown>,
   ): ImageResizeOptions {
-    const options: ResizeOptionsInterface = {};
+    const options: ImageResizeOptionsInterface = {};
+
+    const identifier = isString(op?.identifier) ? op.identifier : '';
 
     // We set the doNotConvert first.
-    options.doNotConvert = fields?.doNotConvert === 'true';
+    options.retainImage =
+      op?.retainImage === 'true' || op?.retainImage === true;
 
     // If it's true, we can short circuit the entire process.
-    if (options.doNotConvert) {
-      return new ImageResizeOptions(newFilename, options);
+    if (options.retainImage) {
+      return new ImageResizeOptions(identifier, newFilename, options);
     }
 
     // If we get a maxSize value, we have to parse it before adding it to options.
-    if (isString(fields?.maxSize)) {
-      const maxSize = parseInt(fields?.maxSize, 10);
+    if (isString(op?.maxSize)) {
+      const maxSize = parseInt(op?.maxSize, 10);
       if (!Number.isNaN(maxSize)) {
         options.maxSize = maxSize;
       }
+    } else if (isNumber(op?.maxSize)) {
+      options.maxSize = op.maxSize;
     }
 
     // We'll get the new format from the string, if it exists. Otherwise, it's null
     options.newFormat = ImageResizeOptions.getImageTypeFromString(
-      fields?.newFormat,
+      op?.newFormat,
     );
 
     // These options are just booleans. We can use comparisons to string to maintain
     // default values. stripMeta is true only if the string is 'true'. This allows
     // us to easily default to false. Resize is true in all situations, unless
     // resize is set to 'false'.
-    options.stripMeta = fields?.stripMeta === 'true';
-    options.resize = fields?.resize !== 'false';
+    options.stripMeta = op?.stripMeta === 'true';
+    options.resize = op?.resize !== 'false';
 
-    return new ImageResizeOptions(newFilename, options);
+    return new ImageResizeOptions(identifier, newFilename, options);
   }
 
   static getImageTypeFromString(type: unknown): ImageType | null {
@@ -203,4 +227,21 @@ export class ImageResizeOptions {
 
     return null;
   }
+}
+
+interface Resolution {
+  x: number;
+  y: number;
+}
+
+interface SavedImage {
+  filename: string;
+  originalName: string;
+  resolution: Resolution;
+  identifier: string;
+}
+
+export interface SavedImageGroup {
+  images: Record<string, SavedImage>;
+  filename: string;
 }

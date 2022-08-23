@@ -1,8 +1,8 @@
 function isRecord(value: unknown): value is Record<string, unknown> {
-  const val = value as Record<string, unknown>;
-
   return (
-    !isNullOrUndefined(value) && typeof val === 'object' && !Array.isArray(val)
+    !isNullOrUndefined(value) &&
+    typeof value === 'object' &&
+    !Array.isArray(value)
   );
 }
 

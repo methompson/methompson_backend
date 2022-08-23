@@ -90,7 +90,7 @@ describe('ImageWriter', () => {
       expect(makeResizeSpy).toHaveBeenCalledTimes(1);
       expect(makeResizeSpy).toHaveBeenCalledWith(
         image1,
-        ImageResizeOptions.fromWebFields(newFilename1, {}),
+        ImageResizeOptions.fromWebFields('web', newFilename1, {}),
       );
       expect(makeThumbnailSpy).toHaveBeenCalledTimes(1);
       expect(makeThumbnailSpy).toHaveBeenCalledWith(image1, newFilename1);
@@ -124,12 +124,12 @@ describe('ImageWriter', () => {
       expect(makeResizeSpy).toHaveBeenNthCalledWith(
         1,
         image1,
-        ImageResizeOptions.fromWebFields(newFilename1, {}),
+        ImageResizeOptions.fromWebFields('web', newFilename1, {}),
       );
       expect(makeResizeSpy).toHaveBeenNthCalledWith(
         2,
         image2,
-        ImageResizeOptions.fromWebFields(newFilename2, {}),
+        ImageResizeOptions.fromWebFields('web', newFilename2, {}),
       );
       expect(makeThumbnailSpy).toHaveBeenCalledTimes(2);
       expect(makeThumbnailSpy).toHaveBeenNthCalledWith(1, image1, newFilename1);
@@ -175,7 +175,7 @@ describe('ImageWriter', () => {
       const buildResizeScriptSpy = jest.spyOn(ic, 'buildResizeScript');
       buildResizeScriptSpy.mockImplementation((_, __) => script);
 
-      const opts = new ImageResizeOptions(image1.originalFilename, {});
+      const opts = new ImageResizeOptions('web', image1.originalFilename, {});
 
       ic.makeAndRunResizeScript(image1, opts);
 
@@ -187,7 +187,7 @@ describe('ImageWriter', () => {
       const ic = new ImageWriter('');
       const buildResizeScriptSpy = jest.spyOn(ic, 'buildResizeScript');
 
-      const opts = new ImageResizeOptions(newFilename1, {});
+      const opts = new ImageResizeOptions('web', newFilename1, {});
 
       ic.makeAndRunResizeScript(image1, opts);
 
@@ -203,7 +203,7 @@ describe('ImageWriter', () => {
       const buildResizeScriptSpy = jest.spyOn(ic, 'buildResizeScript');
       buildResizeScriptSpy.mockImplementation((_, __) => script);
 
-      const opts = new ImageResizeOptions(image1.originalFilename, {});
+      const opts = new ImageResizeOptions('web', image1.originalFilename, {});
 
       exec.mockImplementation((_, result: ExecCallback) => {
         result(new Error(testError), '', '');
@@ -226,7 +226,7 @@ describe('ImageWriter', () => {
       const buildResizeScriptSpy = jest.spyOn(ic, 'buildResizeScript');
       buildResizeScriptSpy.mockImplementation((_, __) => script);
 
-      const opts = new ImageResizeOptions(image1.originalFilename, {});
+      const opts = new ImageResizeOptions('web', image1.originalFilename, {});
 
       exec.mockImplementation((_, result: ExecCallback) => {
         result(null, '', testError);
