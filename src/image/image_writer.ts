@@ -7,51 +7,83 @@ import {
   ParsedFilesAndFields,
   ImageResizeOptions,
   UploadedFile,
-} from '@/src/image/image_data_types';
-import { isNumber } from '../utils/type_guards';
-
-interface ImageDimensions {
-  x: number;
-  y: number;
-}
+  ImageDimensions,
+  FileDetailsInterface,
+  NewImageDetailsInterface,
+} from '@/src/models/image_models';
 
 export class ImageWriter {
   constructor(private savedImagePath: string) {}
 
-  async convertImages(parsedData: ParsedFilesAndFields) {
+  async convertImages(
+    parsedData: ParsedFilesAndFields,
+  ): Promise<NewImageDetailsInterface[]> {
     if (parsedData.imageFiles.length == 0) {
       throw new HttpException('No Image File Provided', HttpStatus.BAD_REQUEST);
     }
 
+    // We extract all of the details from the arguments
     const { ops, imageFiles } = parsedData;
 
+    // otherOps are the default operations that we utilize to make sure that
+    // things run as intend. If no operations are provided by the user, we
+    // add a default, empty operation here.
+    const otherOps = {};
+    if (Object.keys(ops).length === 0) {
+      otherOps[''] = {};
+    }
+
+    // We also add a default thumb operation here. If the user supersedes the
+    // thumb operation, that's fine.
+    otherOps['thumb'] = {
+      identifier: 'thumb',
+      resize: true,
+      maxSize: 128,
+      stripMeta: true,
+    };
+
+    // opsFinal represent the final list of operations that we will use to
+    // convert images.
     const opsFinal = {
-      thumb: {
-        identifier: 'thumb',
-        resize: true,
-        maxSize: 128,
-        stripMeta: true,
-      },
+      ...otherOps,
       ...ops,
     };
 
-    const conversionPromises = imageFiles.map(async (imageFile) => {
-      const newFilename = uuidv4();
-      const promises: Promise<unknown>[] = [];
+    // This date is used for adding metadata to the eventual return data for this function
+    const now = new Date();
 
-      Object.keys(opsFinal).forEach((key) => {
-        const op = opsFinal[key];
-        const resizeOptions = ImageResizeOptions.fromWebFields(newFilename, op);
+    // the conversionPromises variable holds the end result for all of the conversions
+    // that we're executing. We map the image files themselves, and perform all image
+    // ops within the map function
+    const conversionPromises: Promise<NewImageDetailsInterface>[] =
+      imageFiles.map(async (imageFile) => {
+        const newFilename = uuidv4();
+        const promises: Promise<FileDetailsInterface>[] = [];
 
-        promises.push(this.makeAndRunResizeScript(imageFile, resizeOptions));
+        Object.keys(opsFinal).forEach((key) => {
+          const op = opsFinal[key];
+          const resizeOptions = ImageResizeOptions.fromWebFields(
+            newFilename,
+            op,
+          );
+
+          promises.push(this.makeAndRunResizeScript(imageFile, resizeOptions));
+        });
+
+        const files: FileDetailsInterface[] = await Promise.all(promises);
+
+        await this.makeAndRunDeleteScript(imageFile);
+
+        return {
+          files,
+          originalFilename: imageFile.originalFilename,
+          dateAdded: now.toISOString(),
+        };
       });
 
-      await Promise.all(promises);
+    const imageDetails = await Promise.all(conversionPromises);
 
-      await this.makeAndRunDeleteScript(imageFile);
-    });
-
-    await Promise.all(conversionPromises);
+    return imageDetails;
   }
 
   /**
@@ -64,7 +96,7 @@ export class ImageWriter {
   async makeAndRunResizeScript(
     imageFile: UploadedFile,
     resizeOptions: ImageResizeOptions,
-  ) {
+  ): Promise<FileDetailsInterface> {
     const result = this.buildResizeScript(imageFile, resizeOptions);
 
     await new Promise((resolve, reject) => {
@@ -82,7 +114,13 @@ export class ImageWriter {
     });
 
     const dimensions = await this.getFileDimensions(result.newFilepath);
-    console.log(result.newFilename, `${dimensions.x}x${dimensions.y}`);
+    // console.log(result.newFilename, `${dimensions.x}x${dimensions.y}`);
+
+    return {
+      filename: this.getNewFileName(imageFile, resizeOptions),
+      dimensions,
+      identifier: resizeOptions.identifier,
+    };
   }
 
   async getFileDimensions(filepath: string): Promise<ImageDimensions> {

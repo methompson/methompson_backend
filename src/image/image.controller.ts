@@ -3,22 +3,20 @@ import { mkdir } from 'fs/promises';
 import {
   Controller,
   Get,
-  Post,
-  Req,
-  UseInterceptors,
   HttpException,
   HttpStatus,
+  Post,
+  Res,
+  Req,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import formidable, { Formidable } from 'formidable';
 
 import { RequestLogInterceptor } from '@/src/middleware/request_log.interceptor';
 import { ImageWriter } from '@/src/image/image_writer';
-import {
-  ParsedFilesAndFields,
-  UploadedFile,
-} from '@/src/image/image_data_types';
+import { ParsedFilesAndFields, UploadedFile } from '@/src/models/image_models';
 import { isString, isRecord } from '@/src/utils/type_guards';
 
 @UseInterceptors(RequestLogInterceptor)
@@ -26,13 +24,24 @@ import { isString, isRecord } from '@/src/utils/type_guards';
 export class ImageController {
   constructor(private configService: ConfigService) {}
 
+  /**
+   * Retrieves an image by the new image file name that was generated from the
+   * uploadImage function.
+   */
   @Get(':imageId')
   async getImageById(): Promise<void> {
     console.log('Get');
   }
 
   @Post('upload')
-  async uploadImage(@Req() req: Request): Promise<void> {
+  async uploadImages(
+    @Req() req: Request,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<void> {
+    if (!(response.locals?.auth?.authorized ?? false)) {
+      throw new HttpException('Not Authorized', HttpStatus.UNAUTHORIZED);
+    }
+
     const uploadPath = this.configService.get('temp_image_path');
 
     if (!isString(uploadPath)) {
@@ -61,7 +70,7 @@ export class ImageController {
     }
 
     const iw = new ImageWriter(savedImagePath);
-    iw.convertImages(parsedData);
+    const results = await iw.convertImages(parsedData);
   }
 
   @Post('delete/:imageId')
@@ -106,47 +115,45 @@ export class ImageController {
     const form = new Formidable(options);
 
     return await new Promise<ParsedFilesAndFields>((resolve, reject) => {
-      form.parse(req, (err, fields, files: formidable.Files) => {
-        if (err) {
-          console.error(err);
-          reject(err);
-        }
-
-        // Parse the operations passed
-        const opsRaw = isString(fields?.ops) ? fields.ops : '[]';
-        const parsedOps = JSON.parse(opsRaw);
-
-        if (!Array.isArray(parsedOps)) {
-          reject(new Error('Invalid Ops Input'));
-        }
-
-        const ops: Record<string, Record<string, unknown>> = {};
-
-        parsedOps.forEach((op) => {
-          if (isRecord(op)) {
-            const id = isString(op?.identifier) ? op.identifier : '';
-
-            ops[id] = op;
+      form.parse(
+        req,
+        (err, fields: formidable.Fields, files: formidable.Files) => {
+          if (err) {
+            console.error(err);
+            reject(err);
           }
-        });
 
-        if (Object.keys(ops).length === 0) {
-          ops[''] = {};
-        }
+          // Parse the operations passed
+          const opsRaw = isString(fields?.ops) ? fields.ops : '[]';
+          const parsedOps = JSON.parse(opsRaw);
 
-        if (Array.isArray(files.image)) {
-          const uploadedFiles: UploadedFile[] = files.image.map((image) =>
-            UploadedFile.fromFormidable(image),
-          );
+          if (!Array.isArray(parsedOps)) {
+            reject(new Error('Invalid Ops Input'));
+          }
 
-          resolve({ imageFiles: uploadedFiles, ops });
-          return;
-        }
+          const ops: Record<string, Record<string, unknown>> = {};
 
-        const uploadedFile = UploadedFile.fromFormidable(files.image);
+          parsedOps.forEach((op) => {
+            if (isRecord(op)) {
+              const id = isString(op?.identifier) ? op.identifier : '';
 
-        resolve({ imageFiles: [uploadedFile], ops });
-      });
+              ops[id] = op;
+            }
+          });
+
+          if (Array.isArray(files.image)) {
+            const uploadedFiles: UploadedFile[] = files.image.map((image) =>
+              UploadedFile.fromFormidable(image),
+            );
+
+            resolve({ imageFiles: uploadedFiles, ops });
+            return;
+          }
+
+          const uploadedFile = UploadedFile.fromFormidable(files.image);
+          resolve({ imageFiles: [uploadedFile], ops });
+        },
+      );
     });
   }
 }

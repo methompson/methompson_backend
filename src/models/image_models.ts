@@ -1,6 +1,7 @@
 import formidable from 'formidable';
 
-import { isNumber, isString } from '@/src/utils/type_guards';
+import { isNumber, isRecord, isString } from '@/src/utils/type_guards';
+import { InvalidInputError } from '../errors/invalid_input_error';
 
 interface FilenameComponents {
   name: string;
@@ -244,4 +245,212 @@ interface SavedImage {
 export interface SavedImageGroup {
   images: Record<string, SavedImage>;
   filename: string;
+}
+
+/**
+ * Represents the image file dimensions in pixels
+ */
+export interface ImageDimensions {
+  x: number;
+  y: number;
+}
+
+/**
+ * @param {string} filename is the obfuscated id file name of the file, currently sitting in the filesystem
+ * @param {string} identifier is a name for this specific converted version of the file (e.g. thumb, web, etc.)
+ * @param {ImageDimensions} dimensions are the dimensions for this specific converted version of the file in pixels
+ */
+export interface FileDetailsInterface {
+  filename: string;
+  identifier: string;
+  dimensions: ImageDimensions;
+}
+
+export class FileDetails {
+  constructor(
+    protected _filename: string,
+    protected _identifier: string,
+    protected _dimensions: ImageDimensions,
+  ) {}
+
+  get filename(): string {
+    return this._filename;
+  }
+  get identifier(): string {
+    return this._identifier;
+  }
+  get dimensions(): ImageDimensions {
+    return this._dimensions;
+  }
+
+  toJSON(): FileDetailsInterface {
+    return {
+      filename: this.filename,
+      identifier: this.identifier,
+      dimensions: this.dimensions,
+    };
+  }
+
+  static fromJSON(input: unknown): FileDetails {
+    if (!FileDetails.isFileDetailsInterface(input)) {
+      throw new InvalidInputError('Invalid file details input');
+    }
+
+    return new FileDetails(input.filename, input.identifier, input.dimensions);
+  }
+
+  static isFileDetailsInterface(input: unknown): input is FileDetailsInterface {
+    return (
+      isRecord(input) &&
+      isString(input.filename) &&
+      isString(input.identifier) &&
+      FileDetails.isImageDimensions(input.dimensions)
+    );
+  }
+
+  static isImageDimensions(input: unknown): input is ImageDimensions {
+    return isRecord(input) && isNumber(input.x) && isNumber(input.y);
+  }
+}
+
+export interface NewImageDetailsInterface {
+  files: FileDetailsInterface[];
+  originalFilename: string;
+  dateAdded: string;
+}
+
+export interface ImageDetailsInterface {
+  id: string;
+  files: FileDetailsInterface[];
+  originalFilename: string;
+  dateAdded: string;
+}
+
+export class NewImageDetails {
+  protected _fileMap: Record<string, FileDetails>;
+
+  constructor(
+    files: FileDetails[],
+    protected _originalFilename: string,
+    protected _dateAdded: string,
+  ) {
+    const fileMap = {};
+    for (const file of files) {
+      fileMap[file.identifier] = file;
+    }
+
+    this._fileMap = fileMap;
+  }
+
+  get files(): FileDetails[] {
+    return Object.values(this._fileMap);
+  }
+  get originalFilename(): string {
+    return this._originalFilename;
+  }
+  get dateAdded(): string {
+    return this._dateAdded;
+  }
+
+  getFileById(id: string): FileDetails | null {
+    return this._fileMap[id] ?? null;
+  }
+
+  static fromJSON(input: unknown): NewImageDetails {
+    if (!NewImageDetails.isNewImageDetailsInterface(input)) {
+      throw new InvalidInputError('Invalid Image Details');
+    }
+
+    const details: FileDetails[] = [];
+    for (const file of input.files) {
+      details.push(FileDetails.fromJSON(file));
+    }
+
+    return new NewImageDetails(
+      details,
+      input.originalFilename,
+      input.dateAdded,
+    );
+  }
+
+  static isNewImageDetailsInterface(
+    input: unknown,
+  ): input is NewImageDetailsInterface {
+    if (!isRecord(input)) {
+      return false;
+    }
+
+    if (!Array.isArray(input.files)) {
+      return false;
+    }
+
+    for (const file of input.files) {
+      if (!FileDetails.isFileDetailsInterface(file)) {
+        return false;
+      }
+    }
+
+    return isString(input.originalFilename) && isString(input.dateAdded);
+  }
+}
+
+export class ImageDetails extends NewImageDetails {
+  constructor(
+    protected _id: string,
+    _files: FileDetails[],
+    _originalFilename: string,
+    _dateAdded: string,
+  ) {
+    super(_files, _originalFilename, _dateAdded);
+  }
+
+  get id(): string {
+    return this._id;
+  }
+
+  toJSON(): ImageDetailsInterface {
+    const files: FileDetailsInterface[] = [];
+    for (const file of this.files) {
+      files.push(file.toJSON());
+    }
+
+    return {
+      id: this.id,
+      files,
+      originalFilename: this.originalFilename,
+      dateAdded: this.dateAdded,
+    };
+  }
+
+  static fromNewImageDetails(
+    id: string,
+    imageDetails: NewImageDetails,
+  ): ImageDetails {
+    return new ImageDetails(
+      id,
+      imageDetails.files,
+      imageDetails.originalFilename,
+      imageDetails.dateAdded,
+    );
+  }
+
+  static fromJSON(input: unknown): ImageDetails {
+    if (!ImageDetails.isImageDetailsInterface(input)) {
+      throw new InvalidInputError('Invalid Image Details Input');
+    }
+
+    const nid = NewImageDetails.fromJSON(input);
+
+    return ImageDetails.fromNewImageDetails(input.id, nid);
+  }
+
+  static isImageDetailsInterface(
+    input: unknown,
+  ): input is ImageDetailsInterface {
+    return (
+      isRecord(input) &&
+      isString(input.id) &&
+      NewImageDetails.isNewImageDetailsInterface(input)
+    );
+  }
 }

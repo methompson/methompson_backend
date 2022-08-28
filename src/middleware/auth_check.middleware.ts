@@ -4,7 +4,7 @@ import { decode } from 'jsonwebtoken';
 // eslint-disable-next-line import/no-unresolved
 import { getAuth } from 'firebase-admin/auth';
 
-import { AuthModel } from '@/src/models/auth_model';
+import { AuthModel, NoAuthModel } from '@/src/models/auth_model';
 import { isRecord } from '@/src/utils/type_guards';
 
 @Injectable()
@@ -37,7 +37,7 @@ class NoAuthCheckMiddlware implements NestMiddleware {
 
     const token = isRecord(decodedPayload) ? decodedPayload : {};
 
-    res.locals.auth = new AuthModel(token);
+    res.locals.auth = new NoAuthModel(token);
 
     next();
   }

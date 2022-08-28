@@ -3,7 +3,7 @@ import { Request } from 'express';
 import { ConfigService } from '@nestjs/config';
 
 import { ImageController } from '@/src/image/image.controller';
-import { UploadedFile } from '@/src/image/image_data_types';
+import { UploadedFile } from '@/src/models/image_models';
 
 type FormidableParseCalback = (
   err: any,
@@ -89,19 +89,21 @@ describe('ImageController', () => {
 
       expect(result).toStrictEqual({
         imageFiles: [UploadedFile.fromFormidable(image1)],
-        fields,
+        ops: {},
       });
     });
 
     test('returns files and fields', async () => {
-      const req = {} as unknown as Request;
-
       const file = { image: [image1, image2] } as formidable.Files;
-
-      const fields = {
+      const identifier = 'identifier';
+      const ops = {
+        identifier,
         field1: 'field1',
         field2: 'field2',
       };
+      const fields = {
+        ops: JSON.stringify([ops]),
+      } as unknown as formidable.Fields;
 
       parse.mockImplementationOnce((a, b: FormidableParseCalback) => {
         b(null, fields, file);
@@ -109,6 +111,8 @@ describe('ImageController', () => {
 
       const configService = new ConfigService();
       const ic = new ImageController(configService);
+      const req = {} as unknown as Request;
+
       const result = await ic.parseImageFilesAndFields(req, '');
 
       expect(parse).toHaveBeenCalledTimes(1);
@@ -119,7 +123,129 @@ describe('ImageController', () => {
           UploadedFile.fromFormidable(image1),
           UploadedFile.fromFormidable(image2),
         ],
-        fields,
+        ops: {
+          identifier: ops,
+        },
+      });
+    });
+
+    test('Returns a single field for an identifier two are provided with the same identifier', async () => {
+      const file = { image: [image1, image2] } as formidable.Files;
+      const identifier = 'identifier';
+      const ops1 = {
+        identifier,
+        field1: 'field1',
+        field2: 'field2',
+      };
+      const ops2 = {
+        identifier,
+        field1: 'field3',
+        field2: 'field4',
+      };
+      const fields = {
+        ops: JSON.stringify([ops1, ops2]),
+      } as unknown as formidable.Fields;
+
+      parse.mockImplementationOnce((a, b: FormidableParseCalback) => {
+        b(null, fields, file);
+      });
+
+      const configService = new ConfigService();
+      const ic = new ImageController(configService);
+      const req = {} as unknown as Request;
+
+      const result = await ic.parseImageFilesAndFields(req, '');
+
+      expect(parse).toHaveBeenCalledTimes(1);
+      expect(parse).toHaveBeenCalledWith(req, expect.anything());
+
+      expect(result).toStrictEqual({
+        imageFiles: [
+          UploadedFile.fromFormidable(image1),
+          UploadedFile.fromFormidable(image2),
+        ],
+        ops: {
+          identifier: ops2,
+        },
+      });
+    });
+
+    test('Returns a single field if two are provided, but neither have an identifier', async () => {
+      const file = { image: [image1, image2] } as formidable.Files;
+      const ops1 = {
+        field1: 'field1',
+        field2: 'field2',
+      };
+      const ops2 = {
+        field1: 'field3',
+        field2: 'field4',
+      };
+      const fields = {
+        ops: JSON.stringify([ops1, ops2]),
+      } as unknown as formidable.Fields;
+
+      parse.mockImplementationOnce((a, b: FormidableParseCalback) => {
+        b(null, fields, file);
+      });
+
+      const configService = new ConfigService();
+      const ic = new ImageController(configService);
+      const req = {} as unknown as Request;
+
+      const result = await ic.parseImageFilesAndFields(req, '');
+
+      expect(parse).toHaveBeenCalledTimes(1);
+      expect(parse).toHaveBeenCalledWith(req, expect.anything());
+
+      expect(result).toStrictEqual({
+        imageFiles: [
+          UploadedFile.fromFormidable(image1),
+          UploadedFile.fromFormidable(image2),
+        ],
+        ops: {
+          '': ops2,
+        },
+      });
+    });
+
+    test('Returns two ops two are provided and each has a unique identifier', async () => {
+      const file = { image: [image1, image2] } as formidable.Files;
+      const ops1 = {
+        identifier: 'id1',
+        field1: 'field1',
+        field2: 'field2',
+      };
+      const ops2 = {
+        identifier: 'id2',
+        field1: 'field3',
+        field2: 'field4',
+      };
+      const fields = {
+        ops: JSON.stringify([ops1, ops2]),
+      } as unknown as formidable.Fields;
+
+      parse.mockImplementationOnce((a, b: FormidableParseCalback) => {
+        b(null, fields, file);
+      });
+
+      const configService = new ConfigService();
+      const ic = new ImageController(configService);
+      const req = {} as unknown as Request;
+
+      const result = await ic.parseImageFilesAndFields(req, '');
+
+      expect(parse).toHaveBeenCalledTimes(1);
+      expect(parse).toHaveBeenCalledWith(req, expect.anything());
+
+      expect(result).toStrictEqual({
+        imageFiles: [
+          UploadedFile.fromFormidable(image1),
+          UploadedFile.fromFormidable(image2),
+        ],
+        ops: {
+          id1: ops1,
+          id2: ops2,
+        },
       });
     });
 
