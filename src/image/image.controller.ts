@@ -5,6 +5,7 @@ import {
   Get,
   HttpException,
   HttpStatus,
+  Inject,
   Post,
   Res,
   Req,
@@ -16,13 +17,22 @@ import formidable, { Formidable } from 'formidable';
 
 import { RequestLogInterceptor } from '@/src/middleware/request_log.interceptor';
 import { ImageWriter } from '@/src/image/image_writer';
-import { ParsedFilesAndFields, UploadedFile } from '@/src/models/image_models';
+import {
+  ImageDetails,
+  ParsedFilesAndFields,
+  UploadedFile,
+} from '@/src/models/image_models';
 import { isString, isRecord } from '@/src/utils/type_guards';
+import { AuthModel } from '@/src/models/auth_model';
+import { ImageDataService } from './image_data.service';
 
 @UseInterceptors(RequestLogInterceptor)
 @Controller({ path: 'api/image' })
 export class ImageController {
-  constructor(private configService: ConfigService) {}
+  constructor(
+    private configService: ConfigService,
+    @Inject('IMAGE_SERVICE') private readonly imageService: ImageDataService,
+  ) {}
 
   /**
    * Retrieves an image by the new image file name that was generated from the
@@ -38,8 +48,24 @@ export class ImageController {
     @Req() req: Request,
     @Res({ passthrough: true }) response: Response,
   ): Promise<void> {
-    if (!(response.locals?.auth?.authorized ?? false)) {
+    const authModel = response.locals.auth;
+    if (!AuthModel.isAuthModel(authModel)) {
+      throw new HttpException(
+        'Invalid Autorization Token',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (!authModel.authorized) {
       throw new HttpException('Not Authorized', HttpStatus.UNAUTHORIZED);
+    }
+
+    const userId = authModel.userId;
+    if (userId.length === 0) {
+      throw new HttpException(
+        'Invalid Autorization Token',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     const uploadPath = this.configService.get('temp_image_path');
@@ -71,6 +97,18 @@ export class ImageController {
 
     const iw = new ImageWriter(savedImagePath);
     const results = await iw.convertImages(parsedData);
+
+    const imageDetails: ImageDetails[] = results.map((img) =>
+      ImageDetails.fromNewImageDetails(userId, img),
+    );
+
+    console.log(results);
+
+    const promises: Promise<unknown>[] = imageDetails.map((img) =>
+      this.imageService.addImage(img),
+    );
+
+    await Promise.all(promises);
   }
 
   @Post('delete/:imageId')

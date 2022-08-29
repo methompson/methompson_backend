@@ -18,7 +18,7 @@ class AuthCheckMiddlware implements NestMiddleware {
     try {
       token = await getAuth().verifyIdToken(authHeader);
     } catch (e) {
-      // uncomment this for better logging later on
+      // uncomment this for more logging
       // console.error('No Authorization Header', e);
     }
 
@@ -35,7 +35,11 @@ class NoAuthCheckMiddlware implements NestMiddleware {
 
     const decodedPayload = decode(authHeader);
 
-    const token = isRecord(decodedPayload) ? decodedPayload : {};
+    const token = isRecord(decodedPayload)
+      ? decodedPayload
+      : {
+          sub: 'noAuthSub',
+        };
 
     res.locals.auth = new NoAuthModel(token);
 

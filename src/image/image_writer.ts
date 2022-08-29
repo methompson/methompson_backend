@@ -9,7 +9,7 @@ import {
   UploadedFile,
   ImageDimensions,
   FileDetailsInterface,
-  NewImageDetailsInterface,
+  NewImageDetails,
 } from '@/src/models/image_models';
 
 export class ImageWriter {
@@ -17,7 +17,7 @@ export class ImageWriter {
 
   async convertImages(
     parsedData: ParsedFilesAndFields,
-  ): Promise<NewImageDetailsInterface[]> {
+  ): Promise<NewImageDetails[]> {
     if (parsedData.imageFiles.length == 0) {
       throw new HttpException('No Image File Provided', HttpStatus.BAD_REQUEST);
     }
@@ -55,8 +55,8 @@ export class ImageWriter {
     // the conversionPromises variable holds the end result for all of the conversions
     // that we're executing. We map the image files themselves, and perform all image
     // ops within the map function
-    const conversionPromises: Promise<NewImageDetailsInterface>[] =
-      imageFiles.map(async (imageFile) => {
+    const conversionPromises: Promise<NewImageDetails>[] = imageFiles.map(
+      async (imageFile) => {
         const newFilename = uuidv4();
         const promises: Promise<FileDetailsInterface>[] = [];
 
@@ -74,12 +74,14 @@ export class ImageWriter {
 
         await this.makeAndRunDeleteScript(imageFile);
 
-        return {
+        return NewImageDetails.fromJSON({
           files,
+          id: newFilename,
           originalFilename: imageFile.originalFilename,
           dateAdded: now.toISOString(),
-        };
-      });
+        });
+      },
+    );
 
     const imageDetails = await Promise.all(conversionPromises);
 

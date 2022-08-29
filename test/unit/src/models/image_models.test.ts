@@ -23,6 +23,8 @@ describe('image_models', () => {
   let validFile1: Record<string, unknown> = {};
   let validFile2: Record<string, unknown> = {};
 
+  const id = '208q9werypfohaijsk';
+
   beforeEach(() => {
     validFile1 = {
       filename: filename1,
@@ -35,6 +37,7 @@ describe('image_models', () => {
       dimensions: dimensions2,
     };
     validNewImageDetails = {
+      id,
       originalFilename,
       dateAdded,
       files: [validFile1, validFile2],
@@ -429,11 +432,13 @@ describe('image_models', () => {
 
   describe('ImageDetails', () => {
     let validImageDetails: Record<string, unknown> = {};
-    const id = '208q9werypfohaijsk';
+    const authorId = '04oiejwakdscm,';
+
     beforeEach(() => {
       validImageDetails = {
         ...validNewImageDetails,
         id,
+        authorId,
       };
     });
 
@@ -443,6 +448,7 @@ describe('image_models', () => {
 
         expect(details.toJSON()).toStrictEqual({
           id,
+          authorId,
           originalFilename,
           dateAdded,
           files: [validFile1, validFile2],
@@ -453,10 +459,11 @@ describe('image_models', () => {
     describe('fromNewImageDetails', () => {
       test('returns an ImageDetails object when passed valid inputs', () => {
         const input = NewImageDetails.fromJSON(validNewImageDetails);
-        const details = ImageDetails.fromNewImageDetails(id, input);
+        const details = ImageDetails.fromNewImageDetails(authorId, input);
 
         expect(details.toJSON()).toStrictEqual({
           ...validNewImageDetails,
+          authorId,
           id,
         });
       });

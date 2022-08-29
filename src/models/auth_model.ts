@@ -23,6 +23,15 @@ export class AuthModel {
     return exp >= new Date().getTime() / 1000;
   }
 
+  get userId(): string {
+    const userId = this.token?.sub;
+    if (isString(userId)) {
+      return userId;
+    }
+
+    return '';
+  }
+
   // Currently we use getAuth and verifyIdToken in auth_check_middleware.
   // We assume that if a token exists, it's properly signed.
   // get properlySigned(): boolean {}
@@ -34,6 +43,10 @@ export class AuthModel {
     }
 
     return iss.includes('methompson-site');
+  }
+
+  static isAuthModel(input: unknown): input is AuthModel {
+    return input instanceof AuthModel;
   }
 }
 

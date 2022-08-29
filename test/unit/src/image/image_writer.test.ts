@@ -177,6 +177,41 @@ describe('ImageWriter', () => {
       expect(makeDeleteSpy).toHaveBeenNthCalledWith(2, image2);
     });
 
+    test('returns NewImageDetails object for each image passed in', async () => {
+      const ic = new ImageWriter('');
+
+      const filename = 'filename';
+      const identifier = 'identifier';
+      const dimensions = { x: 1024, y: 768 };
+
+      const makeResizeSpy = jest.spyOn(ic, 'makeAndRunResizeScript');
+      makeResizeSpy.mockImplementation(async (_) => ({
+        filename,
+        identifier,
+        dimensions,
+      }));
+      const makeDeleteSpy = jest.spyOn(ic, 'makeAndRunDeleteScript');
+      makeDeleteSpy.mockImplementation(async (_) => {});
+
+      uuidv4.mockImplementationOnce(() => newFilename1);
+      uuidv4.mockImplementationOnce(() => newFilename2);
+
+      const parsedData = {
+        imageFiles: [image1, image2],
+        ops: {},
+      };
+
+      const results = await ic.convertImages(parsedData);
+
+      expect(results.length).toBe(2);
+
+      const first = results[0];
+      const second = results[1];
+
+      expect(first.originalFilename).toBe(image1.originalFilename);
+      expect(second.originalFilename).toBe(image2.originalFilename);
+    });
+
     test('throws an error if makeAndRunResizeScript throws an error', async () => {
       expect.assertions(3);
       const ic = new ImageWriter('');

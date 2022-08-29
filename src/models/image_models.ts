@@ -314,6 +314,7 @@ export class FileDetails {
 }
 
 export interface NewImageDetailsInterface {
+  id: string;
   files: FileDetailsInterface[];
   originalFilename: string;
   dateAdded: string;
@@ -321,6 +322,7 @@ export interface NewImageDetailsInterface {
 
 export interface ImageDetailsInterface {
   id: string;
+  authorId: string;
   files: FileDetailsInterface[];
   originalFilename: string;
   dateAdded: string;
@@ -331,6 +333,7 @@ export class NewImageDetails {
 
   constructor(
     files: FileDetails[],
+    protected _id: string,
     protected _originalFilename: string,
     protected _dateAdded: string,
   ) {
@@ -342,6 +345,9 @@ export class NewImageDetails {
     this._fileMap = fileMap;
   }
 
+  get id(): string {
+    return this._id;
+  }
   get files(): FileDetails[] {
     return Object.values(this._fileMap);
   }
@@ -368,6 +374,7 @@ export class NewImageDetails {
 
     return new NewImageDetails(
       details,
+      input.id,
       input.originalFilename,
       input.dateAdded,
     );
@@ -390,22 +397,27 @@ export class NewImageDetails {
       }
     }
 
-    return isString(input.originalFilename) && isString(input.dateAdded);
+    return (
+      isString(input.originalFilename) &&
+      isString(input.dateAdded) &&
+      isString(input.id)
+    );
   }
 }
 
 export class ImageDetails extends NewImageDetails {
   constructor(
-    protected _id: string,
+    protected _authorId: string,
+    _id: string,
     _files: FileDetails[],
     _originalFilename: string,
     _dateAdded: string,
   ) {
-    super(_files, _originalFilename, _dateAdded);
+    super(_files, _id, _originalFilename, _dateAdded);
   }
 
-  get id(): string {
-    return this._id;
+  get authorId(): string {
+    return this._authorId;
   }
 
   toJSON(): ImageDetailsInterface {
@@ -416,6 +428,7 @@ export class ImageDetails extends NewImageDetails {
 
     return {
       id: this.id,
+      authorId: this.authorId,
       files,
       originalFilename: this.originalFilename,
       dateAdded: this.dateAdded,
@@ -423,11 +436,12 @@ export class ImageDetails extends NewImageDetails {
   }
 
   static fromNewImageDetails(
-    id: string,
+    authorId: string,
     imageDetails: NewImageDetails,
   ): ImageDetails {
     return new ImageDetails(
-      id,
+      authorId,
+      imageDetails.id,
       imageDetails.files,
       imageDetails.originalFilename,
       imageDetails.dateAdded,
@@ -441,7 +455,7 @@ export class ImageDetails extends NewImageDetails {
 
     const nid = NewImageDetails.fromJSON(input);
 
-    return ImageDetails.fromNewImageDetails(input.id, nid);
+    return ImageDetails.fromNewImageDetails(input.authorId, nid);
   }
 
   static isImageDetailsInterface(
@@ -450,6 +464,7 @@ export class ImageDetails extends NewImageDetails {
     return (
       isRecord(input) &&
       isString(input.id) &&
+      isString(input.authorId) &&
       NewImageDetails.isNewImageDetailsInterface(input)
     );
   }
