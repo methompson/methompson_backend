@@ -8,7 +8,7 @@ docker rm methompson_blog
     -e MONGO_DB_NAME=blog \
     -e CONSOLE_LOGGING=true \
     -e DB_LOGGING=true \
-    -e BLOG_TYPE=mongo_db \
+    -e BLOG_SERVER_TYPE=mongo_db \
     --name methompson_blog \
     methompson_blog
 )

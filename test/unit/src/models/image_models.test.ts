@@ -23,7 +23,10 @@ describe('image_models', () => {
   let validFile1: Record<string, unknown> = {};
   let validFile2: Record<string, unknown> = {};
 
-  const id = '208q9werypfohaijsk';
+  const imageId = '208q9werypfohaijsk';
+  const authorId = '023ueiowjfaknldsm';
+  const id = '04oiejwakdscm,';
+  const isPrivate = false;
 
   beforeEach(() => {
     validFile1 = {
@@ -37,10 +40,12 @@ describe('image_models', () => {
       dimensions: dimensions2,
     };
     validNewImageDetails = {
-      id,
+      imageId,
+      files: [validFile1, validFile2],
       originalFilename,
       dateAdded,
-      files: [validFile1, validFile2],
+      authorId,
+      isPrivate,
     };
   });
 
@@ -432,13 +437,11 @@ describe('image_models', () => {
 
   describe('ImageDetails', () => {
     let validImageDetails: Record<string, unknown> = {};
-    const authorId = '04oiejwakdscm,';
 
     beforeEach(() => {
       validImageDetails = {
         ...validNewImageDetails,
         id,
-        authorId,
       };
     });
 
@@ -448,10 +451,12 @@ describe('image_models', () => {
 
         expect(details.toJSON()).toStrictEqual({
           id,
+          imageId,
           authorId,
+          files: [validFile1, validFile2],
           originalFilename,
           dateAdded,
-          files: [validFile1, validFile2],
+          isPrivate,
         });
       });
     });
@@ -459,11 +464,10 @@ describe('image_models', () => {
     describe('fromNewImageDetails', () => {
       test('returns an ImageDetails object when passed valid inputs', () => {
         const input = NewImageDetails.fromJSON(validNewImageDetails);
-        const details = ImageDetails.fromNewImageDetails(authorId, input);
+        const details = ImageDetails.fromNewImageDetails(id, input);
 
         expect(details.toJSON()).toStrictEqual({
           ...validNewImageDetails,
-          authorId,
           id,
         });
       });
@@ -474,6 +478,7 @@ describe('image_models', () => {
         const details = ImageDetails.fromJSON(validImageDetails);
 
         expect(details.id).toBe(validImageDetails.id);
+        expect(details.imageId).toBe(validImageDetails.imageId);
         expect(details.originalFilename).toBe(
           validImageDetails.originalFilename,
         );
@@ -495,6 +500,7 @@ describe('image_models', () => {
         const details = ImageDetails.fromJSON(input);
 
         expect(details.id).toBe(validImageDetails.id);
+        expect(details.imageId).toBe(validImageDetails.imageId);
         expect(details.originalFilename).toBe(
           validImageDetails.originalFilename,
         );

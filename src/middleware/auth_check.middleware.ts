@@ -10,7 +10,10 @@ import { isRecord } from '@/src/utils/type_guards';
 @Injectable()
 class AuthCheckMiddlware implements NestMiddleware {
   async use(req: Request, res: Response, next: NextFunction) {
-    const authHeader = req.header('authorization') ?? '';
+    // First we attempt to get authorization from the header. Then we get it from
+    // the cookies. If both fail, we get an empty string.
+    const authHeader =
+      req.header('authorization') ?? req.cookies?.authorization ?? '';
 
     // console.log('authHeader', authHeader);
     let token = {};
@@ -31,7 +34,8 @@ class AuthCheckMiddlware implements NestMiddleware {
 @Injectable()
 class NoAuthCheckMiddlware implements NestMiddleware {
   async use(req: Request, res: Response, next: NextFunction) {
-    const authHeader = req.header('authorization');
+    const authHeader =
+      req.header('authorization') ?? req.cookies?.authorization ?? '';
 
     const decodedPayload = decode(authHeader);
 

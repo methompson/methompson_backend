@@ -1,6 +1,12 @@
 import formidable from 'formidable';
+import { WithId, Document } from 'mongodb';
 
-import { isNumber, isRecord, isString } from '@/src/utils/type_guards';
+import {
+  isBoolean,
+  isNumber,
+  isRecord,
+  isString,
+} from '@/src/utils/type_guards';
 import { InvalidInputError } from '../errors/invalid_input_error';
 
 interface FilenameComponents {
@@ -314,42 +320,43 @@ export class FileDetails {
 }
 
 export interface NewImageDetailsInterface {
-  id: string;
+  imageId: string;
   files: FileDetailsInterface[];
   originalFilename: string;
   dateAdded: string;
-}
-
-export interface ImageDetailsInterface {
-  id: string;
   authorId: string;
-  files: FileDetailsInterface[];
-  originalFilename: string;
-  dateAdded: string;
+  isPrivate: boolean;
 }
 
 export class NewImageDetails {
   protected _fileMap: Record<string, FileDetails>;
+  protected _filenames: string[];
 
   constructor(
     files: FileDetails[],
-    protected _id: string,
+    protected _imageId: string,
     protected _originalFilename: string,
     protected _dateAdded: string,
+    protected _isPrivate: boolean,
+    protected _authorId: string,
   ) {
     const fileMap = {};
+    const filenames = [];
+
     for (const file of files) {
       fileMap[file.identifier] = file;
+      filenames.push(file.filename);
     }
 
     this._fileMap = fileMap;
+    this._filenames = filenames;
   }
 
-  get id(): string {
-    return this._id;
-  }
   get files(): FileDetails[] {
     return Object.values(this._fileMap);
+  }
+  get imageId(): string {
+    return this._imageId;
   }
   get originalFilename(): string {
     return this._originalFilename;
@@ -357,9 +364,30 @@ export class NewImageDetails {
   get dateAdded(): string {
     return this._dateAdded;
   }
+  get authorId(): string {
+    return this._authorId;
+  }
+  get isPrivate(): boolean {
+    return this._isPrivate;
+  }
 
   getFileById(id: string): FileDetails | null {
     return this._fileMap[id] ?? null;
+  }
+
+  containsImage(name: string): boolean {
+    return this._filenames.includes(name);
+  }
+
+  toJSON(): NewImageDetailsInterface {
+    return {
+      files: this.files,
+      imageId: this.imageId,
+      originalFilename: this.originalFilename,
+      dateAdded: this.dateAdded,
+      isPrivate: this.isPrivate,
+      authorId: this.authorId,
+    };
   }
 
   static fromJSON(input: unknown): NewImageDetails {
@@ -374,9 +402,11 @@ export class NewImageDetails {
 
     return new NewImageDetails(
       details,
-      input.id,
+      input.imageId,
       input.originalFilename,
       input.dateAdded,
+      input.isPrivate,
+      input.authorId,
     );
   }
 
@@ -400,24 +430,38 @@ export class NewImageDetails {
     return (
       isString(input.originalFilename) &&
       isString(input.dateAdded) &&
-      isString(input.id)
+      isString(input.imageId) &&
+      isString(input.authorId) &&
+      isBoolean(input.isPrivate)
     );
   }
 }
 
+export interface ImageDetailsInterface {
+  id: string;
+  imageId: string;
+  files: FileDetailsInterface[];
+  originalFilename: string;
+  dateAdded: string;
+  authorId: string;
+  isPrivate: boolean;
+}
+
 export class ImageDetails extends NewImageDetails {
   constructor(
-    protected _authorId: string,
-    _id: string,
-    _files: FileDetails[],
-    _originalFilename: string,
-    _dateAdded: string,
+    protected _id: string,
+    files: FileDetails[],
+    imageId: string,
+    originalFilename: string,
+    dateAdded: string,
+    isPrivate: boolean,
+    authorId: string,
   ) {
-    super(_files, _id, _originalFilename, _dateAdded);
+    super(files, imageId, originalFilename, dateAdded, isPrivate, authorId);
   }
 
-  get authorId(): string {
-    return this._authorId;
+  get id(): string {
+    return this._id;
   }
 
   toJSON(): ImageDetailsInterface {
@@ -428,23 +472,27 @@ export class ImageDetails extends NewImageDetails {
 
     return {
       id: this.id,
+      imageId: this.imageId,
       authorId: this.authorId,
       files,
       originalFilename: this.originalFilename,
       dateAdded: this.dateAdded,
+      isPrivate: this._isPrivate,
     };
   }
 
   static fromNewImageDetails(
-    authorId: string,
+    id: string,
     imageDetails: NewImageDetails,
   ): ImageDetails {
     return new ImageDetails(
-      authorId,
-      imageDetails.id,
+      id,
       imageDetails.files,
+      imageDetails.imageId,
       imageDetails.originalFilename,
       imageDetails.dateAdded,
+      imageDetails.isPrivate,
+      imageDetails.authorId,
     );
   }
 
@@ -455,7 +503,14 @@ export class ImageDetails extends NewImageDetails {
 
     const nid = NewImageDetails.fromJSON(input);
 
-    return ImageDetails.fromNewImageDetails(input.authorId, nid);
+    return ImageDetails.fromNewImageDetails(input.id, nid);
+  }
+
+  static fromMongo(input: WithId<Document> | Document): ImageDetails {
+    return ImageDetails.fromJSON({
+      ...input,
+      id: input?._id?.toString(),
+    });
   }
 
   static isImageDetailsInterface(
@@ -464,7 +519,6 @@ export class ImageDetails extends NewImageDetails {
     return (
       isRecord(input) &&
       isString(input.id) &&
-      isString(input.authorId) &&
       NewImageDetails.isNewImageDetailsInterface(input)
     );
   }

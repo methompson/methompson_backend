@@ -3,14 +3,19 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import { LoggerModule } from '@/src/logger/logger.module';
 import { ImageController } from '@/src/image/image.controller';
-import { ImageMemoryDataService } from '@/src/image/image_data.memory.service';
+import { InMemoryImageDataService } from '@/src/image/image_data.memory.service';
+import { MongoImageDataService } from './image_data.mongo.service';
 
 const imageServiceFactory = {
   provide: 'IMAGE_SERVICE',
   useFactory: async (configService: ConfigService) => {
-    const type = configService.get('ImageServerType');
+    const type = configService.get('imageServerType');
 
-    return new ImageMemoryDataService();
+    if (type === 'mongo_db') {
+      return await MongoImageDataService.initFromConfig(configService);
+    }
+
+    return new InMemoryImageDataService();
   },
   inject: [ConfigService],
 };

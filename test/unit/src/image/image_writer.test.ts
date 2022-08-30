@@ -46,6 +46,8 @@ describe('ImageWriter', () => {
 
   const testError = 'test error';
 
+  const authorId = 'aoishfdjn023';
+
   beforeEach(() => {
     uuidv4.mockClear();
     exec.mockClear();
@@ -89,7 +91,7 @@ describe('ImageWriter', () => {
 
       uuidv4.mockImplementation(() => newFilename1);
 
-      await ic.convertImages(parsedData);
+      await ic.convertImages(parsedData, authorId);
 
       expect(uuidv4).toHaveBeenCalledTimes(1);
 
@@ -137,7 +139,7 @@ describe('ImageWriter', () => {
         ops: {},
       };
 
-      await ic.convertImages(parsedData);
+      await ic.convertImages(parsedData, authorId);
 
       expect(uuidv4).toHaveBeenCalledTimes(2);
 
@@ -201,7 +203,7 @@ describe('ImageWriter', () => {
         ops: {},
       };
 
-      const results = await ic.convertImages(parsedData);
+      const results = await ic.convertImages(parsedData, authorId);
 
       expect(results.length).toBe(2);
 
@@ -230,7 +232,7 @@ describe('ImageWriter', () => {
       uuidv4.mockImplementation(() => newFilename1);
 
       try {
-        await ic.convertImages(parsedData);
+        await ic.convertImages(parsedData, authorId);
       } catch (e) {
         expect(e.message).toBe(testError);
         expect(makeResizeSpy).toHaveBeenCalledTimes(2);

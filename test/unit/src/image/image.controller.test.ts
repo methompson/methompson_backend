@@ -3,7 +3,7 @@ import { Request } from 'express';
 import { ConfigService } from '@nestjs/config';
 
 import { ImageController } from '@/src/image/image.controller';
-import { ImageMemoryDataService } from '@/src/image/image_data.memory.service';
+import { InMemoryImageDataService } from '@/src/image/image_data.memory.service';
 import { UploadedFile } from '@/src/models/image_models';
 
 type FormidableParseCalback = (
@@ -82,7 +82,7 @@ describe('ImageController', () => {
       });
 
       const configService = new ConfigService();
-      const imageDataService = new ImageMemoryDataService();
+      const imageDataService = new InMemoryImageDataService();
       const ic = new ImageController(configService, imageDataService);
       const result = await ic.parseImageFilesAndFields(req, '');
 
@@ -112,7 +112,7 @@ describe('ImageController', () => {
       });
 
       const configService = new ConfigService();
-      const imageDataService = new ImageMemoryDataService();
+      const imageDataService = new InMemoryImageDataService();
       const ic = new ImageController(configService, imageDataService);
       const req = {} as unknown as Request;
 
@@ -154,7 +154,7 @@ describe('ImageController', () => {
       });
 
       const configService = new ConfigService();
-      const imageDataService = new ImageMemoryDataService();
+      const imageDataService = new InMemoryImageDataService();
       const ic = new ImageController(configService, imageDataService);
       const req = {} as unknown as Request;
 
@@ -193,7 +193,7 @@ describe('ImageController', () => {
       });
 
       const configService = new ConfigService();
-      const imageDataService = new ImageMemoryDataService();
+      const imageDataService = new InMemoryImageDataService();
       const ic = new ImageController(configService, imageDataService);
       const req = {} as unknown as Request;
 
@@ -234,7 +234,7 @@ describe('ImageController', () => {
       });
 
       const configService = new ConfigService();
-      const imageDataService = new ImageMemoryDataService();
+      const imageDataService = new InMemoryImageDataService();
       const ic = new ImageController(configService, imageDataService);
       const req = {} as unknown as Request;
 
@@ -257,7 +257,7 @@ describe('ImageController', () => {
 
     test('throws an error if parse returns an error', async () => {
       const configService = new ConfigService();
-      const imageDataService = new ImageMemoryDataService();
+      const imageDataService = new InMemoryImageDataService();
       const ic = new ImageController(configService, imageDataService);
 
       const req = {} as unknown as Request;

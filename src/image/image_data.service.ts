@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { ImageDetails } from '@/src/models/image_models';
+import { ImageDetails, NewImageDetails } from '@/src/models/image_models';
 
 @Injectable()
 export abstract class ImageDataService {
-  abstract getImageByName();
+  abstract getImageByName(name: string): Promise<ImageDetails>;
 
-  abstract deleteImage(id: string);
+  abstract deleteImage(id: string): Promise<string>;
 
-  abstract addImage(imageDetails: ImageDetails);
+  abstract addImage(imageDetails: NewImageDetails): Promise<ImageDetails>;
 }

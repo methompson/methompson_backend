@@ -17,6 +17,8 @@ export class ImageWriter {
 
   async convertImages(
     parsedData: ParsedFilesAndFields,
+    authorId: string,
+    isPrivate = false,
   ): Promise<NewImageDetails[]> {
     if (parsedData.imageFiles.length == 0) {
       throw new HttpException('No Image File Provided', HttpStatus.BAD_REQUEST);
@@ -76,9 +78,11 @@ export class ImageWriter {
 
         return NewImageDetails.fromJSON({
           files,
-          id: newFilename,
+          imageId: newFilename,
           originalFilename: imageFile.originalFilename,
           dateAdded: now.toISOString(),
+          authorId,
+          isPrivate,
         });
       },
     );

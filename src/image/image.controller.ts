@@ -1,4 +1,4 @@
-import { mkdir } from 'fs/promises';
+import { mkdir, stat } from 'fs/promises';
 
 import {
   Controller,
@@ -25,21 +25,82 @@ import {
 import { isString, isRecord } from '@/src/utils/type_guards';
 import { AuthModel } from '@/src/models/auth_model';
 import { ImageDataService } from './image_data.service';
+import path from 'path';
+import { NotFoundError, InvalidStateError } from '@/src/errors';
 
 @UseInterceptors(RequestLogInterceptor)
 @Controller({ path: 'api/image' })
 export class ImageController {
+  private uploadPath: string;
+  private savedImagePath: string;
+
   constructor(
     private configService: ConfigService,
     @Inject('IMAGE_SERVICE') private readonly imageService: ImageDataService,
-  ) {}
+  ) {
+    this.init();
+  }
+
+  /**
+   * Configures the temp and saved image paths.
+   */
+  async init() {
+    this.uploadPath = this.configService.get('temp_image_path') ?? '';
+
+    if (this.uploadPath.length > 0) {
+      await mkdir(this.uploadPath, {
+        recursive: true,
+      });
+    }
+
+    const savedImagePath = this.configService.get('saved_image_path');
+    try {
+      await mkdir(savedImagePath, { recursive: true });
+    } catch (e) {
+      console.error('Invalid Saved Image Path');
+      process.exit();
+    }
+
+    this.savedImagePath = savedImagePath;
+  }
 
   /**
    * Retrieves an image by the new image file name that was generated from the
    * uploadImage function.
    */
-  @Get(':imageId')
-  async getImageById(): Promise<void> {
+  @Get(':imageName')
+  async getImageById(
+    @Req() request: Request,
+    @Res() response: Response,
+  ): Promise<void> {
+    const imageName = request.params?.imageName;
+    const pathToImage = path.join(this.savedImagePath, imageName);
+
+    try {
+      await stat(pathToImage);
+    } catch (e) {
+      throw new HttpException('File not found', HttpStatus.NOT_FOUND);
+    }
+
+    let imageDetails: ImageDetails;
+    try {
+      imageDetails = await this.imageService.getImageByName(imageName);
+    } catch (e) {
+      if (e instanceof InvalidStateError) {
+        throw new HttpException(
+          'server error',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+
+      if (e instanceof NotFoundError) {
+        throw new HttpException('File not found', HttpStatus.NOT_FOUND);
+      }
+    }
+
+    console.log(imageDetails);
+
+    response.sendFile(pathToImage);
     console.log('Get');
   }
 
@@ -68,43 +129,21 @@ export class ImageController {
       );
     }
 
-    const uploadPath = this.configService.get('temp_image_path');
-
-    if (!isString(uploadPath)) {
-      throw new HttpException(
-        'Invaid Upload Dir Config',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-
-    if (uploadPath.length > 0) {
-      await mkdir(uploadPath, {
-        recursive: true,
-      });
-    }
-
-    const savedImagePath = this.configService.get('saved_image_path');
-    await mkdir(savedImagePath, { recursive: true });
-
     let parsedData;
 
     try {
-      parsedData = await this.parseImageFilesAndFields(req, uploadPath);
+      parsedData = await this.parseImageFilesAndFields(req, this.uploadPath);
     } catch (e) {
       const msg = isString(e?.message) ? e.message : `${e}`;
       throw new HttpException(msg, HttpStatus.BAD_REQUEST);
     }
 
-    const iw = new ImageWriter(savedImagePath);
-    const results = await iw.convertImages(parsedData);
-
-    const imageDetails: ImageDetails[] = results.map((img) =>
-      ImageDetails.fromNewImageDetails(userId, img),
-    );
+    const iw = new ImageWriter(this.savedImagePath);
+    const results = await iw.convertImages(parsedData, userId);
 
     console.log(results);
 
-    const promises: Promise<unknown>[] = imageDetails.map((img) =>
+    const promises: Promise<unknown>[] = results.map((img) =>
       this.imageService.addImage(img),
     );
 
