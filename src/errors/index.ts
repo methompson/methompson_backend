@@ -9,3 +9,10 @@ export class NotFoundError extends Error {
     Object.setPrototypeOf(this, NotFoundError.prototype);
   }
 }
+
+export class MutateDataException extends Error {
+  constructor(message: string) {
+    super(message);
+    Object.setPrototypeOf(this, MutateDataException.prototype);
+  }
+}

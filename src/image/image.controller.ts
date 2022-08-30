@@ -1,4 +1,5 @@
 import { mkdir, stat } from 'fs/promises';
+import path from 'path';
 
 import {
   Controller,
@@ -24,8 +25,7 @@ import {
 } from '@/src/models/image_models';
 import { isString, isRecord } from '@/src/utils/type_guards';
 import { AuthModel } from '@/src/models/auth_model';
-import { ImageDataService } from './image_data.service';
-import path from 'path';
+import { ImageDataService } from '@/src/image/image_data.service';
 import { NotFoundError, InvalidStateError } from '@/src/errors';
 
 @UseInterceptors(RequestLogInterceptor)
@@ -96,17 +96,30 @@ export class ImageController {
       if (e instanceof NotFoundError) {
         throw new HttpException('File not found', HttpStatus.NOT_FOUND);
       }
+
+      throw new HttpException('server error', HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    console.log(imageDetails);
+    if (imageDetails.isPrivate) {
+      const authModel = response.locals.auth;
+      if (!AuthModel.isAuthModel(authModel)) {
+        throw new HttpException(
+          'Invalid Autorization Token',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      if (!authModel.authorized) {
+        throw new HttpException('Not Authorized', HttpStatus.UNAUTHORIZED);
+      }
+    }
 
     response.sendFile(pathToImage);
-    console.log('Get');
   }
 
   @Post('upload')
   async uploadImages(
-    @Req() req: Request,
+    @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ): Promise<void> {
     const authModel = response.locals.auth;
@@ -132,7 +145,10 @@ export class ImageController {
     let parsedData;
 
     try {
-      parsedData = await this.parseImageFilesAndFields(req, this.uploadPath);
+      parsedData = await this.parseImageFilesAndFields(
+        request,
+        this.uploadPath,
+      );
     } catch (e) {
       const msg = isString(e?.message) ? e.message : `${e}`;
       throw new HttpException(msg, HttpStatus.BAD_REQUEST);
@@ -141,8 +157,6 @@ export class ImageController {
     const iw = new ImageWriter(this.savedImagePath);
     const results = await iw.convertImages(parsedData, userId);
 
-    console.log(results);
-
     const promises: Promise<unknown>[] = results.map((img) =>
       this.imageService.addImage(img),
     );
@@ -150,9 +164,54 @@ export class ImageController {
     await Promise.all(promises);
   }
 
-  @Post('delete/:imageId')
-  async deleteImage(): Promise<void> {
-    console.log('Delete');
+  @Post('delete/:imageName')
+  async deleteImage(
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<void> {
+    const authModel = response.locals.auth;
+    if (!AuthModel.isAuthModel(authModel)) {
+      throw new HttpException(
+        'Invalid Autorization Token',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (!authModel.authorized) {
+      throw new HttpException('Not Authorized', HttpStatus.UNAUTHORIZED);
+    }
+
+    const userId = authModel.userId;
+    if (userId.length === 0) {
+      throw new HttpException(
+        'Invalid Autorization Token',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const imageName = request.params?.imageName;
+    let imageDetails: ImageDetails;
+    try {
+      imageDetails = await this.imageService.getImageByName(imageName);
+    } catch (e) {
+      if (e instanceof InvalidStateError) {
+        throw new HttpException(
+          'server error',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+
+      if (e instanceof NotFoundError) {
+        throw new HttpException('File not found', HttpStatus.NOT_FOUND);
+      }
+
+      throw new HttpException('server error', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    const iw = new ImageWriter(this.savedImagePath);
+    await iw.deleteImages(imageDetails);
+
+    await this.imageService.deleteImage(imageDetails.id);
   }
 
   /**

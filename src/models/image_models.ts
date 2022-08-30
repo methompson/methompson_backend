@@ -7,7 +7,7 @@ import {
   isRecord,
   isString,
 } from '@/src/utils/type_guards';
-import { InvalidInputError } from '../errors/invalid_input_error';
+import { InvalidInputError } from '@/src/errors/invalid_input_error';
 
 interface FilenameComponents {
   name: string;
@@ -380,13 +380,25 @@ export class NewImageDetails {
   }
 
   toJSON(): NewImageDetailsInterface {
+    const files = this.files.map((file) => file.toJSON());
     return {
-      files: this.files,
+      files,
       imageId: this.imageId,
       originalFilename: this.originalFilename,
       dateAdded: this.dateAdded,
       isPrivate: this.isPrivate,
       authorId: this.authorId,
+    };
+  }
+
+  toMongo() {
+    const json = this.toJSON();
+
+    const dateAdded = new Date(this.dateAdded);
+
+    return {
+      ...json,
+      dateAdded,
     };
   }
 
@@ -465,10 +477,7 @@ export class ImageDetails extends NewImageDetails {
   }
 
   toJSON(): ImageDetailsInterface {
-    const files: FileDetailsInterface[] = [];
-    for (const file of this.files) {
-      files.push(file.toJSON());
-    }
+    const files = this.files.map((file) => file.toJSON());
 
     return {
       id: this.id,
@@ -507,9 +516,14 @@ export class ImageDetails extends NewImageDetails {
   }
 
   static fromMongo(input: WithId<Document> | Document): ImageDetails {
+    console.log('from Mongo');
+    const dateAdded = input?.dateAdded?.toISOString();
+    const id = input?._id?.toString();
+
     return ImageDetails.fromJSON({
       ...input,
-      id: input?._id?.toString(),
+      id,
+      dateAdded,
     });
   }
 

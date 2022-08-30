@@ -1,16 +1,20 @@
 import { exec } from 'child_process';
+import path from 'path';
+import { stat } from 'fs/promises';
 
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 
 import {
-  ParsedFilesAndFields,
-  ImageResizeOptions,
-  UploadedFile,
-  ImageDimensions,
   FileDetailsInterface,
+  ImageDetails,
+  ImageDimensions,
+  ImageResizeOptions,
   NewImageDetails,
+  ParsedFilesAndFields,
+  UploadedFile,
 } from '@/src/models/image_models';
+import { NotFoundError } from '@/src/errors';
 
 export class ImageWriter {
   constructor(private savedImagePath: string) {}
@@ -74,7 +78,7 @@ export class ImageWriter {
 
         const files: FileDetailsInterface[] = await Promise.all(promises);
 
-        await this.makeAndRunDeleteScript(imageFile);
+        await this.makeAndRunDeleteScript(imageFile.filepath);
 
         return NewImageDetails.fromJSON({
           files,
@@ -165,8 +169,8 @@ export class ImageWriter {
    * @param {UploadedFile} imageFile image file data that's used for path and name
    * @returns {Promise} returns a promise that resolves when the script has finished executing or throws an error
    */
-  async makeAndRunDeleteScript(imageFile: UploadedFile) {
-    const script = `rm ${imageFile.filepath}`;
+  async makeAndRunDeleteScript(filepath: string) {
+    const script = `rm ${filepath}`;
 
     return new Promise((resolve, reject) => {
       exec(script, (_err, _stdout, _stderr) => {
@@ -225,6 +229,20 @@ export class ImageWriter {
     }
 
     return `${options.newFileNameInfo.name}.${ext}`;
+  }
+
+  async deleteImages(imageDetails: ImageDetails) {
+    const paths = imageDetails.files.map((file) =>
+      path.join(this.savedImagePath, file.filename),
+    );
+
+    const deletePromises = paths.map((path) =>
+      this.makeAndRunDeleteScript(path),
+    );
+
+    const results = await Promise.allSettled(deletePromises);
+
+    console.log('delete results', results);
   }
 
   /**

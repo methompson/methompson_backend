@@ -17,7 +17,7 @@ import { isString } from '@/src/utils/type_guards';
 
 import { BlogService, BlogPostRequestOutput } from '@/src/blog/blog.service';
 import { LoggerService } from '@/src/logger/logger.service';
-import { RequestLogInterceptor } from '../middleware/request_log.interceptor';
+import { RequestLogInterceptor } from '@/src/middleware/request_log.interceptor';
 
 @UseInterceptors(RequestLogInterceptor)
 @Controller({ path: 'api/blog' })

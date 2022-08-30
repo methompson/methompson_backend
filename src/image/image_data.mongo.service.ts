@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Collection, Document, MongoServerError } from 'mongodb';
+import { Collection, Document, MongoServerError, ObjectId } from 'mongodb';
 
 import { ImageDataService } from '@/src/image/image_data.service';
 import { ImageDetails, NewImageDetails } from '@/src/models/image_models';
@@ -8,6 +8,7 @@ import {
   NotFoundError,
   InvalidStateError,
   InvalidInputError,
+  MutateDataException,
 } from '@/src/errors';
 import { MongoDBClient } from '@/src/utils/mongodb_client_class';
 
@@ -74,8 +75,8 @@ export class MongoImageDataService extends ImageDataService {
               description: 'originalFilename is required and must be a String',
             },
             dateAdded: {
-              bsonType: 'string',
-              description: 'dateAdded is required and must be a String',
+              bsonType: 'date',
+              description: 'dateAdded is required and must be a Date',
             },
             isPrivate: {
               bsonType: 'bool',
@@ -94,19 +95,31 @@ export class MongoImageDataService extends ImageDataService {
     const imageCollection = await this.imageCollection;
     const result = await imageCollection.findOne({ 'files.filename': name });
 
-    console.log('result', result);
+    if (result === null) {
+      throw new NotFoundError('Result is null');
+    }
 
-    throw new Error('unimplemented');
+    return ImageDetails.fromMongo(result);
   }
 
-  async deleteImage(id: string): Promise<string> {
-    return '';
+  async deleteImage(imageId: string): Promise<string> {
+    const _id = new ObjectId(imageId);
+
+    const result = await this.imageCollection.then((collection) =>
+      collection.deleteOne({ _id }),
+    );
+
+    if (result.deletedCount !== 1) {
+      throw new MutateDataException('No Exchanges Deleted');
+    }
+
+    return imageId;
   }
 
   async addImage(imageDetails: NewImageDetails): Promise<ImageDetails> {
     try {
       const imageCollection = await this.imageCollection;
-      const result = await imageCollection.insertOne(imageDetails.toJSON());
+      const result = await imageCollection.insertOne(imageDetails.toMongo());
 
       console.log('upload result', result);
 
