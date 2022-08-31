@@ -112,7 +112,7 @@ describe('ImageWriter', () => {
         }),
       );
       expect(makeDeleteSpy).toHaveBeenCalledTimes(1);
-      expect(makeDeleteSpy).toHaveBeenCalledWith(image1);
+      expect(makeDeleteSpy).toHaveBeenCalledWith(image1.filepath);
     });
 
     test('calls functions with the passed in data, even if there are multiple files', async () => {
@@ -175,8 +175,8 @@ describe('ImageWriter', () => {
         }),
       );
       expect(makeDeleteSpy).toHaveBeenCalledTimes(2);
-      expect(makeDeleteSpy).toHaveBeenNthCalledWith(1, image1);
-      expect(makeDeleteSpy).toHaveBeenNthCalledWith(2, image2);
+      expect(makeDeleteSpy).toHaveBeenNthCalledWith(1, image1.filepath);
+      expect(makeDeleteSpy).toHaveBeenNthCalledWith(2, image2.filepath);
     });
 
     test('returns NewImageDetails object for each image passed in', async () => {
