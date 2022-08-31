@@ -1,5 +1,6 @@
 import * as child_process from 'child_process';
 import * as uuid from 'uuid';
+import * as fsPromises from 'fs/promises';
 
 import { ImageWriter } from '@/src/image/image_writer';
 import { ImageResizeOptions, UploadedFile } from '@/src/models/image_models';
@@ -12,9 +13,11 @@ type ExecCallback = (
 
 jest.mock('fs/promises', () => {
   const mkdir = jest.fn(async () => {});
+  const rm = jest.fn(async () => {});
 
   return {
     mkdir,
+    rm,
   };
 });
 
@@ -35,6 +38,7 @@ jest.mock('uuid', () => {
 });
 
 const exec = child_process.exec as unknown as jest.Mock<unknown, unknown[]>;
+const rm = fsPromises.rm as unknown as jest.Mock<unknown, unknown[]>;
 const uuidv4 = uuid.v4 as jest.Mock<unknown, unknown[]>;
 
 describe('ImageWriter', () => {
@@ -51,6 +55,7 @@ describe('ImageWriter', () => {
   beforeEach(() => {
     uuidv4.mockClear();
     exec.mockClear();
+    rm.mockClear();
   });
 
   const image1 = new UploadedFile(
@@ -81,8 +86,6 @@ describe('ImageWriter', () => {
         identifier,
         dimensions,
       }));
-      const makeDeleteSpy = jest.spyOn(ic, 'makeAndRunDeleteScript');
-      makeDeleteSpy.mockImplementation(async (_) => {});
 
       const parsedData = {
         imageFiles: [image1],
@@ -111,8 +114,8 @@ describe('ImageWriter', () => {
           stripMeta: true,
         }),
       );
-      expect(makeDeleteSpy).toHaveBeenCalledTimes(1);
-      expect(makeDeleteSpy).toHaveBeenCalledWith(image1.filepath);
+      expect(rm).toHaveBeenCalledTimes(1);
+      expect(rm).toHaveBeenCalledWith(image1.filepath);
     });
 
     test('calls functions with the passed in data, even if there are multiple files', async () => {
@@ -128,8 +131,6 @@ describe('ImageWriter', () => {
         identifier,
         dimensions,
       }));
-      const makeDeleteSpy = jest.spyOn(ic, 'makeAndRunDeleteScript');
-      makeDeleteSpy.mockImplementation(async (_) => {});
 
       uuidv4.mockImplementationOnce(() => newFilename1);
       uuidv4.mockImplementationOnce(() => newFilename2);
@@ -174,9 +175,9 @@ describe('ImageWriter', () => {
           stripMeta: true,
         }),
       );
-      expect(makeDeleteSpy).toHaveBeenCalledTimes(2);
-      expect(makeDeleteSpy).toHaveBeenNthCalledWith(1, image1.filepath);
-      expect(makeDeleteSpy).toHaveBeenNthCalledWith(2, image2.filepath);
+      expect(rm).toHaveBeenCalledTimes(2);
+      expect(rm).toHaveBeenNthCalledWith(1, image1.filepath);
+      expect(rm).toHaveBeenNthCalledWith(2, image2.filepath);
     });
 
     test('returns NewImageDetails object for each image passed in', async () => {
@@ -192,8 +193,6 @@ describe('ImageWriter', () => {
         identifier,
         dimensions,
       }));
-      const makeDeleteSpy = jest.spyOn(ic, 'makeAndRunDeleteScript');
-      makeDeleteSpy.mockImplementation(async (_) => {});
 
       uuidv4.mockImplementationOnce(() => newFilename1);
       uuidv4.mockImplementationOnce(() => newFilename2);
@@ -222,7 +221,6 @@ describe('ImageWriter', () => {
       makeResizeSpy.mockImplementation(async (_) => {
         throw new Error(testError);
       });
-      const makeDeleteSpy = jest.spyOn(ic, 'makeAndRunDeleteScript');
 
       const parsedData = {
         imageFiles: [image1],
@@ -236,7 +234,7 @@ describe('ImageWriter', () => {
       } catch (e) {
         expect(e.message).toBe(testError);
         expect(makeResizeSpy).toHaveBeenCalledTimes(2);
-        expect(makeDeleteSpy).toHaveBeenCalledTimes(0);
+        expect(rm).toHaveBeenCalledTimes(0);
       }
     });
   });

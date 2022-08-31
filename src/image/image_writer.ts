@@ -1,6 +1,6 @@
 import { exec } from 'child_process';
 import path from 'path';
-import { stat } from 'fs/promises';
+import { rm } from 'fs/promises';
 
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
@@ -78,7 +78,7 @@ export class ImageWriter {
 
         const files: FileDetailsInterface[] = await Promise.all(promises);
 
-        await this.makeAndRunDeleteScript(imageFile.filepath);
+        await rm(imageFile.filepath);
 
         return NewImageDetails.fromJSON({
           files,
@@ -164,25 +164,6 @@ export class ImageWriter {
   }
 
   /**
-   * Takes a UploadedFile object and deletes the original file.
-   *
-   * @param {UploadedFile} imageFile image file data that's used for path and name
-   * @returns {Promise} returns a promise that resolves when the script has finished executing or throws an error
-   */
-  async makeAndRunDeleteScript(filepath: string) {
-    const script = `rm ${filepath}`;
-
-    return new Promise((resolve, reject) => {
-      exec(script, (_err, _stdout, _stderr) => {
-        if (_err || _stderr) {
-          reject(new Error('rm script failed'));
-        }
-        resolve(null);
-      });
-    });
-  }
-
-  /**
    * Builds an imageMagick resize script based upon the ImageResizeOptions
    * object passed in.
    *
@@ -236,9 +217,7 @@ export class ImageWriter {
       path.join(this.savedImagePath, file.filename),
     );
 
-    const deletePromises = paths.map((path) =>
-      this.makeAndRunDeleteScript(path),
-    );
+    const deletePromises = paths.map((path) => rm(path));
 
     const results = await Promise.allSettled(deletePromises);
 
