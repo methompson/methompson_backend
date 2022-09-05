@@ -18,6 +18,19 @@
       "internalConsoleOptions": "neverOpen",
     },
     {
+      "name": "Debug Jest Integration Tests",
+      "type": "node",
+      "request": "launch",
+      "runtimeArgs": [
+        "--inspect-brk",
+        "${workspaceRoot}/node_modules/.bin/jest",
+        "${workspaceRoot}/test/integration",
+        "--runInBand"
+      ],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+    },
+    {
       "name": "Debug App w/ No Auth",
       "request": "launch",
       "runtimeArgs": [

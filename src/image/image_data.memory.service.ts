@@ -35,13 +35,18 @@ export class InMemoryImageDataService extends ImageDataService {
     return id;
   }
 
-  async addImage(imageDetails: NewImageDetails): Promise<ImageDetails> {
+  async addImages(imageDetails: NewImageDetails[]): Promise<ImageDetails[]> {
     const id = uuidv4();
-    const image = ImageDetails.fromNewImageDetails(id, imageDetails);
 
-    this.images[image.imageId] = image;
-    this.images = { ...this.images };
+    const images = imageDetails.map((imageDetail) => {
+      const image = ImageDetails.fromNewImageDetails(id, imageDetail);
 
-    return image;
+      this.images[image.imageId] = image;
+      this.images = { ...this.images };
+
+      return image;
+    });
+
+    return images;
   }
 }

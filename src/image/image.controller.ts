@@ -155,13 +155,27 @@ export class ImageController {
     }
 
     const iw = new ImageWriter(this.savedImagePath);
-    const results = await iw.convertImages(parsedData, userId);
+    const imageDetails = await iw.convertImages(parsedData, userId);
 
-    const promises: Promise<unknown>[] = results.map((img) =>
-      this.imageService.addImage(img),
-    );
+    // const promises: Promise<unknown>[] = imageDetails.map((img) =>
+    //   this.imageService.addImage(img),
+    // );
 
-    await Promise.all(promises);
+    try {
+      await this.imageService.addImages(imageDetails);
+    } catch (e) {
+      // Roll back file writes
+      const promises = imageDetails.map((details) =>
+        iw.rollBackWrites(details),
+      );
+
+      await Promise.all(promises);
+
+      throw new HttpException(
+        'Error Writing Image to database',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Post('delete/:imageName')

@@ -16,18 +16,22 @@ const imageDataCollectionName = 'images';
 
 @Injectable()
 export class MongoImageDataService extends ImageDataService {
-  constructor(protected mongoDBClient: MongoDBClient) {
+  constructor(protected _mongoDBClient: MongoDBClient) {
     super();
   }
 
   protected get imageCollection(): Promise<Collection<Document>> {
-    return this.mongoDBClient.db.then((db) =>
+    return this._mongoDBClient.db.then((db) =>
       db.collection(imageDataCollectionName),
     );
   }
 
+  public get mongoDBClient() {
+    return this._mongoDBClient;
+  }
+
   protected async containsImageCollection(): Promise<boolean> {
-    const db = await this.mongoDBClient.db;
+    const db = await this._mongoDBClient.db;
     const collections = await db.collections();
 
     let containsBlog = false;
@@ -42,7 +46,7 @@ export class MongoImageDataService extends ImageDataService {
 
   protected async makeImageCollection() {
     console.log('Making Blog Collection');
-    const db = await this.mongoDBClient.db;
+    const db = await this._mongoDBClient.db;
 
     // Enforce required values
     const imageCollection = await db.createCollection(imageDataCollectionName, {
@@ -104,10 +108,9 @@ export class MongoImageDataService extends ImageDataService {
 
   async deleteImage(imageId: string): Promise<string> {
     const _id = new ObjectId(imageId);
+    const collection = await this.imageCollection;
 
-    const result = await this.imageCollection.then((collection) =>
-      collection.deleteOne({ _id }),
-    );
+    const result = await collection.deleteOne({ _id });
 
     if (result.deletedCount !== 1) {
       throw new MutateDataException('No Exchanges Deleted');
@@ -116,16 +119,31 @@ export class MongoImageDataService extends ImageDataService {
     return imageId;
   }
 
-  async addImage(imageDetails: NewImageDetails): Promise<ImageDetails> {
+  async addImages(imageDetails: NewImageDetails[]): Promise<ImageDetails[]> {
+    if (imageDetails.length === 0) {
+      throw new InvalidInputError('imageDetails must contain a value');
+    }
+
     try {
       const imageCollection = await this.imageCollection;
-      const result = await imageCollection.insertOne(imageDetails.toMongo());
+      const details = imageDetails.map((imageDetail) => imageDetail.toMongo());
 
-      console.log('upload result', result);
+      const results = await imageCollection.insertMany(details, {
+        ordered: false,
+      });
 
-      const id = result.insertedId.toString();
+      const output = details.map((detail) => ImageDetails.fromMongo(detail));
 
-      return ImageDetails.fromNewImageDetails(id, imageDetails);
+      console.log('upload result', results);
+
+      if (
+        !results.acknowledged ||
+        results.insertedCount != imageDetails.length
+      ) {
+        throw new Error('Upload error');
+      }
+
+      return output;
     } catch (e) {
       console.error('Add Image Error', e);
 

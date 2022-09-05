@@ -7,5 +7,5 @@ export abstract class ImageDataService {
 
   abstract deleteImage(id: string): Promise<string>;
 
-  abstract addImage(imageDetails: NewImageDetails): Promise<ImageDetails>;
+  abstract addImages(imageDetails: NewImageDetails[]): Promise<ImageDetails[]>;
 }

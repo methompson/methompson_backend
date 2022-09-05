@@ -14,7 +14,6 @@ import {
   ParsedFilesAndFields,
   UploadedFile,
 } from '@/src/models/image_models';
-import { NotFoundError } from '@/src/errors';
 
 export class ImageWriter {
   constructor(private savedImagePath: string) {}
@@ -227,5 +226,11 @@ export class ImageWriter {
   /**
    * Attempts to roll back any writes that occurred in case of an error
    */
-  async rollBackWrites() {}
+  async rollBackWrites(details: NewImageDetails) {
+    const promises = details.files.map((file) =>
+      rm(`${this.savedImagePath}/${file.filename}`),
+    );
+
+    await Promise.all(promises);
+  }
 }
