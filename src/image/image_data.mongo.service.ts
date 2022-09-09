@@ -1,16 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Collection, Document, MongoServerError, ObjectId } from 'mongodb';
+import { Collection, Document, ObjectId } from 'mongodb';
 
-import { ImageDataService } from '@/src/image/image_data.service';
-import { ImageDetails, NewImageDetails } from '@/src/models/image_models';
 import {
-  NotFoundError,
-  InvalidStateError,
-  InvalidInputError,
-  MutateDataException,
-} from '@/src/errors';
+  DeleteImageOptions,
+  ImageDataService,
+} from '@/src/image/image_data.service';
+import { ImageDetails, NewImageDetails } from '@/src/models/image_models';
+import { NotFoundError, InvalidInputError } from '@/src/errors';
 import { MongoDBClient } from '@/src/utils/mongodb_client_class';
+import { isNull, isNullOrUndefined } from '@/src/utils/type_guards';
 
 const imageDataCollectionName = 'images';
 
@@ -106,17 +105,44 @@ export class MongoImageDataService extends ImageDataService {
     return ImageDetails.fromMongo(result);
   }
 
-  async deleteImage(imageId: string): Promise<string> {
-    const _id = new ObjectId(imageId);
-    const collection = await this.imageCollection;
+  async deleteImage(options: DeleteImageOptions): Promise<ImageDetails> {
+    let deleteOptions: Record<string, unknown> = {};
 
-    const result = await collection.deleteOne({ _id });
-
-    if (result.deletedCount !== 1) {
-      throw new MutateDataException('No Exchanges Deleted');
+    if (!isNullOrUndefined(options.id)) {
+      const _id = new ObjectId(options.id);
+      deleteOptions._id = _id;
     }
 
-    return imageId;
+    if (!isNullOrUndefined(options.filename)) {
+      deleteOptions = {
+        ...deleteOptions,
+        'files.filename': options.filename,
+      };
+    }
+    if (!isNullOrUndefined(options.originalFilename)) {
+      deleteOptions.originalFilename = options.originalFilename;
+    }
+
+    const collection = await this.imageCollection;
+    const result = await collection.findOneAndDelete(deleteOptions);
+
+    if (isNull(result.value)) {
+      throw new InvalidInputError('Invalid delete image options passed');
+    }
+
+    const details = ImageDetails.fromMongo(result.value);
+
+    return details;
+  }
+
+  async rollBackAdditions(imageDetails: NewImageDetails[]): Promise<void> {
+    const collection = await this.imageCollection;
+
+    const promises = imageDetails.map((detail) =>
+      collection.deleteOne({ originalFilename: detail.originalFilename }),
+    );
+
+    await Promise.allSettled(promises);
   }
 
   async addImages(imageDetails: NewImageDetails[]): Promise<ImageDetails[]> {
@@ -124,17 +150,14 @@ export class MongoImageDataService extends ImageDataService {
       throw new InvalidInputError('imageDetails must contain a value');
     }
 
+    const details = imageDetails.map((imageDetail) => imageDetail.toMongo());
+
     try {
       const imageCollection = await this.imageCollection;
-      const details = imageDetails.map((imageDetail) => imageDetail.toMongo());
 
       const results = await imageCollection.insertMany(details, {
-        ordered: false,
+        ordered: true,
       });
-
-      const output = details.map((detail) => ImageDetails.fromMongo(detail));
-
-      console.log('upload result', results);
 
       if (
         !results.acknowledged ||
@@ -142,13 +165,14 @@ export class MongoImageDataService extends ImageDataService {
       ) {
         throw new Error('Upload error');
       }
-
-      return output;
     } catch (e) {
       console.error('Add Image Error', e);
 
       throw new Error('Add Image Error');
     }
+
+    const output = details.map((detail) => ImageDetails.fromMongo(detail));
+    return output;
   }
 
   static async initFromConfig(

@@ -15,6 +15,15 @@ import {
   UploadedFile,
 } from '@/src/models/image_models';
 
+/**
+ * The ImageWriter class represents an API to handle image files. It performs
+ * actions such as converting image files, saving them to a file system,
+ * retrieving image files from the file system and deleting them from the
+ * file system.
+ *
+ * It also employs ImageMagick to perform conversions so that an image can
+ * be compressed and resized into smaller versions.
+ */
 export class ImageWriter {
   constructor(private savedImagePath: string) {}
 

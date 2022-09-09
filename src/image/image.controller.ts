@@ -204,28 +204,35 @@ export class ImageController {
     }
 
     const imageName = request.params?.imageName;
-    let imageDetails: ImageDetails;
+    // let imageDetails: ImageDetails;
+    // try {
+    //   imageDetails = await this.imageService.getImageByName(imageName);
+    // } catch (e) {
+    //   if (e instanceof InvalidStateError) {
+    //     throw new HttpException(
+    //       'server error',
+    //       HttpStatus.INTERNAL_SERVER_ERROR,
+    //     );
+    //   }
+
+    //   if (e instanceof NotFoundError) {
+    //     throw new HttpException('File not found', HttpStatus.NOT_FOUND);
+    //   }
+
+    //   throw new HttpException('server error', HttpStatus.INTERNAL_SERVER_ERROR);
+    // }
+
     try {
-      imageDetails = await this.imageService.getImageByName(imageName);
+      const imageDetails = await this.imageService.deleteImage({
+        filename: imageName,
+      });
+
+      const iw = new ImageWriter(this.savedImagePath);
+      await iw.deleteImages(imageDetails);
     } catch (e) {
-      if (e instanceof InvalidStateError) {
-        throw new HttpException(
-          'server error',
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
-
-      if (e instanceof NotFoundError) {
-        throw new HttpException('File not found', HttpStatus.NOT_FOUND);
-      }
-
+      console.error(e);
       throw new HttpException('server error', HttpStatus.INTERNAL_SERVER_ERROR);
     }
-
-    const iw = new ImageWriter(this.savedImagePath);
-    await iw.deleteImages(imageDetails);
-
-    await this.imageService.deleteImage(imageDetails.id);
   }
 
   /**

@@ -26,8 +26,8 @@ function isNull(value: unknown): value is null {
   return value === null;
 }
 
-function isUndefined(value: unknown): value is null {
-  return value === null;
+function isUndefined(value: unknown): value is undefined {
+  return value === undefined;
 }
 
 function isNullOrUndefined(value: unknown): value is null | undefined {

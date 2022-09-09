@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 
-import { ImageDataService } from '@/src/image/image_data.service';
+import {
+  DeleteImageOptions,
+  ImageDataService,
+} from '@/src/image/image_data.service';
 import { ImageDetails, NewImageDetails } from '@/src/models/image_models';
 import { NotFoundError, InvalidStateError } from '@/src/errors';
 
@@ -28,11 +31,12 @@ export class InMemoryImageDataService extends ImageDataService {
     return file[0];
   }
 
-  async deleteImage(id: string): Promise<string> {
-    delete this.images[id];
-    this.images = { ...this.images };
+  async deleteImage(options: DeleteImageOptions): Promise<ImageDetails> {
+    // delete this.images[id];
+    // this.images = { ...this.images };
 
-    return id;
+    // return id;
+    throw new Error('Unimplemented');
   }
 
   async addImages(imageDetails: NewImageDetails[]): Promise<ImageDetails[]> {

@@ -391,7 +391,7 @@ export class NewImageDetails {
     };
   }
 
-  toMongo() {
+  toMongo(): Record<string, unknown> {
     const json = this.toJSON();
 
     const dateAdded = new Date(this.dateAdded);
