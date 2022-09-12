@@ -204,23 +204,6 @@ export class ImageController {
     }
 
     const imageName = request.params?.imageName;
-    // let imageDetails: ImageDetails;
-    // try {
-    //   imageDetails = await this.imageService.getImageByName(imageName);
-    // } catch (e) {
-    //   if (e instanceof InvalidStateError) {
-    //     throw new HttpException(
-    //       'server error',
-    //       HttpStatus.INTERNAL_SERVER_ERROR,
-    //     );
-    //   }
-
-    //   if (e instanceof NotFoundError) {
-    //     throw new HttpException('File not found', HttpStatus.NOT_FOUND);
-    //   }
-
-    //   throw new HttpException('server error', HttpStatus.INTERNAL_SERVER_ERROR);
-    // }
 
     try {
       const imageDetails = await this.imageService.deleteImage({

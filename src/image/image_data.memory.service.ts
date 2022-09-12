@@ -6,7 +6,12 @@ import {
   ImageDataService,
 } from '@/src/image/image_data.service';
 import { ImageDetails, NewImageDetails } from '@/src/models/image_models';
-import { NotFoundError, InvalidStateError } from '@/src/errors';
+import {
+  NotFoundError,
+  InvalidStateError,
+  InvalidInputError,
+} from '@/src/errors';
+import { isNullOrUndefined } from '../utils/type_guards';
 
 @Injectable()
 export class InMemoryImageDataService extends ImageDataService {
@@ -32,11 +37,52 @@ export class InMemoryImageDataService extends ImageDataService {
   }
 
   async deleteImage(options: DeleteImageOptions): Promise<ImageDetails> {
-    // delete this.images[id];
-    // this.images = { ...this.images };
+    if (!isNullOrUndefined(options.id)) {
+      const details = this.images[options.id];
 
-    // return id;
-    throw new Error('Unimplemented');
+      if (isNullOrUndefined(details)) {
+        throw new InvalidInputError(
+          `Image does not exist for id ${options.id}`,
+        );
+      }
+
+      delete this.images[options.id];
+      return details;
+    }
+
+    const imagesToDelete = Object.values(this.images).filter((image) => {
+      let toDelete = false;
+      if (!isNullOrUndefined(options.originalFilename)) {
+        if (image.originalFilename === options.originalFilename) {
+          toDelete = true;
+        }
+      }
+
+      if (!isNullOrUndefined(options.filename)) {
+        const files = image.files;
+        files.reduce((currVal, prevVal, index) => {
+          if (currVal) return currVal;
+          return files[index]?.filename === options.filename;
+        }, false);
+
+        if (files.length > 0) {
+          toDelete = true;
+        }
+      }
+
+      return toDelete;
+    });
+
+    if (imagesToDelete.length === 0) {
+      throw new InvalidInputError('Image does not exist');
+    }
+
+    const image = this.images[0];
+
+    delete this.images[image.id];
+    this.images = { ...this.images };
+
+    return image;
   }
 
   async addImages(imageDetails: NewImageDetails[]): Promise<ImageDetails[]> {
