@@ -95,6 +95,7 @@ export class MongoImageDataService extends ImageDataService {
   }
 
   async getImageByName(name: string): Promise<ImageDetails> {
+    console.log('getImageByName');
     const imageCollection = await this.imageCollection;
     const result = await imageCollection.findOne({ 'files.filename': name });
 

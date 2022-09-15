@@ -69,7 +69,7 @@ export class ImageController {
    * uploadImage function.
    */
   @Get(':imageName')
-  async getImageById(
+  async getImageByName(
     @Req() request: Request,
     @Res() response: Response,
   ): Promise<void> {

@@ -11,7 +11,8 @@ import {
   InvalidStateError,
   InvalidInputError,
 } from '@/src/errors';
-import { isNullOrUndefined } from '../utils/type_guards';
+
+import { isNullOrUndefined } from '@/src/utils/type_guards';
 
 @Injectable()
 export class InMemoryImageDataService extends ImageDataService {

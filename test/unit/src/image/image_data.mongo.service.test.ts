@@ -1,10 +1,13 @@
-import { Db, MongoClient, Collection } from 'mongodb';
+import { Db, MongoClient, Collection, ObjectId } from 'mongodb';
 
 import { MongoImageDataService } from '@/src/image/image_data.mongo.service';
 import { MongoDBClient } from '@/src/utils/mongodb_client_class';
+import { NotFoundError } from '@/src/errors';
 
 // jest.mock('mongodb');
 jest.mock('mongodb', () => {
+  const originalModule = jest.requireActual('mongodb');
+
   function MockDb() {}
   MockDb.prototype.collection = jest.fn();
   MockDb.prototype.collections = jest.fn();
@@ -12,10 +15,12 @@ jest.mock('mongodb', () => {
 
   function MockCollection() {}
   MockCollection.prototype.createIndex = jest.fn();
+  MockCollection.prototype.findOne = jest.fn();
 
   const MockMongoClient = jest.fn();
 
   return {
+    ...originalModule,
     Db: MockDb,
     MongoClient: MockMongoClient,
     Collection: MockCollection,
@@ -300,7 +305,79 @@ describe('MongoImageDataService', () => {
     });
   });
 
-  describe('getImageByName', () => {});
+  describe('getImageByName', () => {
+    const imageDetails = {
+      files: [
+        {
+          filename: 'fa713d2c-877c-4ddc-b87d-dc39e2ac0061.jpg',
+          identifier: '',
+          dimensions: {
+            x: 1280,
+            y: 928,
+          },
+        },
+        {
+          filename: 'fa713d2c-877c-4ddc-b87d-dc39e2ac0061_thumb.jpg',
+          identifier: 'thumb',
+          dimensions: {
+            x: 128,
+            y: 93,
+          },
+        },
+      ],
+      imageId: 'test',
+      originalFilename: 'originalFilename',
+      dateAdded: new Date('2022-09-15T06:46:00.000Z'),
+      isPrivate: false,
+      authorId: 'authorId',
+      _id: new ObjectId('abcdef123456'),
+    };
+
+    test('returns the value from findOne', async () => {
+      const findOneSpy = jest.spyOn(mockCollection, 'findOne');
+      findOneSpy.mockImplementationOnce(async () => imageDetails);
+
+      const svc = new MongoImageDataService(mockMongoDBClient);
+      const results = await svc.getImageByName('test');
+
+      expect(results.imageId).toBe(imageDetails.imageId);
+      expect(results.originalFilename).toBe(imageDetails.originalFilename);
+      expect(results.isPrivate).toBe(imageDetails.isPrivate);
+      expect(results.authorId).toBe(imageDetails.authorId);
+      expect(results.dateAdded).toBe(imageDetails.dateAdded.toISOString());
+
+      const images = results.files.map((file) => file.toJSON());
+      expect(images).toStrictEqual(imageDetails.files);
+    });
+
+    test('throws an error when findOne throws an error', async () => {
+      const findOneSpy = jest.spyOn(mockCollection, 'findOne');
+      findOneSpy.mockImplementationOnce(async () => {
+        throw new Error(testError);
+      });
+
+      const svc = new MongoImageDataService(mockMongoDBClient);
+      await expect(() => svc.getImageByName('test')).rejects.toThrow(testError);
+    });
+
+    test('throws an error when findOne returns null', async () => {
+      const findOneSpy = jest.spyOn(mockCollection, 'findOne');
+      findOneSpy.mockImplementationOnce(async () => null);
+
+      const svc = new MongoImageDataService(mockMongoDBClient);
+      await expect(() => svc.getImageByName('test')).rejects.toThrow(
+        new NotFoundError('Result is null'),
+      );
+    });
+
+    test('throws an error when the value returned does not conform to ImageDetails', async () => {
+      const findOneSpy = jest.spyOn(mockCollection, 'findOne');
+      findOneSpy.mockImplementationOnce(async () => ({}));
+
+      const svc = new MongoImageDataService(mockMongoDBClient);
+      await expect(() => svc.getImageByName('test')).rejects.toThrow();
+    });
+  });
 
   describe('deleteImage', () => {});
 

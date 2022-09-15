@@ -516,6 +516,7 @@ export class ImageDetails extends NewImageDetails {
   }
 
   static fromMongo(input: WithId<Document> | Document): ImageDetails {
+    console.log(JSON.stringify(input));
     const dateAdded = input?.dateAdded?.toISOString();
     const id = input?._id?.toString();
 
