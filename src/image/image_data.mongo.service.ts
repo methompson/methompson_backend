@@ -107,7 +107,7 @@ export class MongoImageDataService extends ImageDataService {
   }
 
   async deleteImage(options: DeleteImageOptions): Promise<ImageDetails> {
-    let deleteOptions: Record<string, unknown> = {};
+    const deleteOptions: Record<string, unknown> = {};
 
     if (!isNullOrUndefined(options.id)) {
       const _id = new ObjectId(options.id);
@@ -115,13 +115,17 @@ export class MongoImageDataService extends ImageDataService {
     }
 
     if (!isNullOrUndefined(options.filename)) {
-      deleteOptions = {
-        ...deleteOptions,
-        'files.filename': options.filename,
-      };
+      deleteOptions['files.filename'] = options.filename;
     }
+
     if (!isNullOrUndefined(options.originalFilename)) {
       deleteOptions.originalFilename = options.originalFilename;
+    }
+
+    if (Object.keys(deleteOptions).length === 0) {
+      throw new InvalidInputError(
+        'Invalid delete image options passed. No options passed',
+      );
     }
 
     const collection = await this.imageCollection;
