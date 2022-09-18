@@ -95,7 +95,6 @@ export class MongoImageDataService extends ImageDataService {
   }
 
   async getImageByName(name: string): Promise<ImageDetails> {
-    console.log('getImageByName');
     const imageCollection = await this.imageCollection;
     const result = await imageCollection.findOne({ 'files.filename': name });
 
@@ -182,8 +181,14 @@ export class MongoImageDataService extends ImageDataService {
 
   static async initFromConfig(
     configService: ConfigService,
+    testClient?: MongoDBClient,
   ): Promise<MongoImageDataService> {
-    const client = MongoDBClient.fromConfiguration(configService);
+    // We only use the testClient if NODE_ENV is test
+    const client =
+      process.env.NODE_ENV === 'test'
+        ? testClient ?? MongoDBClient.fromConfiguration(configService)
+        : MongoDBClient.fromConfiguration(configService);
+
     const service = new MongoImageDataService(client);
 
     if (!(await service.containsImageCollection())) {

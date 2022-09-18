@@ -1,8 +1,10 @@
 import { Db, MongoClient, Collection, ObjectId } from 'mongodb';
 
-import { MongoImageDataService } from '@/src/image/image_data.mongo.service';
-import { MongoDBClient } from '@/src/utils/mongodb_client_class';
 import { NotFoundError } from '@/src/errors';
+import { MongoImageDataService } from '@/src/image/image_data.mongo.service';
+import { ImageDetails, NewImageDetails } from '@/src/models/image_models';
+import { MongoDBClient } from '@/src/utils/mongodb_client_class';
+import { ConfigService } from '@nestjs/config';
 
 // jest.mock('mongodb');
 jest.mock('mongodb', () => {
@@ -23,6 +25,8 @@ jest.mock('mongodb', () => {
   MockCollection.prototype.createIndex = jest.fn();
   MockCollection.prototype.findOne = jest.fn();
   MockCollection.prototype.findOneAndDelete = jest.fn();
+  MockCollection.prototype.deleteOne = jest.fn();
+  MockCollection.prototype.insertMany = jest.fn();
 
   const MockMongoClient = jest.fn();
 
@@ -79,7 +83,8 @@ describe('MongoImageDataService', () => {
   let mockCollectionSpy: jest.SpyInstance;
   let clientDbSpy: jest.SpyInstance;
 
-  const objectId = 'abcdef123456';
+  const objectId1 = 'abcdef1234567890abcdef12';
+  const objectId2 = '0987654321fedcba09876543';
 
   const imageDetails = {
     files: [
@@ -105,17 +110,21 @@ describe('MongoImageDataService', () => {
     dateAdded: new Date('2022-09-15T06:46:00.000Z'),
     isPrivate: false,
     authorId: 'authorId',
-    _id: new ObjectId(objectId),
+    _id: new ObjectId(objectId1),
   };
 
   beforeEach(() => {
     (Db.prototype.collection as unknown as jest.Mock).mockReset();
     (Db.prototype.collections as unknown as jest.Mock).mockReset();
     (Db.prototype.createCollection as unknown as jest.Mock).mockReset();
+
     (MongoClient as unknown as jest.Mock).mockReset();
+
     (Collection.prototype.createIndex as unknown as jest.Mock).mockReset();
     (Collection.prototype.findOne as unknown as jest.Mock).mockReset();
     (Collection.prototype.findOneAndDelete as unknown as jest.Mock).mockReset();
+    (Collection.prototype.deleteOne as unknown as jest.Mock).mockReset();
+    (Collection.prototype.insertMany as unknown as jest.Mock).mockReset();
 
     mockMongoClient = new MongoClient(dbName);
     mockDb = new Db(mockMongoClient, dbName);
@@ -192,10 +201,9 @@ describe('MongoImageDataService', () => {
       col2NameSpy.mockReturnValue('collection2');
 
       const collectionsSpy = jest.spyOn(mockDb, 'collections');
-      collectionsSpy.mockImplementationOnce(() => {
-        console.log('contains true');
-        return Promise.resolve([imageDataCol, collection1, collection2]);
-      });
+      collectionsSpy.mockImplementationOnce(() =>
+        Promise.resolve([imageDataCol, collection1, collection2]),
+      );
 
       const svc = new MongoImageDataService(mockMongoDBClient);
       const result = await svc['containsImageCollection']();
@@ -420,7 +428,7 @@ describe('MongoImageDataService', () => {
         value: imageDetails,
       }));
 
-      const result = await svc.deleteImage({ id: objectId });
+      const result = await svc.deleteImage({ id: objectId1 });
 
       expect(deleteOneSpy).toHaveBeenCalledTimes(1);
 
@@ -439,10 +447,10 @@ describe('MongoImageDataService', () => {
         value: imageDetails,
       }));
 
-      await svc.deleteImage({ id: objectId });
+      await svc.deleteImage({ id: objectId1 });
 
       expect(deleteOneSpy).toHaveBeenCalledWith({
-        _id: new ObjectId(objectId),
+        _id: new ObjectId(objectId1),
       });
     });
 
@@ -546,9 +554,454 @@ describe('MongoImageDataService', () => {
     });
   });
 
-  describe('rollBackAdditions', () => {});
+  describe('rollBackAdditions', () => {
+    test('awaits the completion of delete operations for all images passed in', async () => {
+      const svc = new MongoImageDataService(mockMongoDBClient);
 
-  describe('addImages', () => {});
+      const nid = NewImageDetails.fromJSON({
+        ...imageDetails,
+        dateAdded: imageDetails.dateAdded.toISOString(),
+      });
 
-  describe('initFromConfig', () => {});
+      const deleteOneSpy = jest.spyOn(mockCollection, 'deleteOne');
+
+      await svc.rollBackAdditions([nid]);
+
+      expect(deleteOneSpy).toHaveBeenCalledTimes(1);
+      expect(deleteOneSpy).toHaveBeenCalledWith({
+        originalFilename: imageDetails.originalFilename,
+      });
+    });
+
+    test('runs deleteOne for every image passed in', async () => {
+      const svc = new MongoImageDataService(mockMongoDBClient);
+
+      const nid1 = NewImageDetails.fromJSON({
+        ...imageDetails,
+        dateAdded: imageDetails.dateAdded.toISOString(),
+      });
+
+      const originalFilename2 = 'originalFilename2';
+      const nid2 = NewImageDetails.fromJSON({
+        ...imageDetails,
+        originalFilename: originalFilename2,
+        dateAdded: imageDetails.dateAdded.toISOString(),
+      });
+
+      const deleteOneSpy = jest.spyOn(mockCollection, 'deleteOne');
+
+      await svc.rollBackAdditions([nid1, nid2]);
+
+      expect(deleteOneSpy).toHaveBeenCalledTimes(2);
+      expect(deleteOneSpy).toHaveBeenNthCalledWith(1, {
+        originalFilename: imageDetails.originalFilename,
+      });
+      expect(deleteOneSpy).toHaveBeenNthCalledWith(2, {
+        originalFilename: originalFilename2,
+      });
+    });
+
+    test('still runs all promises, if deleteOne fails for one', async () => {
+      const svc = new MongoImageDataService(mockMongoDBClient);
+
+      const nid1 = NewImageDetails.fromJSON({
+        ...imageDetails,
+        dateAdded: imageDetails.dateAdded.toISOString(),
+      });
+
+      const originalFilename2 = 'originalFilename2';
+      const nid2 = NewImageDetails.fromJSON({
+        ...imageDetails,
+        originalFilename: originalFilename2,
+        dateAdded: imageDetails.dateAdded.toISOString(),
+      });
+
+      const deleteOneSpy = jest.spyOn(mockCollection, 'deleteOne');
+      deleteOneSpy.mockImplementationOnce(async () => {
+        throw new Error(testError);
+      });
+
+      await svc.rollBackAdditions([nid1, nid2]);
+
+      expect(deleteOneSpy).toHaveBeenCalledTimes(2);
+      expect(deleteOneSpy).toHaveBeenNthCalledWith(1, {
+        originalFilename: imageDetails.originalFilename,
+      });
+      expect(deleteOneSpy).toHaveBeenNthCalledWith(2, {
+        originalFilename: originalFilename2,
+      });
+    });
+  });
+
+  describe('addImages', () => {
+    test('runs insertMany for all images passed to the function and returns all the ImageDetails', async () => {
+      const nid1 = NewImageDetails.fromJSON({
+        ...imageDetails,
+        dateAdded: imageDetails.dateAdded.toISOString(),
+      });
+
+      const originalFilename2 = 'originalFilename2';
+      const nid2 = NewImageDetails.fromJSON({
+        ...imageDetails,
+        originalFilename: originalFilename2,
+        dateAdded: imageDetails.dateAdded.toISOString(),
+      });
+
+      const id1 = ImageDetails.fromNewImageDetails(objectId1, nid1);
+      const id2 = ImageDetails.fromNewImageDetails(objectId2, nid2);
+
+      const insertManySpy = jest.spyOn(mockCollection, 'insertMany');
+      insertManySpy.mockImplementationOnce(async (input) => {
+        input[0]._id = new ObjectId(objectId1);
+        input[1]._id = new ObjectId(objectId2);
+
+        return {
+          acknowledged: true,
+          insertedCount: 2,
+        };
+      });
+
+      const svc = new MongoImageDataService(mockMongoDBClient);
+      const result = await svc.addImages([nid1, nid2]);
+
+      expect(insertManySpy).toHaveBeenCalledTimes(1);
+      expect(result[0].toJSON()).toStrictEqual(id1.toJSON());
+      expect(result[1].toJSON()).toStrictEqual(id2.toJSON());
+    });
+
+    test('throws an error if acknowledged is not true', async () => {
+      const nid1 = NewImageDetails.fromJSON({
+        ...imageDetails,
+        dateAdded: imageDetails.dateAdded.toISOString(),
+      });
+
+      const originalFilename2 = 'originalFilename2';
+      const nid2 = NewImageDetails.fromJSON({
+        ...imageDetails,
+        originalFilename: originalFilename2,
+        dateAdded: imageDetails.dateAdded.toISOString(),
+      });
+
+      const insertManySpy = jest.spyOn(mockCollection, 'insertMany');
+      insertManySpy.mockImplementationOnce(async (input) => {
+        input[0]._id = new ObjectId(objectId1);
+        input[1]._id = new ObjectId(objectId2);
+
+        return {
+          acknowledged: false,
+          insertedCount: 2,
+        };
+      });
+
+      const svc = new MongoImageDataService(mockMongoDBClient);
+      await expect(() => svc.addImages([nid1, nid2])).rejects.toThrow();
+
+      expect(insertManySpy).toHaveBeenCalledTimes(1);
+    });
+
+    test('throws an error if insertedCount does not match the quantity of images passed in', async () => {
+      const nid1 = NewImageDetails.fromJSON({
+        ...imageDetails,
+        dateAdded: imageDetails.dateAdded.toISOString(),
+      });
+
+      const originalFilename2 = 'originalFilename2';
+      const nid2 = NewImageDetails.fromJSON({
+        ...imageDetails,
+        originalFilename: originalFilename2,
+        dateAdded: imageDetails.dateAdded.toISOString(),
+      });
+
+      const insertManySpy = jest.spyOn(mockCollection, 'insertMany');
+      insertManySpy.mockImplementationOnce(async (input) => {
+        input[0]._id = new ObjectId(objectId1);
+        input[1]._id = new ObjectId(objectId2);
+
+        return {
+          acknowledged: true,
+          insertedCount: 1,
+        };
+      });
+
+      const svc = new MongoImageDataService(mockMongoDBClient);
+      await expect(() => svc.addImages([nid1, nid2])).rejects.toThrow();
+
+      expect(insertManySpy).toHaveBeenCalledTimes(1);
+    });
+
+    test('throws an error if insertMany throws an error', async () => {
+      const nid1 = NewImageDetails.fromJSON({
+        ...imageDetails,
+        dateAdded: imageDetails.dateAdded.toISOString(),
+      });
+
+      const originalFilename2 = 'originalFilename2';
+      const nid2 = NewImageDetails.fromJSON({
+        ...imageDetails,
+        originalFilename: originalFilename2,
+        dateAdded: imageDetails.dateAdded.toISOString(),
+      });
+
+      const insertManySpy = jest.spyOn(mockCollection, 'insertMany');
+      insertManySpy.mockImplementationOnce(async () => {
+        throw new Error(testError);
+      });
+
+      const svc = new MongoImageDataService(mockMongoDBClient);
+      await expect(() => svc.addImages([nid1, nid2])).rejects.toThrow();
+
+      expect(insertManySpy).toHaveBeenCalledTimes(1);
+    });
+
+    test('throws an error if imageCollection getter throws an error', async () => {
+      const nid1 = NewImageDetails.fromJSON({
+        ...imageDetails,
+        dateAdded: imageDetails.dateAdded.toISOString(),
+      });
+
+      const originalFilename2 = 'originalFilename2';
+      const nid2 = NewImageDetails.fromJSON({
+        ...imageDetails,
+        originalFilename: originalFilename2,
+        dateAdded: imageDetails.dateAdded.toISOString(),
+      });
+
+      mockCollectionSpy.mockImplementationOnce(async () => {
+        throw new Error(testError);
+      });
+
+      const insertManySpy = jest.spyOn(mockCollection, 'insertMany');
+      insertManySpy.mockImplementationOnce(async () => ({}));
+
+      const svc = new MongoImageDataService(mockMongoDBClient);
+      await expect(() => svc.addImages([nid1, nid2])).rejects.toThrow();
+
+      expect(insertManySpy).toHaveBeenCalledTimes(0);
+    });
+
+    test('throws an error if ImageDetails.fromMongo throws an error', async () => {
+      const nid1 = NewImageDetails.fromJSON({
+        ...imageDetails,
+        dateAdded: imageDetails.dateAdded.toISOString(),
+      });
+
+      const originalFilename2 = 'originalFilename2';
+      const nid2 = NewImageDetails.fromJSON({
+        ...imageDetails,
+        originalFilename: originalFilename2,
+        dateAdded: imageDetails.dateAdded.toISOString(),
+      });
+
+      const insertManySpy = jest.spyOn(mockCollection, 'insertMany');
+      insertManySpy.mockImplementationOnce(async (input) => ({
+        acknowledged: true,
+        insertedCount: 2,
+      }));
+
+      const svc = new MongoImageDataService(mockMongoDBClient);
+      await expect(() => svc.addImages([nid1, nid2])).rejects.toThrow();
+
+      expect(insertManySpy).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('initFromConfig', () => {
+    test('creates a service with a client. Does not run makeImageCollection if images exists in the collections', async () => {
+      const imageDataCol = new Collection<Document>();
+      const imgNameSpy = jest.spyOn(imageDataCol, 'collectionName', 'get');
+      imgNameSpy.mockReturnValue('images');
+
+      const collection1 = new Collection<Document>();
+      const col1NameSpy = jest.spyOn(collection1, 'collectionName', 'get');
+      col1NameSpy.mockReturnValue('collection1');
+
+      const collection2 = new Collection<Document>();
+      const col2NameSpy = jest.spyOn(collection2, 'collectionName', 'get');
+      col2NameSpy.mockReturnValue('collection2');
+
+      const collectionsSpy = jest.spyOn(mockDb, 'collections');
+      collectionsSpy.mockImplementationOnce(() =>
+        Promise.resolve([imageDataCol, collection1, collection2]),
+      );
+
+      const createSpy = jest.spyOn(mockDb, 'createCollection');
+      createSpy.mockImplementationOnce(async () => mockCollection);
+
+      await MongoImageDataService.initFromConfig(
+        new ConfigService(),
+        mockMongoDBClient,
+      );
+
+      expect(clientDbSpy).toHaveBeenCalledTimes(1);
+      expect(collectionsSpy).toHaveBeenCalledTimes(1);
+      expect(imgNameSpy).toHaveBeenCalledTimes(1);
+      expect(col1NameSpy).toHaveBeenCalledTimes(1);
+      expect(col2NameSpy).toHaveBeenCalledTimes(1);
+      expect(createSpy).toHaveBeenCalledTimes(0);
+    });
+
+    test('creates a service with a client. Runs makeImageCollection if images does not exist in the collections', async () => {
+      const collection1 = new Collection<Document>();
+      const col1NameSpy = jest.spyOn(collection1, 'collectionName', 'get');
+      col1NameSpy.mockReturnValue('collection1');
+
+      const collection2 = new Collection<Document>();
+      const col2NameSpy = jest.spyOn(collection2, 'collectionName', 'get');
+      col2NameSpy.mockReturnValue('collection2');
+
+      const collectionsSpy = jest.spyOn(mockDb, 'collections');
+      collectionsSpy.mockImplementationOnce(() =>
+        Promise.resolve([collection1, collection2]),
+      );
+
+      const createSpy = jest.spyOn(mockDb, 'createCollection');
+      createSpy.mockImplementationOnce(async () => mockCollection);
+
+      await MongoImageDataService.initFromConfig(
+        new ConfigService(),
+        mockMongoDBClient,
+      );
+
+      expect(clientDbSpy).toHaveBeenCalledTimes(2);
+      expect(collectionsSpy).toHaveBeenCalledTimes(1);
+      expect(col1NameSpy).toHaveBeenCalledTimes(1);
+      expect(col2NameSpy).toHaveBeenCalledTimes(1);
+      expect(createSpy).toHaveBeenCalledTimes(1);
+    });
+
+    test('Throws an error if createCollection throws an error', async () => {
+      const collection1 = new Collection<Document>();
+      const col1NameSpy = jest.spyOn(collection1, 'collectionName', 'get');
+      col1NameSpy.mockReturnValue('collection1');
+
+      const collection2 = new Collection<Document>();
+      const col2NameSpy = jest.spyOn(collection2, 'collectionName', 'get');
+      col2NameSpy.mockReturnValue('collection2');
+
+      const collectionsSpy = jest.spyOn(mockDb, 'collections');
+      collectionsSpy.mockImplementationOnce(() =>
+        Promise.resolve([collection1, collection2]),
+      );
+
+      const createSpy = jest.spyOn(mockDb, 'createCollection');
+      createSpy.mockImplementationOnce(async () => {
+        throw new Error(testError);
+      });
+
+      await expect(() =>
+        MongoImageDataService.initFromConfig(
+          new ConfigService(),
+          mockMongoDBClient,
+        ),
+      ).rejects.toThrow(testError);
+
+      expect(clientDbSpy).toHaveBeenCalledTimes(2);
+      expect(collectionsSpy).toHaveBeenCalledTimes(1);
+      expect(col1NameSpy).toHaveBeenCalledTimes(1);
+      expect(col2NameSpy).toHaveBeenCalledTimes(1);
+      expect(createSpy).toHaveBeenCalledTimes(1);
+    });
+
+    test('Throws an error if createIndex throws an error', async () => {
+      const collection1 = new Collection<Document>();
+      const col1NameSpy = jest.spyOn(collection1, 'collectionName', 'get');
+      col1NameSpy.mockReturnValue('collection1');
+
+      const collection2 = new Collection<Document>();
+      const col2NameSpy = jest.spyOn(collection2, 'collectionName', 'get');
+      col2NameSpy.mockReturnValue('collection2');
+
+      const collectionsSpy = jest.spyOn(mockDb, 'collections');
+      collectionsSpy.mockImplementationOnce(() =>
+        Promise.resolve([collection1, collection2]),
+      );
+
+      const createSpy = jest.spyOn(mockDb, 'createCollection');
+      createSpy.mockImplementationOnce(async () => mockCollection);
+
+      const createIndexSpy = jest.spyOn(mockCollection, 'createIndex');
+      createIndexSpy.mockImplementationOnce(async () => {
+        throw new Error(testError);
+      });
+
+      await expect(() =>
+        MongoImageDataService.initFromConfig(
+          new ConfigService(),
+          mockMongoDBClient,
+        ),
+      ).rejects.toThrow(testError);
+
+      expect(clientDbSpy).toHaveBeenCalledTimes(2);
+      expect(collectionsSpy).toHaveBeenCalledTimes(1);
+      expect(col1NameSpy).toHaveBeenCalledTimes(1);
+      expect(col2NameSpy).toHaveBeenCalledTimes(1);
+      expect(createSpy).toHaveBeenCalledTimes(1);
+      expect(createIndexSpy).toHaveBeenCalledTimes(1);
+    });
+
+    test('Throws an error if _mongoDBClient.db', async () => {
+      const imageDataCol = new Collection<Document>();
+      const imgNameSpy = jest.spyOn(imageDataCol, 'collectionName', 'get');
+      imgNameSpy.mockReturnValue('images');
+
+      const collection1 = new Collection<Document>();
+      const col1NameSpy = jest.spyOn(collection1, 'collectionName', 'get');
+      col1NameSpy.mockReturnValue('collection1');
+
+      const collection2 = new Collection<Document>();
+      const col2NameSpy = jest.spyOn(collection2, 'collectionName', 'get');
+      col2NameSpy.mockReturnValue('collection2');
+
+      clientDbSpy.mockImplementationOnce(() => {
+        throw new Error(testError);
+      });
+
+      const collectionsSpy = jest.spyOn(mockDb, 'collections');
+
+      await expect(() =>
+        MongoImageDataService.initFromConfig(
+          new ConfigService(),
+          mockMongoDBClient,
+        ),
+      ).rejects.toThrow();
+
+      expect(clientDbSpy).toHaveBeenCalledTimes(1);
+      expect(collectionsSpy).toHaveBeenCalledTimes(0);
+      expect(imgNameSpy).toHaveBeenCalledTimes(0);
+      expect(col1NameSpy).toHaveBeenCalledTimes(0);
+      expect(col2NameSpy).toHaveBeenCalledTimes(0);
+    });
+
+    test('throws an error if db.collections throws an error', async () => {
+      const imageDataCol = new Collection<Document>();
+      const imgNameSpy = jest.spyOn(imageDataCol, 'collectionName', 'get');
+      imgNameSpy.mockReturnValue('images');
+
+      const collection1 = new Collection<Document>();
+      const col1NameSpy = jest.spyOn(collection1, 'collectionName', 'get');
+      col1NameSpy.mockReturnValue('collection1');
+
+      const collection2 = new Collection<Document>();
+      const col2NameSpy = jest.spyOn(collection2, 'collectionName', 'get');
+      col2NameSpy.mockReturnValue('collection2');
+
+      const collectionsSpy = jest.spyOn(mockDb, 'collections');
+      collectionsSpy.mockImplementation(() => {
+        throw new Error(testError);
+      });
+
+      await expect(() =>
+        MongoImageDataService.initFromConfig(
+          new ConfigService(),
+          mockMongoDBClient,
+        ),
+      ).rejects.toThrow();
+
+      expect(clientDbSpy).toHaveBeenCalledTimes(1);
+      expect(collectionsSpy).toHaveBeenCalledTimes(1);
+      expect(imgNameSpy).toHaveBeenCalledTimes(0);
+      expect(col1NameSpy).toHaveBeenCalledTimes(0);
+      expect(col2NameSpy).toHaveBeenCalledTimes(0);
+    });
+  });
 });
