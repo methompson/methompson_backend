@@ -6,10 +6,9 @@ import {
   HttpStatus,
   Post,
   Req,
-  Res,
   UseInterceptors,
 } from '@nestjs/common';
-import { Request, Response } from 'express';
+import { Request } from 'express';
 
 import { BlogPost } from '@/src/models/blog_post_model';
 import { InvalidInputError } from '@/src/errors/invalid_input_error';

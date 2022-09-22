@@ -43,6 +43,7 @@ const dbName = 'dbName';
 const testError = 'test error';
 
 const errorSpy = jest.spyOn(console, 'error');
+const logSpy = jest.spyOn(console, 'log');
 
 test('Testing ES5 Classes', () => {
   const helloWorld = 'Hello, world';
@@ -307,6 +308,14 @@ describe('MongoImageDataService', () => {
   });
 
   describe('makeImageCollection', () => {
+    beforeEach(() => {
+      logSpy.mockImplementationOnce(() => {});
+    });
+
+    afterEach(() => {
+      logSpy.mockReset();
+    });
+
     test('calls createCollection and createIndex on the DB', async () => {
       const createSpy = jest.spyOn(mockDb, 'createCollection');
       createSpy.mockImplementationOnce(async () => mockCollection);

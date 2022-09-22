@@ -6,6 +6,7 @@ import { InMemoryBlogService } from '@/src/blog/blog.memory.service';
 import { LoggerService } from '@/src/logger/logger.service';
 import { BlogPost } from '@/src/models/blog_post_model';
 import { InvalidInputError } from '@/src/errors/invalid_input_error';
+import { UserAuthRequest } from '@/src/middleware/auth_model_decorator';
 
 const post1 = new BlogPost(
   'id1',
@@ -311,81 +312,18 @@ describe('BlogController', () => {
 
       const req = {
         body: postData,
-      } as unknown as Request;
-
-      const res = {
-        locals: { auth: { authorized: true } },
-      } as unknown as Response;
+        authModel: { authorized: true },
+      } as unknown as UserAuthRequest;
 
       const addBlogPostSpy = jest.spyOn(blogService, 'addBlogPost');
       addBlogPostSpy.mockImplementationOnce(async () => post1);
 
-      const value = await controller.addNewPost(req, res);
+      const value = await controller.addNewPost(req);
 
       expect(value.toJSON()).toStrictEqual(post1.toJSON());
 
       expect(addBlogPostSpy).toHaveBeenCalledTimes(1);
       expect(addBlogPostSpy).toHaveBeenCalledWith(postData);
-    });
-
-    test('Throws an error if the user is not authorized', async () => {
-      expect.assertions(2);
-
-      const blogService = new InMemoryBlogService();
-      const loggerService = new LoggerService([]);
-
-      const controller = new BlogController(blogService, loggerService);
-
-      const postData = post1.toJSON();
-
-      const req = {
-        body: postData,
-      } as unknown as Request;
-
-      const res = {
-        locals: { auth: { authorized: false } },
-      } as unknown as Response;
-
-      const addBlogPostSpy = jest.spyOn(blogService, 'addBlogPost');
-
-      try {
-        await controller.addNewPost(req, res);
-      } catch (e) {
-        expect(e).toStrictEqual(
-          new HttpException('Not Authorized', HttpStatus.UNAUTHORIZED),
-        );
-        expect(addBlogPostSpy).not.toHaveBeenCalled();
-      }
-    });
-
-    test('Throws an error if authorized is not part of the response', async () => {
-      expect.assertions(2);
-
-      const blogService = new InMemoryBlogService();
-      const loggerService = new LoggerService([]);
-
-      const controller = new BlogController(blogService, loggerService);
-
-      const postData = post1.toJSON();
-
-      const req = {
-        body: postData,
-      } as unknown as Request;
-
-      const res = {
-        locals: { auth: { authorized: false } },
-      } as unknown as Response;
-
-      const addBlogPostSpy = jest.spyOn(blogService, 'addBlogPost');
-
-      try {
-        await controller.addNewPost(req, res);
-      } catch (e) {
-        expect(e).toStrictEqual(
-          new HttpException('Not Authorized', HttpStatus.UNAUTHORIZED),
-        );
-        expect(addBlogPostSpy).not.toHaveBeenCalled();
-      }
     });
 
     test('Throws a specific error if addBlogPost throws an InvalidInputError', async () => {
@@ -400,11 +338,8 @@ describe('BlogController', () => {
 
       const req = {
         body: postData,
-      } as unknown as Request;
-
-      const res = {
-        locals: { auth: { authorized: true } },
-      } as unknown as Response;
+        authModel: { authorized: true },
+      } as unknown as UserAuthRequest;
 
       const addBlogPostSpy = jest.spyOn(blogService, 'addBlogPost');
       addBlogPostSpy.mockImplementationOnce(() => {
@@ -412,7 +347,7 @@ describe('BlogController', () => {
       });
 
       try {
-        await controller.addNewPost(req, res);
+        await controller.addNewPost(req);
       } catch (e) {
         expect(e).toStrictEqual(
           new HttpException(
@@ -436,11 +371,8 @@ describe('BlogController', () => {
 
       const req = {
         body: postData,
-      } as unknown as Request;
-
-      const res = {
-        locals: { auth: { authorized: true } },
-      } as unknown as Response;
+        authModel: { authorized: true },
+      } as unknown as UserAuthRequest;
 
       const addBlogPostSpy = jest.spyOn(blogService, 'addBlogPost');
       addBlogPostSpy.mockImplementationOnce(() => {
@@ -448,7 +380,7 @@ describe('BlogController', () => {
       });
 
       try {
-        await controller.addNewPost(req, res);
+        await controller.addNewPost(req);
       } catch (e) {
         expect(e).toStrictEqual(
           new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
