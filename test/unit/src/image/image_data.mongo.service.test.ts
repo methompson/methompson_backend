@@ -809,7 +809,7 @@ describe('MongoImageDataService', () => {
       });
 
       const insertManySpy = jest.spyOn(mockCollection, 'insertMany');
-      insertManySpy.mockImplementationOnce(async (input) => ({
+      insertManySpy.mockImplementationOnce(async () => ({
         acknowledged: true,
         insertedCount: 2,
       }));

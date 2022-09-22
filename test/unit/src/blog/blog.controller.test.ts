@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request } from 'express';
 import { HttpException, HttpStatus } from '@nestjs/common';
 
 import { BlogController } from '@/src/blog/blog.controller';

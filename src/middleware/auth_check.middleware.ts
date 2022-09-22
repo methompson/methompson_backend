@@ -1,5 +1,5 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import { decode } from 'jsonwebtoken';
 // eslint-disable-next-line import/no-unresolved
 import { getAuth } from 'firebase-admin/auth';
