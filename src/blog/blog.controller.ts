@@ -18,6 +18,7 @@ import { isString } from '@/src/utils/type_guards';
 import { BlogService, BlogPostRequestOutput } from '@/src/blog/blog.service';
 import { LoggerService } from '@/src/logger/logger.service';
 import { RequestLogInterceptor } from '@/src/middleware/request_log.interceptor';
+import { AuthRequiredIncerceptor } from '@/src/middleware/auth_interceptor';
 
 @UseInterceptors(RequestLogInterceptor)
 @Controller({ path: 'api/blog' })
@@ -81,14 +82,8 @@ export class BlogController {
   }
 
   @Post()
-  async addNewPost(
-    @Req() request: Request,
-    @Res({ passthrough: true }) response: Response,
-  ): Promise<BlogPost> {
-    if (!(response.locals?.auth?.authorized ?? false)) {
-      throw new HttpException('Not Authorized', HttpStatus.UNAUTHORIZED);
-    }
-
+  @UseInterceptors(AuthRequiredIncerceptor)
+  async addNewPost(@Req() request: Request): Promise<BlogPost> {
     try {
       return await this.blogService.addBlogPost(request.body);
     } catch (e) {

@@ -42,6 +42,8 @@ const uri = 'uri';
 const dbName = 'dbName';
 const testError = 'test error';
 
+const errorSpy = jest.spyOn(console, 'error');
+
 test('Testing ES5 Classes', () => {
   const helloWorld = 'Hello, world';
   const value = 'value';
@@ -670,6 +672,7 @@ describe('MongoImageDataService', () => {
     });
 
     test('throws an error if acknowledged is not true', async () => {
+      errorSpy.mockImplementationOnce(() => {});
       const nid1 = NewImageDetails.fromJSON({
         ...imageDetails,
         dateAdded: imageDetails.dateAdded.toISOString(),
@@ -700,6 +703,7 @@ describe('MongoImageDataService', () => {
     });
 
     test('throws an error if insertedCount does not match the quantity of images passed in', async () => {
+      errorSpy.mockImplementationOnce(() => {});
       const nid1 = NewImageDetails.fromJSON({
         ...imageDetails,
         dateAdded: imageDetails.dateAdded.toISOString(),
@@ -730,6 +734,7 @@ describe('MongoImageDataService', () => {
     });
 
     test('throws an error if insertMany throws an error', async () => {
+      errorSpy.mockImplementationOnce(() => {});
       const nid1 = NewImageDetails.fromJSON({
         ...imageDetails,
         dateAdded: imageDetails.dateAdded.toISOString(),
@@ -754,6 +759,7 @@ describe('MongoImageDataService', () => {
     });
 
     test('throws an error if imageCollection getter throws an error', async () => {
+      errorSpy.mockImplementationOnce(() => {});
       const nid1 = NewImageDetails.fromJSON({
         ...imageDetails,
         dateAdded: imageDetails.dateAdded.toISOString(),
@@ -780,6 +786,7 @@ describe('MongoImageDataService', () => {
     });
 
     test('throws an error if ImageDetails.fromMongo throws an error', async () => {
+      errorSpy.mockImplementationOnce(() => {});
       const nid1 = NewImageDetails.fromJSON({
         ...imageDetails,
         dateAdded: imageDetails.dateAdded.toISOString(),

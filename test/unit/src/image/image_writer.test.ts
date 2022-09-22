@@ -22,9 +22,7 @@ jest.mock('fs/promises', () => {
 });
 
 jest.mock('child_process', () => {
-  const exec = jest.fn((_, a: ExecCallback) => {
-    a(null, '', '');
-  });
+  const exec = jest.fn();
 
   return { exec };
 });
@@ -53,9 +51,13 @@ describe('ImageWriter', () => {
   const authorId = 'aoishfdjn023';
 
   beforeEach(() => {
-    uuidv4.mockClear();
-    exec.mockClear();
-    rm.mockClear();
+    uuidv4.mockReset();
+    exec.mockReset();
+    rm.mockReset();
+
+    exec.mockImplementation((_, a: ExecCallback) => {
+      a(null, '', '');
+    });
   });
 
   const image1 = new UploadedFile(
@@ -74,13 +76,13 @@ describe('ImageWriter', () => {
 
   describe('convertImages', () => {
     test('calls functions with the passed in data when no ops are passed in', async () => {
-      const ic = new ImageWriter('');
+      const iw = new ImageWriter('');
 
       const filename = 'filename';
       const identifier = 'identifier';
       const dimensions = { x: 1024, y: 768 };
 
-      const makeResizeSpy = jest.spyOn(ic, 'makeAndRunResizeScript');
+      const makeResizeSpy = jest.spyOn(iw, 'makeAndRunResizeScript');
       makeResizeSpy.mockImplementation(async (_) => ({
         filename,
         identifier,
@@ -94,7 +96,7 @@ describe('ImageWriter', () => {
 
       uuidv4.mockImplementation(() => newFilename1);
 
-      await ic.convertImages(parsedData, authorId);
+      await iw.convertImages(parsedData, authorId);
 
       expect(uuidv4).toHaveBeenCalledTimes(1);
 
@@ -119,13 +121,13 @@ describe('ImageWriter', () => {
     });
 
     test('calls functions with the passed in data, even if there are multiple files', async () => {
-      const ic = new ImageWriter('');
+      const iw = new ImageWriter('');
 
       const filename = 'filename';
       const identifier = 'identifier';
       const dimensions = { x: 1024, y: 768 };
 
-      const makeResizeSpy = jest.spyOn(ic, 'makeAndRunResizeScript');
+      const makeResizeSpy = jest.spyOn(iw, 'makeAndRunResizeScript');
       makeResizeSpy.mockImplementation(async (_) => ({
         filename,
         identifier,
@@ -140,7 +142,7 @@ describe('ImageWriter', () => {
         ops: {},
       };
 
-      await ic.convertImages(parsedData, authorId);
+      await iw.convertImages(parsedData, authorId);
 
       expect(uuidv4).toHaveBeenCalledTimes(2);
 
@@ -181,13 +183,13 @@ describe('ImageWriter', () => {
     });
 
     test('returns NewImageDetails object for each image passed in', async () => {
-      const ic = new ImageWriter('');
+      const iw = new ImageWriter('');
 
       const filename = 'filename';
       const identifier = 'identifier';
       const dimensions = { x: 1024, y: 768 };
 
-      const makeResizeSpy = jest.spyOn(ic, 'makeAndRunResizeScript');
+      const makeResizeSpy = jest.spyOn(iw, 'makeAndRunResizeScript');
       makeResizeSpy.mockImplementation(async (_) => ({
         filename,
         identifier,
@@ -202,7 +204,7 @@ describe('ImageWriter', () => {
         ops: {},
       };
 
-      const results = await ic.convertImages(parsedData, authorId);
+      const results = await iw.convertImages(parsedData, authorId);
 
       expect(results.length).toBe(2);
 
@@ -215,9 +217,9 @@ describe('ImageWriter', () => {
 
     test('throws an error if makeAndRunResizeScript throws an error', async () => {
       expect.assertions(3);
-      const ic = new ImageWriter('');
+      const iw = new ImageWriter('');
 
-      const makeResizeSpy = jest.spyOn(ic, 'makeAndRunResizeScript');
+      const makeResizeSpy = jest.spyOn(iw, 'makeAndRunResizeScript');
       makeResizeSpy.mockImplementation(async (_) => {
         throw new Error(testError);
       });
@@ -230,7 +232,7 @@ describe('ImageWriter', () => {
       uuidv4.mockImplementation(() => newFilename1);
 
       try {
-        await ic.convertImages(parsedData, authorId);
+        await iw.convertImages(parsedData, authorId);
       } catch (e) {
         expect(e.message).toBe(testError);
         expect(makeResizeSpy).toHaveBeenCalledTimes(2);
@@ -241,25 +243,25 @@ describe('ImageWriter', () => {
 
   describe('makeAndRunResizeScript', () => {
     test('retrieves a script and runs it based on default inputs', async () => {
-      const ic = new ImageWriter('');
+      const iw = new ImageWriter('');
 
       const newFilename = 'newFilename';
       const newFilepath = 'newFilepath';
       const script = `${image1.filepath} - ${image1.originalFilename}`;
 
-      const buildResizeScriptSpy = jest.spyOn(ic, 'buildResizeScript');
+      const buildResizeScriptSpy = jest.spyOn(iw, 'buildResizeScript');
       buildResizeScriptSpy.mockImplementation((_, __) => ({
         newFilename,
         newFilepath,
         script,
       }));
 
-      const dimensionSpy = jest.spyOn(ic, 'getFileDimensions');
+      const dimensionSpy = jest.spyOn(iw, 'getFileDimensions');
       dimensionSpy.mockImplementation(async (_) => ({ x: 64, y: 32 }));
 
       const opts = new ImageResizeOptions('web', image1.originalFilename, {});
 
-      await ic.makeAndRunResizeScript(image1, opts);
+      await iw.makeAndRunResizeScript(image1, opts);
 
       expect(exec).toHaveBeenCalledTimes(1);
       expect(exec).toHaveBeenCalledWith(script, expect.anything());
@@ -267,15 +269,15 @@ describe('ImageWriter', () => {
     });
 
     test('Constructs a set of options based on what is passed into the function', async () => {
-      const ic = new ImageWriter('');
-      const buildResizeScriptSpy = jest.spyOn(ic, 'buildResizeScript');
+      const iw = new ImageWriter('');
+      const buildResizeScriptSpy = jest.spyOn(iw, 'buildResizeScript');
 
-      const dimensionSpy = jest.spyOn(ic, 'getFileDimensions');
+      const dimensionSpy = jest.spyOn(iw, 'getFileDimensions');
       dimensionSpy.mockImplementation(async (_) => ({ x: 64, y: 32 }));
 
       const opts = new ImageResizeOptions('web', newFilename1, {});
 
-      await ic.makeAndRunResizeScript(image1, opts);
+      await iw.makeAndRunResizeScript(image1, opts);
 
       expect(buildResizeScriptSpy).toHaveBeenCalledTimes(1);
       expect(buildResizeScriptSpy).toHaveBeenCalledWith(image1, opts);
@@ -284,13 +286,13 @@ describe('ImageWriter', () => {
     test('throws an error if exec returns an error', async () => {
       expect.assertions(3);
 
-      const ic = new ImageWriter('');
+      const iw = new ImageWriter('');
 
       const newFilename = 'newFilename';
       const newFilepath = 'newFilepath';
       const script = `${image1.filepath} - ${image1.originalFilename}`;
 
-      const buildResizeScriptSpy = jest.spyOn(ic, 'buildResizeScript');
+      const buildResizeScriptSpy = jest.spyOn(iw, 'buildResizeScript');
       buildResizeScriptSpy.mockImplementation((_, __) => ({
         newFilename,
         newFilepath,
@@ -304,7 +306,7 @@ describe('ImageWriter', () => {
       });
 
       try {
-        await ic.makeAndRunResizeScript(image1, opts);
+        await iw.makeAndRunResizeScript(image1, opts);
       } catch (e) {
         expect(e.message).toBe(testError);
         expect(exec).toHaveBeenCalledTimes(1);
@@ -315,13 +317,13 @@ describe('ImageWriter', () => {
     test('throws an error if exec returns a stderr', async () => {
       expect.assertions(3);
 
-      const ic = new ImageWriter('');
+      const iw = new ImageWriter('');
 
       const newFilename = 'newFilename';
       const newFilepath = 'newFilepath';
       const script = `${image1.filepath} - ${image1.originalFilename}`;
 
-      const buildResizeScriptSpy = jest.spyOn(ic, 'buildResizeScript');
+      const buildResizeScriptSpy = jest.spyOn(iw, 'buildResizeScript');
       buildResizeScriptSpy.mockImplementation((_, __) => ({
         newFilename,
         newFilepath,
@@ -335,7 +337,7 @@ describe('ImageWriter', () => {
       });
 
       try {
-        await ic.makeAndRunResizeScript(image1, opts);
+        await iw.makeAndRunResizeScript(image1, opts);
       } catch (e) {
         expect(e.message).toBe(testError);
         expect(exec).toHaveBeenCalledTimes(1);
@@ -343,4 +345,216 @@ describe('ImageWriter', () => {
       }
     });
   });
+
+  describe('getFileDimensions', () => {
+    const errMsg = 'image size script failed';
+    const invalidValueMsg = 'Image Size returned invalid value';
+
+    test('builds and executes a shell script, then returns the results', async () => {
+      const iw = new ImageWriter('');
+      const filepath = 'path/to/file.ext';
+      const script = `magick identify -format "%w,%h" ${filepath}`;
+
+      exec.mockImplementationOnce((_, callback: ExecCallback) => {
+        callback(null, '640,480', '');
+      });
+
+      const result = await iw.getFileDimensions(filepath);
+
+      expect(result).toStrictEqual({ x: 640, y: 480 });
+      expect(exec).toHaveBeenCalledTimes(1);
+      expect(exec).toHaveBeenCalledWith(script, expect.anything());
+    });
+
+    test('Throws an error if err is not null', async () => {
+      const iw = new ImageWriter('');
+      const filepath = 'path/to/file.ext';
+
+      exec.mockImplementationOnce((_, callback: ExecCallback) => {
+        callback(new Error(testError), '', '');
+      });
+
+      await expect(() => iw.getFileDimensions(filepath)).rejects.toThrow(
+        errMsg,
+      );
+
+      expect(exec).toHaveBeenCalledTimes(1);
+    });
+
+    test('Throws an error if stderr is not null', async () => {
+      const iw = new ImageWriter('');
+      const filepath = 'path/to/file.ext';
+
+      exec.mockImplementationOnce((_, callback: ExecCallback) => {
+        callback(null, '', testError);
+      });
+
+      await expect(() => iw.getFileDimensions(filepath)).rejects.toThrow(
+        errMsg,
+      );
+
+      expect(exec).toHaveBeenCalledTimes(1);
+    });
+
+    test('Throws an error if stdout is not in the appropriate format', async () => {
+      const iw = new ImageWriter('');
+      const filepath = 'path/to/file.ext';
+
+      exec.mockImplementationOnce((_, callback: ExecCallback) => {
+        callback(null, '640', '');
+      });
+
+      await expect(() => iw.getFileDimensions(filepath)).rejects.toThrow(
+        invalidValueMsg,
+      );
+
+      expect(exec).toHaveBeenCalledTimes(1);
+    });
+
+    test('Throws an error if x is not number', async () => {
+      const iw = new ImageWriter('');
+      const filepath = 'path/to/file.ext';
+
+      exec.mockImplementationOnce((_, callback: ExecCallback) => {
+        callback(null, 'B,480', '');
+      });
+
+      await expect(() => iw.getFileDimensions(filepath)).rejects.toThrow(
+        invalidValueMsg,
+      );
+
+      expect(exec).toHaveBeenCalledTimes(1);
+    });
+
+    test('Throws an error if y is not a number', async () => {
+      const iw = new ImageWriter('');
+      const filepath = 'path/to/file.ext';
+
+      exec.mockImplementationOnce((_, callback: ExecCallback) => {
+        callback(null, '640,A', '');
+      });
+
+      await expect(() => iw.getFileDimensions(filepath)).rejects.toThrow(
+        invalidValueMsg,
+      );
+
+      expect(exec).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('buildResizeScript', () => {
+    test('Constructs a script with defaults', () => {
+      const newPath = 'new/path';
+      const opt = new ImageResizeOptions('identifier', 'newFileName', {});
+
+      const ic = new ImageWriter(newPath);
+
+      const { newFilename, newFilepath, script } = ic.buildResizeScript(
+        image1,
+        opt,
+      );
+
+      const expectedNewName = ic.getNewFileName(image1, opt);
+      const expectedNewFilepath = `${newPath}/${expectedNewName}`;
+
+      expect(newFilename).toBe(expectedNewName);
+      expect(newFilepath).toBe(expectedNewFilepath);
+
+      expect(script).toContain(`magick ${image1.filepath} -quality 90`);
+      expect(script).toContain(expectedNewFilepath);
+
+      expect(script).not.toContain('-resize');
+      expect(script).not.toContain('-strip');
+      expect(script).not.toContain('cp ');
+    });
+
+    test('constructs a specific script when doNotConvert is set to true', () => {
+      const newPath = 'new/path';
+      const opt = new ImageResizeOptions('identifier', 'newFileName', {
+        retainImage: true,
+      });
+
+      const ic = new ImageWriter(newPath);
+
+      const { newFilename, newFilepath, script } = ic.buildResizeScript(
+        image1,
+        opt,
+      );
+
+      const expectedNewName = ic.getNewFileName(image1, opt);
+      const expectedNewFilepath = `${newPath}/${expectedNewName}`;
+
+      expect(newFilename).toBe(expectedNewName);
+      expect(newFilepath).toBe(expectedNewFilepath);
+
+      expect(script).not.toContain('magick');
+      expect(script).toContain(expectedNewFilepath);
+
+      expect(script).not.toContain('-resize');
+      expect(script).not.toContain('-strip');
+      expect(script).toBe(`cp ${image1.filepath} ${expectedNewFilepath}`);
+    });
+
+    test('Adds resize when resize is set to true', () => {
+      const newPath = 'new/path';
+      const maxSize = 6969;
+      const opt = new ImageResizeOptions('identifier', 'newFileName', {
+        resize: true,
+        maxSize: maxSize,
+      });
+
+      const ic = new ImageWriter(newPath);
+
+      const { newFilename, newFilepath, script } = ic.buildResizeScript(
+        image1,
+        opt,
+      );
+
+      const expectedNewName = ic.getNewFileName(image1, opt);
+      const expectedNewFilepath = `${newPath}/${expectedNewName}`;
+
+      expect(newFilename).toBe(expectedNewName);
+      expect(newFilepath).toBe(expectedNewFilepath);
+
+      expect(script).toContain(`magick ${image1.filepath} -quality 90`);
+      expect(script).toContain(expectedNewFilepath);
+
+      expect(script).toContain(`-resize ${maxSize}x${maxSize}`);
+      expect(script).not.toContain('-strip');
+      expect(script).not.toContain('cp ');
+    });
+
+    test('Adds strip when stripMeta is set to true', () => {
+      const newPath = 'new/path';
+      const opt = new ImageResizeOptions('identifier', 'newFileName', {
+        stripMeta: true,
+      });
+
+      const ic = new ImageWriter(newPath);
+
+      const { newFilename, newFilepath, script } = ic.buildResizeScript(
+        image1,
+        opt,
+      );
+
+      const expectedNewName = ic.getNewFileName(image1, opt);
+      const expectedNewFilepath = `${newPath}/${expectedNewName}`;
+
+      expect(newFilename).toBe(expectedNewName);
+      expect(newFilepath).toBe(expectedNewFilepath);
+
+      expect(script).toContain(`magick ${image1.filepath} -quality 90`);
+      expect(script).toContain(expectedNewFilepath);
+
+      expect(script).not.toContain('-resize');
+      expect(script).toContain('-strip');
+      expect(script).not.toContain('cp ');
+    });
+  });
+
+  describe('getNewFileName', () => {});
+
+  describe('deleteImages', () => {});
+
+  describe('rollBackWrites', () => {});
 });

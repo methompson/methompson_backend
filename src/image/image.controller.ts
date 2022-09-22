@@ -27,6 +27,8 @@ import { isString, isRecord } from '@/src/utils/type_guards';
 import { AuthModel } from '@/src/models/auth_model';
 import { ImageDataService } from '@/src/image/image_data.service';
 import { NotFoundError, InvalidStateError } from '@/src/errors';
+import { AuthRequiredIncerceptor } from '@/src/middleware/auth_interceptor';
+import { UserId } from '@/src/middleware/auth_model_decorator';
 
 @UseInterceptors(RequestLogInterceptor)
 @Controller({ path: 'api/image' })
@@ -118,30 +120,12 @@ export class ImageController {
   }
 
   @Post('upload')
+  @UseInterceptors(AuthRequiredIncerceptor)
   async uploadImages(
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
+    @UserId() userId: string,
   ): Promise<void> {
-    const authModel = response.locals.auth;
-    if (!AuthModel.isAuthModel(authModel)) {
-      throw new HttpException(
-        'Invalid Autorization Token',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    if (!authModel.authorized) {
-      throw new HttpException('Not Authorized', HttpStatus.UNAUTHORIZED);
-    }
-
-    const userId = authModel.userId;
-    if (userId.length === 0) {
-      throw new HttpException(
-        'Invalid Autorization Token',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
     let parsedData;
 
     try {
@@ -179,30 +163,8 @@ export class ImageController {
   }
 
   @Post('delete/:imageName')
-  async deleteImage(
-    @Req() request: Request,
-    @Res({ passthrough: true }) response: Response,
-  ): Promise<void> {
-    const authModel = response.locals.auth;
-    if (!AuthModel.isAuthModel(authModel)) {
-      throw new HttpException(
-        'Invalid Autorization Token',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    if (!authModel.authorized) {
-      throw new HttpException('Not Authorized', HttpStatus.UNAUTHORIZED);
-    }
-
-    const userId = authModel.userId;
-    if (userId.length === 0) {
-      throw new HttpException(
-        'Invalid Autorization Token',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
+  @UseInterceptors(AuthRequiredIncerceptor)
+  async deleteImage(@Req() request: Request): Promise<void> {
     const imageName = request.params?.imageName;
 
     try {

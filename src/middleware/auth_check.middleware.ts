@@ -6,10 +6,11 @@ import { getAuth } from 'firebase-admin/auth';
 
 import { AuthModel, NoAuthModel } from '@/src/models/auth_model';
 import { isRecord } from '@/src/utils/type_guards';
+import { UserAuthRequest } from './auth_model_decorator';
 
 @Injectable()
 class AuthCheckMiddlware implements NestMiddleware {
-  async use(req: Request, res: Response, next: NextFunction) {
+  async use(req: UserAuthRequest, res: Response, next: NextFunction) {
     // First we attempt to get authorization from the header. Then we get it from
     // the cookies. If both fail, we get an empty string.
     const authHeader =
@@ -26,6 +27,7 @@ class AuthCheckMiddlware implements NestMiddleware {
     }
 
     res.locals.auth = new AuthModel(token);
+    req.authModel = new AuthModel(token);
 
     next();
   }
@@ -33,7 +35,7 @@ class AuthCheckMiddlware implements NestMiddleware {
 
 @Injectable()
 class NoAuthCheckMiddlware implements NestMiddleware {
-  async use(req: Request, res: Response, next: NextFunction) {
+  async use(req: UserAuthRequest, res: Response, next: NextFunction) {
     const authHeader =
       req.header('authorization') ?? req.cookies?.authorization ?? '';
 
@@ -46,6 +48,7 @@ class NoAuthCheckMiddlware implements NestMiddleware {
         };
 
     res.locals.auth = new NoAuthModel(token);
+    req.authModel = new AuthModel(token);
 
     next();
   }

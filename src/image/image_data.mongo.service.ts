@@ -192,7 +192,6 @@ export class MongoImageDataService extends ImageDataService {
     const service = new MongoImageDataService(client);
 
     if (!(await service.containsImageCollection())) {
-      console.log('Does not contain an image Collection');
       await service.makeImageCollection();
     }
 
