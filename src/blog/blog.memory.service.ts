@@ -6,7 +6,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { NewBlogPost, BlogPost } from '@/src/models/blog_post_model';
 import { InvalidInputError } from '@/src/errors/invalid_input_error';
 import { BlogService, BlogPostRequestOutput } from '@/src/blog/blog.service';
-import { isUndefined } from '@/src/utils/type_guards';
+import { isNullOrUndefined, isUndefined } from '@/src/utils/type_guards';
+import { NotFoundError } from '@/src/errors';
 
 @Injectable()
 export class InMemoryBlogService implements BlogService {
@@ -14,6 +15,12 @@ export class InMemoryBlogService implements BlogService {
    * Blog Posts are an object of String to BlogPost. The key is the slug.
    */
   protected blogPosts: Record<string, BlogPost> = {};
+
+  constructor(inputPosts: BlogPost[] = []) {
+    for (const post of inputPosts) {
+      this.blogPosts[post.slug] = post;
+    }
+  }
 
   get blogPostsByDate(): BlogPost[] {
     const posts = Object.values(this.blogPosts);
@@ -54,7 +61,7 @@ export class InMemoryBlogService implements BlogService {
     const blog = this.blogPosts[slug];
 
     if (isUndefined(blog)) {
-      throw new Error('Blog Does Not Exist');
+      throw new NotFoundError('Blog Post Does Not Exist');
     }
 
     return blog;
@@ -62,7 +69,7 @@ export class InMemoryBlogService implements BlogService {
 
   async addBlogPost(requestBody: unknown): Promise<BlogPost> {
     if (!NewBlogPost.isNewBlogPostInterface(requestBody)) {
-      throw new InvalidInputError('Invalid requesty body');
+      throw new InvalidInputError('Invalid request body');
     }
 
     const newPost = NewBlogPost.fromJSON(requestBody);
@@ -73,5 +80,17 @@ export class InMemoryBlogService implements BlogService {
     this.blogPosts[blog.slug] = blog;
 
     return blog;
+  }
+
+  async deleteBlogPost(slug: string): Promise<BlogPost> {
+    const post = this.blogPosts[slug];
+
+    if (isNullOrUndefined(post)) {
+      throw new NotFoundError('Blog Post Does Not Exist');
+    }
+
+    delete this.blogPosts[slug];
+
+    return post;
   }
 }

@@ -18,6 +18,7 @@ import { BlogService, BlogPostRequestOutput } from '@/src/blog/blog.service';
 import { LoggerService } from '@/src/logger/logger.service';
 import { RequestLogInterceptor } from '@/src/middleware/request_log.interceptor';
 import { AuthRequiredIncerceptor } from '@/src/middleware/auth_interceptor';
+import { getNumberFromString } from '../utils/get_number_from_string';
 
 @UseInterceptors(RequestLogInterceptor)
 @Controller({ path: 'api/blog' })
@@ -34,22 +35,10 @@ export class BlogController {
     const pageQP = request.query?.page;
     const paginationQP = request.query?.pagination;
 
-    let page = 1;
-    let pagination = 10;
-
-    if (isString(pageQP)) {
-      const parsedInt = Number.parseInt(pageQP, 10);
-      if (!Number.isNaN(parsedInt)) {
-        page = parsedInt;
-      }
-    }
-
-    if (isString(paginationQP)) {
-      const parsedInt = Number.parseInt(paginationQP, 10);
-      if (!Number.isNaN(parsedInt)) {
-        pagination = parsedInt;
-      }
-    }
+    const page = isString(pageQP) ? getNumberFromString(pageQP, 1) : 1;
+    const pagination = isString(paginationQP)
+      ? getNumberFromString(paginationQP, 10)
+      : 10;
 
     try {
       return await this.blogService.getPosts(page, pagination);
@@ -98,4 +87,8 @@ export class BlogController {
       throw new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+
+  @Post('delete/:slug')
+  @UseInterceptors(AuthRequiredIncerceptor)
+  async deleteBlogPost(@Req() request: Request): Promise<void> {}
 }

@@ -26,7 +26,6 @@ class AuthCheckMiddlware implements NestMiddleware {
       // console.error('No Authorization Header', e);
     }
 
-    res.locals.auth = new AuthModel(token);
     req.authModel = new AuthModel(token);
 
     next();
@@ -47,8 +46,7 @@ class NoAuthCheckMiddlware implements NestMiddleware {
           sub: 'noAuthSub',
         };
 
-    res.locals.auth = new NoAuthModel(token);
-    req.authModel = new AuthModel(token);
+    req.authModel = new NoAuthModel(token);
 
     next();
   }

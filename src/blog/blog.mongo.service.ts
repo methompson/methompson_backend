@@ -6,13 +6,23 @@ import { NewBlogPost, BlogPost } from '@/src/models/blog_post_model';
 import { InvalidInputError } from '@/src/errors/invalid_input_error';
 import { BlogService, BlogPostRequestOutput } from '@/src/blog/blog.service';
 import { MongoDBClient } from '@/src/utils/mongodb_client_class';
+import { NotFoundError } from '@/src/errors';
+import { isNullOrUndefined, isRecord } from '../utils/type_guards';
 
 const blogPostsCollectionName = 'blogPosts';
 
 @Injectable()
-export class MongoBlogService extends BlogService {
-  constructor(protected mongoDBClient: MongoDBClient) {
-    super();
+export class MongoBlogService implements BlogService {
+  constructor(protected _mongoDBClient: MongoDBClient) {}
+
+  protected get blogCollection(): Promise<Collection<Document>> {
+    return this.mongoDBClient.db.then((db) =>
+      db.collection(blogPostsCollectionName),
+    );
+  }
+
+  public get mongoDBClient() {
+    return this._mongoDBClient;
   }
 
   protected async containsBlogCollection(): Promise<boolean> {
@@ -69,12 +79,6 @@ export class MongoBlogService extends BlogService {
     await blogCollection.createIndex({ slug: 1 }, { unique: true });
   }
 
-  protected get blogCollection(): Promise<Collection<Document>> {
-    return this.mongoDBClient.db.then((db) =>
-      db.collection(blogPostsCollectionName),
-    );
-  }
-
   async getPosts(page = 1, pagination = 10): Promise<BlogPostRequestOutput> {
     const blogCollection = await this.blogCollection;
     const skip = pagination * (page - 1);
@@ -113,12 +117,16 @@ export class MongoBlogService extends BlogService {
     const blogCollection = await this.blogCollection;
     const result = await blogCollection.findOne({ slug });
 
+    if (result === null) {
+      throw new NotFoundError('Result is null');
+    }
+
     return await BlogPost.fromMongoDB(result);
   }
 
   async addBlogPost(requestBody: unknown): Promise<BlogPost> {
     if (!NewBlogPost.isNewBlogPostInterface(requestBody)) {
-      throw new InvalidInputError('Invalid requesty body');
+      throw new InvalidInputError('Invalid request body');
     }
 
     const newPost = NewBlogPost.fromJSON(requestBody);
@@ -127,7 +135,7 @@ export class MongoBlogService extends BlogService {
       const blogCollection = await this.blogCollection;
       const result = await blogCollection.insertOne(newPost.toJSON());
 
-      if (result.insertedId === null || result.insertedId === undefined) {
+      if (isNullOrUndefined(result.insertedId)) {
         throw new Error('Nothing written');
       }
 
@@ -135,17 +143,24 @@ export class MongoBlogService extends BlogService {
     } catch (e) {
       if (e instanceof MongoServerError) {
         if (e.code === 11000) {
-          throw new InvalidInputError(
-            `Duplicate Key Error. The following keys must be unique: ${Object.keys(
+          let msg = 'Duplicate Key Error.';
+          if (isRecord(e.keyPattern)) {
+            msg = `${msg} The following keys must be unique: ${Object.keys(
               e.keyPattern,
-            )}`,
-          );
+            )}`;
+          }
+
+          throw new InvalidInputError(msg);
         }
       }
 
       console.error('Add blog error', e);
       throw new Error('Add blog error');
     }
+  }
+
+  async deleteBlogPost(slug: string): Promise<BlogPost> {
+    throw new Error('Not Implemented');
   }
 
   static async initFromConfig(configService: ConfigService) {

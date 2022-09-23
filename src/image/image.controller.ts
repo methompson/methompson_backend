@@ -29,6 +29,7 @@ import { ImageDataService } from '@/src/image/image_data.service';
 import { NotFoundError, InvalidStateError } from '@/src/errors';
 import { AuthRequiredIncerceptor } from '@/src/middleware/auth_interceptor';
 import { UserId } from '@/src/middleware/auth_model_decorator';
+import { getNumberFromString } from '../utils/get_number_from_string';
 
 @UseInterceptors(RequestLogInterceptor)
 @Controller({ path: 'api/image' })
@@ -64,6 +65,18 @@ export class ImageController {
     }
 
     this.savedImagePath = savedImagePath;
+  }
+
+  @Get('list')
+  @UseInterceptors(AuthRequiredIncerceptor)
+  async getImageList(@Req() request: Request): Promise<void> {
+    const pageQP = request.query?.page;
+    const paginationQP = request.query?.pagination;
+
+    const page = isString(pageQP) ? getNumberFromString(pageQP, 1) : 1;
+    const pagination = isString(paginationQP)
+      ? getNumberFromString(paginationQP, 20)
+      : 20;
   }
 
   /**
@@ -123,7 +136,6 @@ export class ImageController {
   @UseInterceptors(AuthRequiredIncerceptor)
   async uploadImages(
     @Req() request: Request,
-    @Res({ passthrough: true }) response: Response,
     @UserId() userId: string,
   ): Promise<void> {
     let parsedData;

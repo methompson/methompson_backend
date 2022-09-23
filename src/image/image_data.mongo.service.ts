@@ -14,10 +14,8 @@ import { isNull, isNullOrUndefined } from '@/src/utils/type_guards';
 const imageDataCollectionName = 'images';
 
 @Injectable()
-export class MongoImageDataService extends ImageDataService {
-  constructor(protected _mongoDBClient: MongoDBClient) {
-    super();
-  }
+export class MongoImageDataService implements ImageDataService {
+  constructor(protected _mongoDBClient: MongoDBClient) {}
 
   protected get imageCollection(): Promise<Collection<Document>> {
     return this._mongoDBClient.db.then((db) =>

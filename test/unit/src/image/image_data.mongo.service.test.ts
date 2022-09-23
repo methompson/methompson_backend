@@ -1,10 +1,10 @@
 import { Db, MongoClient, Collection, ObjectId } from 'mongodb';
+import { ConfigService } from '@nestjs/config';
 
 import { NotFoundError } from '@/src/errors';
 import { MongoImageDataService } from '@/src/image/image_data.mongo.service';
 import { ImageDetails, NewImageDetails } from '@/src/models/image_models';
 import { MongoDBClient } from '@/src/utils/mongodb_client_class';
-import { ConfigService } from '@nestjs/config';
 
 // jest.mock('mongodb');
 jest.mock('mongodb', () => {

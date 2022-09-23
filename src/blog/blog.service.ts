@@ -17,4 +17,6 @@ export abstract class BlogService {
   abstract findBySlug(slug: string): Promise<BlogPost>;
 
   abstract addBlogPost(requestBody: unknown): Promise<BlogPost>;
+
+  abstract deleteBlogPost(slug: string): Promise<BlogPost>;
 }
