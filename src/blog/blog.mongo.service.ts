@@ -163,8 +163,16 @@ export class MongoBlogService implements BlogService {
     throw new Error('Not Implemented');
   }
 
-  static async initFromConfig(configService: ConfigService) {
-    const client = MongoDBClient.fromConfiguration(configService);
+  static async initFromConfig(
+    configService: ConfigService,
+    testClient?: MongoDBClient,
+  ) {
+    // We only use the testClient if NODE_ENV is test
+    const client =
+      process.env.NODE_ENV === 'test'
+        ? testClient ?? MongoDBClient.fromConfiguration(configService)
+        : MongoDBClient.fromConfiguration(configService);
+
     const service = new MongoBlogService(client);
 
     if (!(await service.containsBlogCollection())) {

@@ -420,7 +420,7 @@ describe('MongoBlogService', () => {
       );
     });
 
-    test('throws an error when the value returned does not conform to ImageDetails', async () => {
+    test('throws an error when the value returned does not conform to BlogPost', async () => {
       const findOneSpy = jest.spyOn(mockCollection, 'findOne');
       findOneSpy.mockImplementationOnce(async () => ({}));
 
@@ -499,5 +499,191 @@ describe('MongoBlogService', () => {
 
   describe('deleteBlogPost', () => {});
 
-  describe('initFromConfig', () => {});
+  describe('initFromConfig', () => {
+    test('creates a service with a client. Does not run makeBlogCollection if blogPosts exists in the collections', async () => {
+      const blogDataCol = new Collection<Document>();
+      const blogNameSpy = jest.spyOn(blogDataCol, 'collectionName', 'get');
+      blogNameSpy.mockReturnValue('blogPosts');
+
+      const collection1 = new Collection<Document>();
+      const col1NameSpy = jest.spyOn(collection1, 'collectionName', 'get');
+      col1NameSpy.mockReturnValue('collection1');
+
+      const collection2 = new Collection<Document>();
+      const col2NameSpy = jest.spyOn(collection2, 'collectionName', 'get');
+      col2NameSpy.mockReturnValue('collection2');
+
+      const collectionsSpy = jest.spyOn(mockDb, 'collections');
+      collectionsSpy.mockImplementationOnce(() =>
+        Promise.resolve([blogDataCol, collection1, collection2]),
+      );
+
+      const createSpy = jest.spyOn(mockDb, 'createCollection');
+      createSpy.mockImplementationOnce(async () => mockCollection);
+
+      await MongoBlogService.initFromConfig(
+        new ConfigService(),
+        mockMongoDBClient,
+      );
+
+      expect(clientDbSpy).toHaveBeenCalledTimes(1);
+      expect(collectionsSpy).toHaveBeenCalledTimes(1);
+      expect(blogNameSpy).toHaveBeenCalledTimes(1);
+      expect(col1NameSpy).toHaveBeenCalledTimes(1);
+      expect(col2NameSpy).toHaveBeenCalledTimes(1);
+      expect(createSpy).toHaveBeenCalledTimes(0);
+    });
+
+    test('creates a service with a client. Runs makeBlogCollection if blogPosts does not exist in the collections', async () => {
+      const collection1 = new Collection<Document>();
+      const col1NameSpy = jest.spyOn(collection1, 'collectionName', 'get');
+      col1NameSpy.mockReturnValue('collection1');
+
+      const collection2 = new Collection<Document>();
+      const col2NameSpy = jest.spyOn(collection2, 'collectionName', 'get');
+      col2NameSpy.mockReturnValue('collection2');
+
+      const collectionsSpy = jest.spyOn(mockDb, 'collections');
+      collectionsSpy.mockImplementationOnce(() =>
+        Promise.resolve([collection1, collection2]),
+      );
+
+      const createSpy = jest.spyOn(mockDb, 'createCollection');
+      createSpy.mockImplementationOnce(async () => mockCollection);
+
+      await MongoBlogService.initFromConfig(
+        new ConfigService(),
+        mockMongoDBClient,
+      );
+
+      expect(clientDbSpy).toHaveBeenCalledTimes(2);
+      expect(collectionsSpy).toHaveBeenCalledTimes(1);
+      expect(col1NameSpy).toHaveBeenCalledTimes(1);
+      expect(col2NameSpy).toHaveBeenCalledTimes(1);
+      expect(createSpy).toHaveBeenCalledTimes(1);
+    });
+
+    test('Throws an error if createCollection throws an error', async () => {
+      const collection1 = new Collection<Document>();
+      const col1NameSpy = jest.spyOn(collection1, 'collectionName', 'get');
+      col1NameSpy.mockReturnValue('collection1');
+
+      const collection2 = new Collection<Document>();
+      const col2NameSpy = jest.spyOn(collection2, 'collectionName', 'get');
+      col2NameSpy.mockReturnValue('collection2');
+
+      const collectionsSpy = jest.spyOn(mockDb, 'collections');
+      collectionsSpy.mockImplementationOnce(() =>
+        Promise.resolve([collection1, collection2]),
+      );
+
+      const createSpy = jest.spyOn(mockDb, 'createCollection');
+      createSpy.mockImplementationOnce(async () => {
+        throw new Error(testError);
+      });
+
+      await expect(() =>
+        MongoBlogService.initFromConfig(new ConfigService(), mockMongoDBClient),
+      ).rejects.toThrow(testError);
+
+      expect(clientDbSpy).toHaveBeenCalledTimes(2);
+      expect(collectionsSpy).toHaveBeenCalledTimes(1);
+      expect(col1NameSpy).toHaveBeenCalledTimes(1);
+      expect(col2NameSpy).toHaveBeenCalledTimes(1);
+      expect(createSpy).toHaveBeenCalledTimes(1);
+    });
+
+    test('Throws an error if createIndex throws an error', async () => {
+      const collection1 = new Collection<Document>();
+      const col1NameSpy = jest.spyOn(collection1, 'collectionName', 'get');
+      col1NameSpy.mockReturnValue('collection1');
+
+      const collection2 = new Collection<Document>();
+      const col2NameSpy = jest.spyOn(collection2, 'collectionName', 'get');
+      col2NameSpy.mockReturnValue('collection2');
+
+      const collectionsSpy = jest.spyOn(mockDb, 'collections');
+      collectionsSpy.mockImplementationOnce(() =>
+        Promise.resolve([collection1, collection2]),
+      );
+
+      const createSpy = jest.spyOn(mockDb, 'createCollection');
+      createSpy.mockImplementationOnce(async () => mockCollection);
+
+      const createIndexSpy = jest.spyOn(mockCollection, 'createIndex');
+      createIndexSpy.mockImplementationOnce(async () => {
+        throw new Error(testError);
+      });
+
+      await expect(() =>
+        MongoBlogService.initFromConfig(new ConfigService(), mockMongoDBClient),
+      ).rejects.toThrow(testError);
+
+      expect(clientDbSpy).toHaveBeenCalledTimes(2);
+      expect(collectionsSpy).toHaveBeenCalledTimes(1);
+      expect(col1NameSpy).toHaveBeenCalledTimes(1);
+      expect(col2NameSpy).toHaveBeenCalledTimes(1);
+      expect(createSpy).toHaveBeenCalledTimes(1);
+      expect(createIndexSpy).toHaveBeenCalledTimes(1);
+    });
+
+    test('Throws an error if _mongoDBClient.db throws an error', async () => {
+      const blogDataCol = new Collection<Document>();
+      const blogNameSpy = jest.spyOn(blogDataCol, 'collectionName', 'get');
+      blogNameSpy.mockReturnValue('blogPosts');
+
+      const collection1 = new Collection<Document>();
+      const col1NameSpy = jest.spyOn(collection1, 'collectionName', 'get');
+      col1NameSpy.mockReturnValue('collection1');
+
+      const collection2 = new Collection<Document>();
+      const col2NameSpy = jest.spyOn(collection2, 'collectionName', 'get');
+      col2NameSpy.mockReturnValue('collection2');
+
+      clientDbSpy.mockImplementationOnce(() => {
+        throw new Error(testError);
+      });
+
+      const collectionsSpy = jest.spyOn(mockDb, 'collections');
+
+      await expect(() =>
+        MongoBlogService.initFromConfig(new ConfigService(), mockMongoDBClient),
+      ).rejects.toThrow();
+
+      expect(clientDbSpy).toHaveBeenCalledTimes(1);
+      expect(collectionsSpy).toHaveBeenCalledTimes(0);
+      expect(blogNameSpy).toHaveBeenCalledTimes(0);
+      expect(col1NameSpy).toHaveBeenCalledTimes(0);
+      expect(col2NameSpy).toHaveBeenCalledTimes(0);
+    });
+
+    test('throws an error if db.collections throws an error', async () => {
+      const blogDataCol = new Collection<Document>();
+      const blogNameSpy = jest.spyOn(blogDataCol, 'collectionName', 'get');
+      blogNameSpy.mockReturnValue('blogPosts');
+
+      const collection1 = new Collection<Document>();
+      const col1NameSpy = jest.spyOn(collection1, 'collectionName', 'get');
+      col1NameSpy.mockReturnValue('collection1');
+
+      const collection2 = new Collection<Document>();
+      const col2NameSpy = jest.spyOn(collection2, 'collectionName', 'get');
+      col2NameSpy.mockReturnValue('collection2');
+
+      const collectionsSpy = jest.spyOn(mockDb, 'collections');
+      collectionsSpy.mockImplementation(() => {
+        throw new Error(testError);
+      });
+
+      await expect(() =>
+        MongoBlogService.initFromConfig(new ConfigService(), mockMongoDBClient),
+      ).rejects.toThrow();
+
+      expect(clientDbSpy).toHaveBeenCalledTimes(1);
+      expect(collectionsSpy).toHaveBeenCalledTimes(1);
+      expect(blogNameSpy).toHaveBeenCalledTimes(0);
+      expect(col1NameSpy).toHaveBeenCalledTimes(0);
+      expect(col2NameSpy).toHaveBeenCalledTimes(0);
+    });
+  });
 });
