@@ -353,7 +353,7 @@ describe('image_models', () => {
         const details = NewImageDetails.fromJSON(validNewImageDetails);
 
         expect(details.originalFilename).toBe(originalFilename);
-        expect(details.dateAdded).toBe(dateAdded);
+        expect(details.dateAdded.toISOString()).toBe(dateAdded);
 
         const file1 = details.getFileById(identifier1);
         expect(file1.toJSON()).toStrictEqual(validFile1);
@@ -482,7 +482,9 @@ describe('image_models', () => {
         expect(details.originalFilename).toBe(
           validImageDetails.originalFilename,
         );
-        expect(details.dateAdded).toBe(validImageDetails.dateAdded);
+        expect(details.dateAdded.toISOString()).toBe(
+          validImageDetails.dateAdded,
+        );
 
         expect(
           details.getFileById(validFile1.identifier as string).toJSON(),
@@ -504,7 +506,9 @@ describe('image_models', () => {
         expect(details.originalFilename).toBe(
           validImageDetails.originalFilename,
         );
-        expect(details.dateAdded).toBe(validImageDetails.dateAdded);
+        expect(details.dateAdded.toISOString()).toBe(
+          validImageDetails.dateAdded,
+        );
 
         expect(
           details.getFileById(validFile1.identifier as string).toJSON(),

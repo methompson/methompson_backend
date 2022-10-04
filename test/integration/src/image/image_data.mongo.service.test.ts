@@ -1,4 +1,3 @@
-import { NotFoundError } from '@/src/errors';
 import { MongoImageDataService } from '@/src/image/image_data.mongo.service';
 import { FileDetails, NewImageDetails } from '@/src/models/image_models';
 import { MongoDBClient } from '@/src/utils/mongodb_client_class';

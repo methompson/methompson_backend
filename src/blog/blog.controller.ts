@@ -90,5 +90,23 @@ export class BlogController {
 
   @Post('delete/:slug')
   @UseInterceptors(AuthRequiredIncerceptor)
-  async deleteBlogPost(@Req() request: Request): Promise<void> {}
+  async deleteBlogPost(@Req() request: Request): Promise<BlogPost> {
+    const slug = request.params?.slug;
+
+    if (!isString(slug) || slug.length === 0) {
+      throw new HttpException('Invalid Slug', HttpStatus.BAD_REQUEST);
+    }
+
+    try {
+      return await this.blogService.deleteBlogPost(slug);
+    } catch (e) {
+      if (e instanceof InvalidInputError) {
+        throw new HttpException('No Blog Post', HttpStatus.NOT_FOUND);
+      }
+
+      console.error(e);
+
+      throw new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 }

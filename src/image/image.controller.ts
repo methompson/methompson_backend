@@ -25,11 +25,14 @@ import {
 } from '@/src/models/image_models';
 import { isString, isRecord } from '@/src/utils/type_guards';
 import { AuthModel } from '@/src/models/auth_model';
-import { ImageDataService } from '@/src/image/image_data.service';
+import {
+  ImageDataService,
+  ImageListOutput,
+} from '@/src/image/image_data.service';
 import { NotFoundError, InvalidStateError } from '@/src/errors';
 import { AuthRequiredIncerceptor } from '@/src/middleware/auth_interceptor';
 import { UserId } from '@/src/middleware/auth_model_decorator';
-import { getNumberFromString } from '../utils/get_number_from_string';
+import { getNumberFromString } from '@/src/utils/get_number_from_string';
 
 @UseInterceptors(RequestLogInterceptor)
 @Controller({ path: 'api/image' })
@@ -69,7 +72,7 @@ export class ImageController {
 
   @Get('list')
   @UseInterceptors(AuthRequiredIncerceptor)
-  async getImageList(@Req() request: Request): Promise<void> {
+  async getImageList(@Req() request: Request): Promise<ImageListOutput> {
     const pageQP = request.query?.page;
     const paginationQP = request.query?.pagination;
 
@@ -77,6 +80,8 @@ export class ImageController {
     const pagination = isString(paginationQP)
       ? getNumberFromString(paginationQP, 20)
       : 20;
+
+    return await this.imageService.getImageList(page, pagination);
   }
 
   /**

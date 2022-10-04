@@ -3,7 +3,10 @@ import { v4 as uuidv4 } from 'uuid';
 
 import {
   DeleteImageOptions,
+  GetImageListOptions,
   ImageDataService,
+  ImageListOutput,
+  ImageSortOption,
 } from '@/src/image/image_data.service';
 import { ImageDetails, NewImageDetails } from '@/src/models/image_models';
 import {
@@ -35,6 +38,38 @@ export class InMemoryImageDataService extends ImageDataService {
     }
 
     return file[0];
+  }
+
+  async getImageList(
+    page = 1,
+    pagination = 10,
+    options: GetImageListOptions,
+  ): Promise<ImageListOutput> {
+    const stringCompare = (a: string, b: string) => a.localeCompare(b);
+    const sortByName = (a: ImageDetails, b: ImageDetails) =>
+      stringCompare(a.originalFilename, b.originalFilename);
+
+    const sortByDate = (a: ImageDetails, b: ImageDetails) =>
+      stringCompare(a.dateAdded.toISOString(), b.dateAdded.toISOString());
+
+    let sortFunction = sortByName;
+
+    if (options.sortBy === ImageSortOption.DateAdded) {
+      sortFunction = sortByDate;
+    }
+
+    const skip = pagination * (page - 1);
+    const end = pagination * page;
+
+    const imageList = Object.values(this.images);
+    imageList.sort(sortFunction);
+    const totalImages = imageList.length;
+
+    const images = imageList.slice(skip, end);
+
+    const morePages = end < totalImages;
+
+    return { images, morePages };
   }
 
   async deleteImage(options: DeleteImageOptions): Promise<ImageDetails> {

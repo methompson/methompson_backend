@@ -8,6 +8,7 @@ import {
   isString,
 } from '@/src/utils/type_guards';
 import { InvalidInputError } from '@/src/errors/invalid_input_error';
+import { isValidDate, ValidDate } from '@/src/utils/valid_date';
 
 interface FilenameComponents {
   name: string;
@@ -336,7 +337,7 @@ export class NewImageDetails {
     files: FileDetails[],
     protected _imageId: string,
     protected _originalFilename: string,
-    protected _dateAdded: string,
+    protected _dateAdded: ValidDate,
     protected _isPrivate: boolean,
     protected _authorId: string,
   ) {
@@ -361,7 +362,7 @@ export class NewImageDetails {
   get originalFilename(): string {
     return this._originalFilename;
   }
-  get dateAdded(): string {
+  get dateAdded(): Date {
     return this._dateAdded;
   }
   get authorId(): string {
@@ -385,7 +386,7 @@ export class NewImageDetails {
       files,
       imageId: this.imageId,
       originalFilename: this.originalFilename,
-      dateAdded: this.dateAdded,
+      dateAdded: this.dateAdded.toISOString(),
       isPrivate: this.isPrivate,
       authorId: this.authorId,
     };
@@ -416,7 +417,7 @@ export class NewImageDetails {
       details,
       input.imageId,
       input.originalFilename,
-      input.dateAdded,
+      new Date(input.dateAdded),
       input.isPrivate,
       input.authorId,
     );
@@ -465,7 +466,7 @@ export class ImageDetails extends NewImageDetails {
     files: FileDetails[],
     imageId: string,
     originalFilename: string,
-    dateAdded: string,
+    dateAdded: ValidDate,
     isPrivate: boolean,
     authorId: string,
   ) {
@@ -485,7 +486,7 @@ export class ImageDetails extends NewImageDetails {
       authorId: this.authorId,
       files,
       originalFilename: this.originalFilename,
-      dateAdded: this.dateAdded,
+      dateAdded: this.dateAdded.toISOString(),
       isPrivate: this._isPrivate,
     };
   }
@@ -515,7 +516,7 @@ export class ImageDetails extends NewImageDetails {
     return ImageDetails.fromNewImageDetails(input.id, nid);
   }
 
-  static fromMongo(input: WithId<Document> | Document): ImageDetails {
+  static fromMongoDB(input: WithId<Document> | Document): ImageDetails {
     // console.log(JSON.stringify(input));
     const dateAdded = input?.dateAdded?.toISOString();
     const id = input?._id?.toString();

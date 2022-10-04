@@ -4,12 +4,15 @@ import { Collection, Document, ObjectId } from 'mongodb';
 
 import {
   DeleteImageOptions,
+  GetImageListOptions,
   ImageDataService,
+  ImageListOutput,
+  ImageSortOption,
 } from '@/src/image/image_data.service';
 import { ImageDetails, NewImageDetails } from '@/src/models/image_models';
 import { NotFoundError, InvalidInputError } from '@/src/errors';
 import { MongoDBClient } from '@/src/utils/mongodb_client_class';
-import { isNull, isNullOrUndefined } from '@/src/utils/type_guards';
+import { isNullOrUndefined } from '@/src/utils/type_guards';
 
 const imageDataCollectionName = 'images';
 
@@ -100,7 +103,50 @@ export class MongoImageDataService implements ImageDataService {
       throw new NotFoundError('Result is null');
     }
 
-    return ImageDetails.fromMongo(result);
+    return ImageDetails.fromMongoDB(result);
+  }
+
+  async getImageList(
+    page = 1,
+    pagination = 10,
+    options?: GetImageListOptions,
+  ): Promise<ImageListOutput> {
+    const $skip = pagination * (page - 1);
+
+    const imageCollection = await this.imageCollection;
+
+    let $sort: Record<string, number> = { dateAdded: -1 };
+
+    if (options?.sortBy === ImageSortOption.Filename) {
+      $sort = { originalFilename: 1 };
+    }
+
+    const rawAggregation = imageCollection.aggregate([
+      { $sort },
+      { $skip },
+      { $limit: pagination + 1 },
+    ]);
+
+    const aggregation = await rawAggregation.toArray();
+
+    const output = [];
+
+    for (const agg of aggregation) {
+      try {
+        output.push(ImageDetails.fromMongoDB(agg));
+      } catch (e) {
+        console.error('Invalid Blog Post', e);
+      }
+    }
+
+    // We check if there are more posts than the pagination value.
+    // If there are, that means the user can hit 'next' and get more posts.
+    const morePages = output.length > pagination;
+
+    return {
+      images: output.slice(0, pagination),
+      morePages,
+    };
   }
 
   async deleteImage(options: DeleteImageOptions): Promise<ImageDetails> {
@@ -128,11 +174,11 @@ export class MongoImageDataService implements ImageDataService {
     const collection = await this.imageCollection;
     const result = await collection.findOneAndDelete(deleteOptions);
 
-    if (isNull(result.value)) {
+    if (isNullOrUndefined(result.value)) {
       throw new InvalidInputError('Invalid delete image options passed');
     }
 
-    const details = ImageDetails.fromMongo(result.value);
+    const details = ImageDetails.fromMongoDB(result.value);
 
     return details;
   }
@@ -173,7 +219,7 @@ export class MongoImageDataService implements ImageDataService {
       throw new Error('Add Image Error');
     }
 
-    const output = details.map((detail) => ImageDetails.fromMongo(detail));
+    const output = details.map((detail) => ImageDetails.fromMongoDB(detail));
     return output;
   }
 

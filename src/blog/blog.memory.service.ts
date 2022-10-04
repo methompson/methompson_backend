@@ -25,22 +25,8 @@ export class InMemoryBlogService implements BlogService {
   get blogPostsByDate(): BlogPost[] {
     const posts = Object.values(this.blogPosts);
 
-    posts.sort((a, b) => {
-      const aTime = a.dateAdded.getTime();
-      const bTime = b.dateAdded.getTime();
-
-      if (aTime > bTime) {
-        return -1;
-      }
-
-      if (aTime < bTime) {
-        return 1;
-      }
-
-      return 0;
-    });
-
-    return posts;
+    // Sorts in reverse chronological order
+    return posts.sort((a, b) => b.dateAdded.getTime() - a.dateAdded.getTime());
   }
 
   async getPosts(page = 1, pagination = 10): Promise<BlogPostRequestOutput> {

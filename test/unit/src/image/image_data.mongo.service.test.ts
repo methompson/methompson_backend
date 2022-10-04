@@ -1,4 +1,10 @@
-import { Db, MongoClient, Collection, ObjectId } from 'mongodb';
+import {
+  Db,
+  MongoClient,
+  Collection,
+  ObjectId,
+  AggregationCursor,
+} from 'mongodb';
 import { ConfigService } from '@nestjs/config';
 
 import { NotFoundError } from '@/src/errors';
@@ -27,14 +33,19 @@ jest.mock('mongodb', () => {
   MockCollection.prototype.findOneAndDelete = jest.fn();
   MockCollection.prototype.deleteOne = jest.fn();
   MockCollection.prototype.insertMany = jest.fn();
+  MockCollection.prototype.aggregate = jest.fn();
 
   const MockMongoClient = jest.fn();
+
+  function MockAggregationCursor() {}
+  MockAggregationCursor.prototype.toArray = jest.fn();
 
   return {
     ...originalModule,
     Db: MockDb,
     MongoClient: MockMongoClient,
     Collection: MockCollection,
+    AggregationCursor: MockAggregationCursor,
   };
 });
 
@@ -89,7 +100,7 @@ describe('MongoImageDataService', () => {
   const objectId1 = 'abcdef1234567890abcdef12';
   const objectId2 = '0987654321fedcba09876543';
 
-  const imageDetails = {
+  const imageDetails1 = ImageDetails.fromJSON({
     files: [
       {
         filename: 'fa713d2c-877c-4ddc-b87d-dc39e2ac0061.jpg',
@@ -110,10 +121,49 @@ describe('MongoImageDataService', () => {
     ],
     imageId: 'test',
     originalFilename: 'originalFilename',
-    dateAdded: new Date('2022-09-15T06:46:00.000Z'),
+    dateAdded: '2022-09-15T06:46:00.000Z',
     isPrivate: false,
     authorId: 'authorId',
+    id: new ObjectId(objectId1).toString(),
+  });
+
+  const id1Mongo = {
+    ...imageDetails1.toJSON(),
     _id: new ObjectId(objectId1),
+    dateAdded: new Date(imageDetails1.dateAdded),
+  };
+
+  const imageDetails2 = ImageDetails.fromJSON({
+    files: [
+      {
+        filename: '3fb475f9-2eec-45be-812e-7b4767666e44.jpg',
+        identifier: '',
+        dimensions: {
+          x: 640,
+          y: 480,
+        },
+      },
+      {
+        filename: '3fb475f9-2eec-45be-812e-7b4767666e44_thumb.jpg',
+        identifier: 'thumb',
+        dimensions: {
+          x: 93,
+          y: 128,
+        },
+      },
+    ],
+    imageId: 'testId',
+    originalFilename: 'anotherFilename',
+    dateAdded: '2022-10-04T06:46:00.000Z',
+    isPrivate: true,
+    authorId: 'authorId',
+    id: new ObjectId(objectId2).toString(),
+  });
+
+  const id2Mongo = {
+    ...imageDetails2.toJSON(),
+    _id: new ObjectId(objectId2),
+    dateAdded: new Date(imageDetails2.dateAdded),
   };
 
   beforeEach(() => {
@@ -128,6 +178,8 @@ describe('MongoImageDataService', () => {
     (Collection.prototype.findOneAndDelete as unknown as jest.Mock).mockReset();
     (Collection.prototype.deleteOne as unknown as jest.Mock).mockReset();
     (Collection.prototype.insertMany as unknown as jest.Mock).mockReset();
+
+    (AggregationCursor.prototype.toArray as unknown as jest.Mock).mockReset();
 
     mockMongoClient = new MongoClient(dbName);
     mockDb = new Db(mockMongoClient, dbName);
@@ -386,19 +438,12 @@ describe('MongoImageDataService', () => {
   describe('getImageByName', () => {
     test('returns the value from findOne', async () => {
       const findOneSpy = jest.spyOn(mockCollection, 'findOne');
-      findOneSpy.mockImplementationOnce(async () => imageDetails);
+      findOneSpy.mockImplementationOnce(async () => id1Mongo);
 
       const svc = new MongoImageDataService(mockMongoDBClient);
       const result = await svc.getImageByName('test');
 
-      expect(result.imageId).toBe(imageDetails.imageId);
-      expect(result.originalFilename).toBe(imageDetails.originalFilename);
-      expect(result.isPrivate).toBe(imageDetails.isPrivate);
-      expect(result.authorId).toBe(imageDetails.authorId);
-      expect(result.dateAdded).toBe(imageDetails.dateAdded.toISOString());
-
-      const images = result.files.map((file) => file.toJSON());
-      expect(images).toStrictEqual(imageDetails.files);
+      expect(result.toJSON()).toStrictEqual(imageDetails1.toJSON());
     });
 
     test('throws an error when findOne throws an error', async () => {
@@ -430,24 +475,47 @@ describe('MongoImageDataService', () => {
     });
   });
 
+  describe('getImageList', () => {
+    test('returns an array with values parsed from mongoDB response', async () => {
+      const cursor = new AggregationCursor<Document>();
+      const toArraySpy = jest.spyOn(cursor, 'toArray');
+      toArraySpy.mockImplementationOnce(async () => [id1Mongo, id2Mongo]);
+
+      const aggregateSpy = jest.spyOn(mockCollection, 'aggregate');
+      aggregateSpy.mockImplementationOnce(() => cursor);
+
+      const svc = new MongoImageDataService(mockMongoDBClient);
+      const result = await svc.getImageList();
+
+      expect(result.images.length).toBe(2);
+      expect(result.morePages).toBe(false);
+
+      const result1 = result.images.filter(
+        (el) => el.originalFilename === imageDetails1.originalFilename,
+      )[0];
+      const result2 = result.images.filter(
+        (el) => el.originalFilename === imageDetails2.originalFilename,
+      )[0];
+
+      expect(result1.toJSON()).toStrictEqual(imageDetails1.toJSON());
+      expect(result2.toJSON()).toStrictEqual(imageDetails2.toJSON());
+    });
+  });
+
   describe('deleteImage', () => {
     test('calls findOneAndDelete and returns the value that was deleted', async () => {
       const svc = new MongoImageDataService(mockMongoDBClient);
 
       const deleteOneSpy = jest.spyOn(mockCollection, 'findOneAndDelete');
       deleteOneSpy.mockImplementationOnce(async () => ({
-        value: imageDetails,
+        value: id1Mongo,
       }));
 
       const result = await svc.deleteImage({ id: objectId1 });
 
       expect(deleteOneSpy).toHaveBeenCalledTimes(1);
 
-      expect(result.imageId).toBe(imageDetails.imageId);
-      expect(result.originalFilename).toBe(imageDetails.originalFilename);
-      expect(result.isPrivate).toBe(imageDetails.isPrivate);
-      expect(result.authorId).toBe(imageDetails.authorId);
-      expect(result.dateAdded).toBe(imageDetails.dateAdded.toISOString());
+      expect(result.toJSON()).toStrictEqual(imageDetails1.toJSON());
     });
 
     test('calls findOneAndDelete with id if provided', async () => {
@@ -455,7 +523,7 @@ describe('MongoImageDataService', () => {
 
       const deleteOneSpy = jest.spyOn(mockCollection, 'findOneAndDelete');
       deleteOneSpy.mockImplementationOnce(async () => ({
-        value: imageDetails,
+        value: id1Mongo,
       }));
 
       await svc.deleteImage({ id: objectId1 });
@@ -470,7 +538,7 @@ describe('MongoImageDataService', () => {
 
       const deleteOneSpy = jest.spyOn(mockCollection, 'findOneAndDelete');
       deleteOneSpy.mockImplementationOnce(async () => ({
-        value: imageDetails,
+        value: id1Mongo,
       }));
 
       const filename = 'filename.jpg';
@@ -487,7 +555,7 @@ describe('MongoImageDataService', () => {
 
       const deleteOneSpy = jest.spyOn(mockCollection, 'findOneAndDelete');
       deleteOneSpy.mockImplementationOnce(async () => ({
-        value: imageDetails,
+        value: id1Mongo,
       }));
 
       const originalFilename = 'filename.jpg';
@@ -511,7 +579,7 @@ describe('MongoImageDataService', () => {
       expect(deleteOneSpy).toHaveBeenCalledTimes(0);
     });
 
-    test('throws an error if findOneAndDelete throws an option', async () => {
+    test('throws an error if findOneAndDelete throws an error', async () => {
       const svc = new MongoImageDataService(mockMongoDBClient);
 
       const deleteOneSpy = jest.spyOn(mockCollection, 'findOneAndDelete');
@@ -557,7 +625,7 @@ describe('MongoImageDataService', () => {
       const input = { originalFilename };
 
       await expect(() => svc.deleteImage(input)).rejects.toThrow(
-        'Invalid Image Details Input',
+        'Invalid delete image options passed',
       );
 
       expect(deleteOneSpy).toHaveBeenCalledTimes(1);
@@ -570,8 +638,8 @@ describe('MongoImageDataService', () => {
       const svc = new MongoImageDataService(mockMongoDBClient);
 
       const nid = NewImageDetails.fromJSON({
-        ...imageDetails,
-        dateAdded: imageDetails.dateAdded.toISOString(),
+        ...id1Mongo,
+        dateAdded: imageDetails1.dateAdded.toISOString(),
       });
 
       const deleteOneSpy = jest.spyOn(mockCollection, 'deleteOne');
@@ -580,7 +648,7 @@ describe('MongoImageDataService', () => {
 
       expect(deleteOneSpy).toHaveBeenCalledTimes(1);
       expect(deleteOneSpy).toHaveBeenCalledWith({
-        originalFilename: imageDetails.originalFilename,
+        originalFilename: imageDetails1.originalFilename,
       });
     });
 
@@ -588,15 +656,15 @@ describe('MongoImageDataService', () => {
       const svc = new MongoImageDataService(mockMongoDBClient);
 
       const nid1 = NewImageDetails.fromJSON({
-        ...imageDetails,
-        dateAdded: imageDetails.dateAdded.toISOString(),
+        ...id1Mongo,
+        dateAdded: imageDetails1.dateAdded.toISOString(),
       });
 
       const originalFilename2 = 'originalFilename2';
       const nid2 = NewImageDetails.fromJSON({
-        ...imageDetails,
+        ...id1Mongo,
         originalFilename: originalFilename2,
-        dateAdded: imageDetails.dateAdded.toISOString(),
+        dateAdded: imageDetails1.dateAdded.toISOString(),
       });
 
       const deleteOneSpy = jest.spyOn(mockCollection, 'deleteOne');
@@ -605,7 +673,7 @@ describe('MongoImageDataService', () => {
 
       expect(deleteOneSpy).toHaveBeenCalledTimes(2);
       expect(deleteOneSpy).toHaveBeenNthCalledWith(1, {
-        originalFilename: imageDetails.originalFilename,
+        originalFilename: imageDetails1.originalFilename,
       });
       expect(deleteOneSpy).toHaveBeenNthCalledWith(2, {
         originalFilename: originalFilename2,
@@ -616,15 +684,15 @@ describe('MongoImageDataService', () => {
       const svc = new MongoImageDataService(mockMongoDBClient);
 
       const nid1 = NewImageDetails.fromJSON({
-        ...imageDetails,
-        dateAdded: imageDetails.dateAdded.toISOString(),
+        ...id1Mongo,
+        dateAdded: imageDetails1.dateAdded.toISOString(),
       });
 
       const originalFilename2 = 'originalFilename2';
       const nid2 = NewImageDetails.fromJSON({
-        ...imageDetails,
+        ...id1Mongo,
         originalFilename: originalFilename2,
-        dateAdded: imageDetails.dateAdded.toISOString(),
+        dateAdded: imageDetails1.dateAdded.toISOString(),
       });
 
       const deleteOneSpy = jest.spyOn(mockCollection, 'deleteOne');
@@ -636,7 +704,7 @@ describe('MongoImageDataService', () => {
 
       expect(deleteOneSpy).toHaveBeenCalledTimes(2);
       expect(deleteOneSpy).toHaveBeenNthCalledWith(1, {
-        originalFilename: imageDetails.originalFilename,
+        originalFilename: imageDetails1.originalFilename,
       });
       expect(deleteOneSpy).toHaveBeenNthCalledWith(2, {
         originalFilename: originalFilename2,
@@ -647,15 +715,15 @@ describe('MongoImageDataService', () => {
   describe('addImages', () => {
     test('runs insertMany for all images passed to the function and returns all the ImageDetails', async () => {
       const nid1 = NewImageDetails.fromJSON({
-        ...imageDetails,
-        dateAdded: imageDetails.dateAdded.toISOString(),
+        ...id1Mongo,
+        dateAdded: imageDetails1.dateAdded.toISOString(),
       });
 
       const originalFilename2 = 'originalFilename2';
       const nid2 = NewImageDetails.fromJSON({
-        ...imageDetails,
+        ...id1Mongo,
         originalFilename: originalFilename2,
-        dateAdded: imageDetails.dateAdded.toISOString(),
+        dateAdded: imageDetails1.dateAdded.toISOString(),
       });
 
       const id1 = ImageDetails.fromNewImageDetails(objectId1, nid1);
@@ -683,15 +751,15 @@ describe('MongoImageDataService', () => {
     test('throws an error if acknowledged is not true', async () => {
       errorSpy.mockImplementationOnce(() => {});
       const nid1 = NewImageDetails.fromJSON({
-        ...imageDetails,
-        dateAdded: imageDetails.dateAdded.toISOString(),
+        ...id1Mongo,
+        dateAdded: imageDetails1.dateAdded.toISOString(),
       });
 
       const originalFilename2 = 'originalFilename2';
       const nid2 = NewImageDetails.fromJSON({
-        ...imageDetails,
+        ...id1Mongo,
         originalFilename: originalFilename2,
-        dateAdded: imageDetails.dateAdded.toISOString(),
+        dateAdded: imageDetails1.dateAdded.toISOString(),
       });
 
       const insertManySpy = jest.spyOn(mockCollection, 'insertMany');
@@ -714,15 +782,15 @@ describe('MongoImageDataService', () => {
     test('throws an error if insertedCount does not match the quantity of images passed in', async () => {
       errorSpy.mockImplementationOnce(() => {});
       const nid1 = NewImageDetails.fromJSON({
-        ...imageDetails,
-        dateAdded: imageDetails.dateAdded.toISOString(),
+        ...id1Mongo,
+        dateAdded: imageDetails1.dateAdded.toISOString(),
       });
 
       const originalFilename2 = 'originalFilename2';
       const nid2 = NewImageDetails.fromJSON({
-        ...imageDetails,
+        ...id1Mongo,
         originalFilename: originalFilename2,
-        dateAdded: imageDetails.dateAdded.toISOString(),
+        dateAdded: imageDetails1.dateAdded.toISOString(),
       });
 
       const insertManySpy = jest.spyOn(mockCollection, 'insertMany');
@@ -745,15 +813,15 @@ describe('MongoImageDataService', () => {
     test('throws an error if insertMany throws an error', async () => {
       errorSpy.mockImplementationOnce(() => {});
       const nid1 = NewImageDetails.fromJSON({
-        ...imageDetails,
-        dateAdded: imageDetails.dateAdded.toISOString(),
+        ...id1Mongo,
+        dateAdded: imageDetails1.dateAdded.toISOString(),
       });
 
       const originalFilename2 = 'originalFilename2';
       const nid2 = NewImageDetails.fromJSON({
-        ...imageDetails,
+        ...id1Mongo,
         originalFilename: originalFilename2,
-        dateAdded: imageDetails.dateAdded.toISOString(),
+        dateAdded: imageDetails1.dateAdded.toISOString(),
       });
 
       const insertManySpy = jest.spyOn(mockCollection, 'insertMany');
@@ -770,15 +838,15 @@ describe('MongoImageDataService', () => {
     test('throws an error if imageCollection getter throws an error', async () => {
       errorSpy.mockImplementationOnce(() => {});
       const nid1 = NewImageDetails.fromJSON({
-        ...imageDetails,
-        dateAdded: imageDetails.dateAdded.toISOString(),
+        ...id1Mongo,
+        dateAdded: imageDetails1.dateAdded.toISOString(),
       });
 
       const originalFilename2 = 'originalFilename2';
       const nid2 = NewImageDetails.fromJSON({
-        ...imageDetails,
+        ...id1Mongo,
         originalFilename: originalFilename2,
-        dateAdded: imageDetails.dateAdded.toISOString(),
+        dateAdded: imageDetails1.dateAdded.toISOString(),
       });
 
       mockCollectionSpy.mockImplementationOnce(async () => {
@@ -797,15 +865,15 @@ describe('MongoImageDataService', () => {
     test('throws an error if ImageDetails.fromMongo throws an error', async () => {
       errorSpy.mockImplementationOnce(() => {});
       const nid1 = NewImageDetails.fromJSON({
-        ...imageDetails,
-        dateAdded: imageDetails.dateAdded.toISOString(),
+        ...id1Mongo,
+        dateAdded: imageDetails1.dateAdded.toISOString(),
       });
 
       const originalFilename2 = 'originalFilename2';
       const nid2 = NewImageDetails.fromJSON({
-        ...imageDetails,
+        ...id1Mongo,
         originalFilename: originalFilename2,
-        dateAdded: imageDetails.dateAdded.toISOString(),
+        dateAdded: imageDetails1.dateAdded.toISOString(),
       });
 
       const insertManySpy = jest.spyOn(mockCollection, 'insertMany');

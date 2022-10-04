@@ -5,6 +5,7 @@ import {
   Collection,
   ObjectId,
   MongoServerError,
+  AggregationCursor,
 } from 'mongodb';
 
 import { MongoBlogService } from '@/src/blog/blog.mongo.service';
@@ -33,14 +34,19 @@ jest.mock('mongodb', () => {
   MockCollection.prototype.deleteOne = jest.fn();
   MockCollection.prototype.insertMany = jest.fn();
   MockCollection.prototype.insertOne = jest.fn();
+  MockCollection.prototype.aggregate = jest.fn();
 
   const MockMongoClient = jest.fn();
+
+  function MockAggregationCursor() {}
+  MockAggregationCursor.prototype.toArray = jest.fn();
 
   return {
     ...originalModule,
     Db: MockDb,
     MongoClient: MockMongoClient,
     Collection: MockCollection,
+    AggregationCursor: MockAggregationCursor,
   };
 });
 
@@ -49,10 +55,16 @@ const dbName = 'dbName';
 const testError = 'test error';
 
 const errorSpy = jest.spyOn(console, 'error');
+errorSpy.mockImplementation(() => {});
 const logSpy = jest.spyOn(console, 'log');
 
+const objectId1 = 'abcdef1234567890abcdef12';
+const objectId2 = '1234567890abcdef12345678';
+const objectId3 = '0987654321fedcba09876543';
+const objectId4 = 'fedcba0987654321fedcba09';
+
 const post1 = new BlogPost(
-  'id1',
+  objectId1,
   'title1',
   'slug1',
   'body1',
@@ -63,7 +75,7 @@ const post1 = new BlogPost(
 );
 
 const post2 = new BlogPost(
-  'id2',
+  objectId2,
   'title2',
   'slug2',
   'body2',
@@ -74,7 +86,7 @@ const post2 = new BlogPost(
 );
 
 const post3 = new BlogPost(
-  'id3',
+  objectId3,
   'title3',
   'slug3',
   'body3',
@@ -85,7 +97,7 @@ const post3 = new BlogPost(
 );
 
 const post4 = new BlogPost(
-  'id4',
+  objectId4,
   'title4',
   'slug4',
   'body4',
@@ -104,9 +116,6 @@ describe('MongoBlogService', () => {
   let mockCollectionSpy: jest.SpyInstance;
   let clientDbSpy: jest.SpyInstance;
 
-  const objectId1 = 'abcdef1234567890abcdef12';
-  const objectId2 = '0987654321fedcba09876543';
-
   beforeEach(() => {
     (Db.prototype.collection as unknown as jest.Mock).mockReset();
     (Db.prototype.collections as unknown as jest.Mock).mockReset();
@@ -120,6 +129,9 @@ describe('MongoBlogService', () => {
     (Collection.prototype.deleteOne as unknown as jest.Mock).mockReset();
     (Collection.prototype.insertMany as unknown as jest.Mock).mockReset();
     (Collection.prototype.insertOne as unknown as jest.Mock).mockReset();
+    (Collection.prototype.aggregate as unknown as jest.Mock).mockReset();
+
+    (AggregationCursor.prototype.toArray as unknown as jest.Mock).mockReset();
 
     mockMongoClient = new MongoClient(dbName);
     mockDb = new Db(mockMongoClient, dbName);
@@ -378,7 +390,167 @@ describe('MongoBlogService', () => {
     });
   });
 
-  describe('getPosts', () => {});
+  describe('getPosts', () => {
+    test('returns a BlogPostRequestOutput with a list of blog posts', async () => {
+      const cursor = new AggregationCursor<Document>();
+      const toArraySpy = jest.spyOn(cursor, 'toArray');
+      toArraySpy.mockImplementationOnce(async () => [
+        { ...post1.toJSON(), _id: new ObjectId(objectId1) },
+        { ...post2.toJSON(), _id: new ObjectId(objectId2) },
+        { ...post3.toJSON(), _id: new ObjectId(objectId3) },
+        { ...post4.toJSON(), _id: new ObjectId(objectId4) },
+      ]);
+
+      const aggregateSpy = jest.spyOn(mockCollection, 'aggregate');
+      aggregateSpy.mockImplementationOnce(() => cursor);
+
+      const svc = new MongoBlogService(mockMongoDBClient);
+      const result = await svc.getPosts();
+
+      expect(aggregateSpy).toHaveBeenCalledTimes(1);
+      expect(aggregateSpy).toHaveBeenCalledWith([
+        { $sort: { dateAdded: -1 } },
+        { $skip: 0 },
+        { $limit: 11 },
+      ]);
+      expect(toArraySpy).toHaveBeenCalledTimes(1);
+
+      expect(result.posts.length).toBe(4);
+
+      const result1 = result.posts.filter((el) => el.title === post1.title)[0];
+      const result2 = result.posts.filter((el) => el.title === post2.title)[0];
+      const result3 = result.posts.filter((el) => el.title === post3.title)[0];
+      const result4 = result.posts.filter((el) => el.title === post4.title)[0];
+
+      expect(result1.toJSON()).toStrictEqual(post1.toJSON());
+      expect(result2.toJSON()).toStrictEqual(post2.toJSON());
+      expect(result3.toJSON()).toStrictEqual(post3.toJSON());
+      expect(result4.toJSON()).toStrictEqual(post4.toJSON());
+    });
+
+    test('Changing the pagination affects the values passed into aggregate', async () => {
+      const cursor = new AggregationCursor<Document>();
+      const toArraySpy = jest.spyOn(cursor, 'toArray');
+      toArraySpy.mockImplementationOnce(async () => []);
+
+      const aggregateSpy = jest.spyOn(mockCollection, 'aggregate');
+      aggregateSpy.mockImplementationOnce(() => cursor);
+
+      const svc = new MongoBlogService(mockMongoDBClient);
+      await svc.getPosts(4, 7);
+
+      expect(aggregateSpy).toHaveBeenCalledTimes(1);
+      expect(aggregateSpy).toHaveBeenCalledWith([
+        { $sort: { dateAdded: -1 } },
+        { $skip: 21 },
+        { $limit: 8 },
+      ]);
+      expect(toArraySpy).toHaveBeenCalledTimes(1);
+    });
+
+    test('morePages is false if there are the same amount of results as the pagination value', async () => {
+      const cursor = new AggregationCursor<Document>();
+      const toArraySpy = jest.spyOn(cursor, 'toArray');
+      toArraySpy.mockImplementationOnce(async () => [
+        { ...post1.toJSON(), _id: new ObjectId(objectId1) },
+        { ...post2.toJSON(), _id: new ObjectId(objectId2) },
+        { ...post3.toJSON(), _id: new ObjectId(objectId3) },
+        { ...post4.toJSON(), _id: new ObjectId(objectId4) },
+      ]);
+
+      const aggregateSpy = jest.spyOn(mockCollection, 'aggregate');
+      aggregateSpy.mockImplementationOnce(() => cursor);
+
+      const svc = new MongoBlogService(mockMongoDBClient);
+      const result = await svc.getPosts(1, 4);
+
+      expect(result.morePages).toBe(false);
+    });
+
+    test('morePages is true if there are more results than the pagination value', async () => {
+      const cursor = new AggregationCursor<Document>();
+      const toArraySpy = jest.spyOn(cursor, 'toArray');
+      toArraySpy.mockImplementationOnce(async () => [
+        { ...post1.toJSON(), _id: new ObjectId(objectId1) },
+        { ...post2.toJSON(), _id: new ObjectId(objectId2) },
+        { ...post3.toJSON(), _id: new ObjectId(objectId3) },
+        { ...post4.toJSON(), _id: new ObjectId(objectId4) },
+      ]);
+
+      const aggregateSpy = jest.spyOn(mockCollection, 'aggregate');
+      aggregateSpy.mockImplementationOnce(() => cursor);
+
+      const svc = new MongoBlogService(mockMongoDBClient);
+      const result = await svc.getPosts(1, 3);
+
+      expect(result.morePages).toBe(true);
+    });
+
+    test('returns an empty array if toArray returns an empty array', async () => {
+      const cursor = new AggregationCursor<Document>();
+      const toArraySpy = jest.spyOn(cursor, 'toArray');
+      toArraySpy.mockImplementationOnce(async () => []);
+
+      const aggregateSpy = jest.spyOn(mockCollection, 'aggregate');
+      aggregateSpy.mockImplementationOnce(() => cursor);
+
+      const svc = new MongoBlogService(mockMongoDBClient);
+      const result = await svc.getPosts();
+
+      expect(aggregateSpy).toHaveBeenCalledTimes(1);
+      expect(toArraySpy).toHaveBeenCalledTimes(1);
+
+      expect(result.posts.length).toBe(0);
+    });
+
+    test('throws an error if aggregate throws an error', async () => {
+      const aggregateSpy = jest.spyOn(mockCollection, 'aggregate');
+      aggregateSpy.mockImplementationOnce(() => {
+        throw new Error(testError);
+      });
+
+      const svc = new MongoBlogService(mockMongoDBClient);
+      await expect(() => svc.getPosts()).rejects.toThrow(testError);
+
+      expect(aggregateSpy).toHaveBeenCalledTimes(1);
+    });
+
+    test('throws an error if toArray throws an error', async () => {
+      const cursor = new AggregationCursor<Document>();
+      const toArraySpy = jest.spyOn(cursor, 'toArray');
+      toArraySpy.mockImplementationOnce(async () => {
+        throw new Error(testError);
+      });
+
+      const aggregateSpy = jest.spyOn(mockCollection, 'aggregate');
+      aggregateSpy.mockImplementationOnce(() => cursor);
+
+      const svc = new MongoBlogService(mockMongoDBClient);
+      await expect(() => svc.getPosts()).rejects.toThrow(testError);
+
+      expect(aggregateSpy).toHaveBeenCalledTimes(1);
+      expect(toArraySpy).toHaveBeenCalledTimes(1);
+    });
+
+    test('Only returns values that can conform to a BlogPost interface from a MongoDB return value', async () => {
+      const cursor = new AggregationCursor<Document>();
+      const toArraySpy = jest.spyOn(cursor, 'toArray');
+      toArraySpy.mockImplementationOnce(async () => [
+        post1.toJSON(),
+        post2.toJSON(),
+        post3.toJSON(),
+        { ...post4.toJSON(), _id: new ObjectId(objectId4) },
+      ]);
+
+      const aggregateSpy = jest.spyOn(mockCollection, 'aggregate');
+      aggregateSpy.mockImplementationOnce(() => cursor);
+
+      const svc = new MongoBlogService(mockMongoDBClient);
+      const result = await svc.getPosts();
+
+      expect(result.posts.length).toBe(1);
+    });
+  });
 
   describe('findBySlug', () => {
     test('returns the value from findOne', async () => {
@@ -497,7 +669,72 @@ describe('MongoBlogService', () => {
     });
   });
 
-  describe('deleteBlogPost', () => {});
+  describe('deleteBlogPost', () => {
+    test('calls findOneAndDelete and returns the value that was deleted', async () => {
+      const svc = new MongoBlogService(mockMongoDBClient);
+
+      const deleteOneSpy = jest.spyOn(mockCollection, 'findOneAndDelete');
+      deleteOneSpy.mockImplementationOnce(async () => ({
+        value: {
+          ...post1.toJSON(),
+          _id: new ObjectId(post1.id),
+        },
+      }));
+
+      const result = await svc.deleteBlogPost(post1.slug);
+
+      expect(deleteOneSpy).toHaveBeenCalledTimes(1);
+      expect(deleteOneSpy).toHaveBeenCalledWith({ slug: post1.slug });
+
+      expect(result.toJSON()).toStrictEqual(post1.toJSON());
+    });
+
+    test('throws an error if findOneAndDelete throws an error', async () => {
+      const svc = new MongoBlogService(mockMongoDBClient);
+
+      const deleteOneSpy = jest.spyOn(mockCollection, 'findOneAndDelete');
+      deleteOneSpy.mockImplementationOnce(async () => {
+        throw new Error(testError);
+      });
+
+      await expect(() => svc.deleteBlogPost(post1.slug)).rejects.toThrow(
+        testError,
+      );
+
+      expect(deleteOneSpy).toHaveBeenCalledTimes(1);
+      expect(deleteOneSpy).toHaveBeenCalledWith({ slug: post1.slug });
+    });
+
+    test('throws an error if findOneAndDelete returns a null value', async () => {
+      const svc = new MongoBlogService(mockMongoDBClient);
+
+      const deleteOneSpy = jest.spyOn(mockCollection, 'findOneAndDelete');
+      deleteOneSpy.mockImplementationOnce(async () => ({
+        value: null,
+      }));
+
+      await expect(() => svc.deleteBlogPost(post1.slug)).rejects.toThrow(
+        'Invalid delete blog slug passed',
+      );
+
+      expect(deleteOneSpy).toHaveBeenCalledTimes(1);
+      expect(deleteOneSpy).toHaveBeenCalledWith({ slug: post1.slug });
+    });
+
+    test('throws an error if findOneAndDelete returns an invalid input', async () => {
+      const svc = new MongoBlogService(mockMongoDBClient);
+
+      const deleteOneSpy = jest.spyOn(mockCollection, 'findOneAndDelete');
+      deleteOneSpy.mockImplementation(async () => ({}));
+
+      await expect(() => svc.deleteBlogPost(post1.slug)).rejects.toThrow(
+        'Invalid delete blog slug passed',
+      );
+
+      expect(deleteOneSpy).toHaveBeenCalledTimes(1);
+      expect(deleteOneSpy).toHaveBeenCalledWith({ slug: post1.slug });
+    });
+  });
 
   describe('initFromConfig', () => {
     test('creates a service with a client. Does not run makeBlogCollection if blogPosts exists in the collections', async () => {

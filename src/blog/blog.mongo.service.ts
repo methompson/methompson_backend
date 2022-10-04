@@ -80,17 +80,18 @@ export class MongoBlogService implements BlogService {
   }
 
   async getPosts(page = 1, pagination = 10): Promise<BlogPostRequestOutput> {
-    const blogCollection = await this.blogCollection;
     const skip = pagination * (page - 1);
 
+    const blogCollection = await this.blogCollection;
+
     // We get one more just to check if there exist any more posts AFTER this result.
-    const aggregation = await blogCollection
-      .aggregate([
-        { $sort: { dateAdded: -1 } },
-        { $skip: skip },
-        { $limit: pagination + 1 },
-      ])
-      .toArray();
+    const rawAggregation = blogCollection.aggregate([
+      { $sort: { dateAdded: -1 } },
+      { $skip: skip },
+      { $limit: pagination + 1 },
+    ]);
+
+    const aggregation = await rawAggregation.toArray();
 
     const output = [];
 
@@ -160,7 +161,17 @@ export class MongoBlogService implements BlogService {
   }
 
   async deleteBlogPost(slug: string): Promise<BlogPost> {
-    throw new Error('Not Implemented');
+    const blogCollection = await this.blogCollection;
+
+    const result = await blogCollection.findOneAndDelete({ slug });
+
+    if (isNullOrUndefined(result.value)) {
+      throw new InvalidInputError('Invalid delete blog slug passed');
+    }
+
+    const blogPost = BlogPost.fromMongoDB(result.value);
+
+    return blogPost;
   }
 
   static async initFromConfig(
