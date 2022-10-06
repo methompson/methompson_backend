@@ -11,6 +11,7 @@ import { NotFoundError } from '@/src/errors';
 import { MongoImageDataService } from '@/src/image/image_data.mongo.service';
 import { ImageDetails, NewImageDetails } from '@/src/models/image_models';
 import { MongoDBClient } from '@/src/utils/mongodb_client_class';
+import { ImageSortOption } from '@/src/image/image_data.service';
 
 // jest.mock('mongodb');
 jest.mock('mongodb', () => {
@@ -54,6 +55,7 @@ const dbName = 'dbName';
 const testError = 'test error';
 
 const errorSpy = jest.spyOn(console, 'error');
+errorSpy.mockImplementation(() => {});
 const logSpy = jest.spyOn(console, 'log');
 
 test('Testing ES5 Classes', () => {
@@ -178,6 +180,7 @@ describe('MongoImageDataService', () => {
     (Collection.prototype.findOneAndDelete as unknown as jest.Mock).mockReset();
     (Collection.prototype.deleteOne as unknown as jest.Mock).mockReset();
     (Collection.prototype.insertMany as unknown as jest.Mock).mockReset();
+    (Collection.prototype.aggregate as unknown as jest.Mock).mockReset();
 
     (AggregationCursor.prototype.toArray as unknown as jest.Mock).mockReset();
 
@@ -499,6 +502,154 @@ describe('MongoImageDataService', () => {
 
       expect(result1.toJSON()).toStrictEqual(imageDetails1.toJSON());
       expect(result2.toJSON()).toStrictEqual(imageDetails2.toJSON());
+
+      expect(aggregateSpy).toHaveBeenCalledTimes(1);
+      expect(toArraySpy).toHaveBeenCalledTimes(1);
+    });
+
+    test('Changing the pagination affects the values passed into aggregate', async () => {
+      const cursor = new AggregationCursor<Document>();
+      const toArraySpy = jest.spyOn(cursor, 'toArray');
+      toArraySpy.mockImplementation(async () => [id1Mongo, id2Mongo]);
+
+      const aggregateSpy = jest.spyOn(mockCollection, 'aggregate');
+      aggregateSpy.mockImplementation(() => cursor);
+
+      const svc = new MongoImageDataService(mockMongoDBClient);
+      await svc.getImageList();
+
+      expect(aggregateSpy).toHaveBeenCalledWith([
+        { $sort: { dateAdded: -1 } },
+        { $skip: 0 },
+        { $limit: 11 },
+      ]);
+      await svc.getImageList(2);
+
+      expect(aggregateSpy).toHaveBeenCalledWith([
+        { $sort: { dateAdded: -1 } },
+        { $skip: 10 },
+        { $limit: 11 },
+      ]);
+      await svc.getImageList(3, 5);
+
+      expect(aggregateSpy).toHaveBeenCalledWith([
+        { $sort: { dateAdded: -1 } },
+        { $skip: 10 },
+        { $limit: 6 },
+      ]);
+
+      await svc.getImageList(6, 9, { sortBy: ImageSortOption.Filename });
+
+      expect(aggregateSpy).toHaveBeenCalledWith([
+        { $sort: { originalFilename: 1 } },
+        { $skip: 45 },
+        { $limit: 10 },
+      ]);
+    });
+
+    test('morePages is false if there are the same amount of results as the pagination value', async () => {
+      const cursor = new AggregationCursor<Document>();
+      const toArraySpy = jest.spyOn(cursor, 'toArray');
+      toArraySpy.mockImplementation(async () => [id1Mongo, id2Mongo]);
+
+      const aggregateSpy = jest.spyOn(mockCollection, 'aggregate');
+      aggregateSpy.mockImplementation(() => cursor);
+
+      const svc = new MongoImageDataService(mockMongoDBClient);
+      const result = await svc.getImageList(1, 2);
+
+      expect(result.morePages).toBe(false);
+    });
+
+    test('morePages is true if there are more results than the pagination value', async () => {
+      const cursor = new AggregationCursor<Document>();
+      const toArraySpy = jest.spyOn(cursor, 'toArray');
+      toArraySpy.mockImplementation(async () => [id1Mongo, id2Mongo, id1Mongo]);
+
+      const aggregateSpy = jest.spyOn(mockCollection, 'aggregate');
+      aggregateSpy.mockImplementation(() => cursor);
+
+      const svc = new MongoImageDataService(mockMongoDBClient);
+      const result = await svc.getImageList(1, 2);
+
+      expect(result.morePages).toBe(true);
+      expect(result.images.length).toBe(2);
+    });
+
+    test('returns an empty array if toArray returns an empty array', async () => {
+      const cursor = new AggregationCursor<Document>();
+      const toArraySpy = jest.spyOn(cursor, 'toArray');
+      toArraySpy.mockImplementation(async () => []);
+
+      const aggregateSpy = jest.spyOn(mockCollection, 'aggregate');
+      aggregateSpy.mockImplementation(() => cursor);
+
+      const svc = new MongoImageDataService(mockMongoDBClient);
+      const result = await svc.getImageList(1, 2);
+
+      expect(result.images).toStrictEqual([]);
+    });
+
+    test('throws an error if aggregate throws an error', async () => {
+      const aggregateSpy = jest.spyOn(mockCollection, 'aggregate');
+      aggregateSpy.mockImplementation(() => {
+        throw new Error(testError);
+      });
+
+      const svc = new MongoImageDataService(mockMongoDBClient);
+      await expect(() => svc.getImageList(1, 2)).rejects.toThrow();
+
+      expect(aggregateSpy).toHaveBeenCalledTimes(1);
+    });
+
+    test('throws an error if toArray throws an error', async () => {
+      const cursor = new AggregationCursor<Document>();
+      const toArraySpy = jest.spyOn(cursor, 'toArray');
+      toArraySpy.mockImplementation(async () => {
+        throw new Error(testError);
+      });
+
+      const aggregateSpy = jest.spyOn(mockCollection, 'aggregate');
+      aggregateSpy.mockImplementation(() => cursor);
+
+      const svc = new MongoImageDataService(mockMongoDBClient);
+      await expect(() => svc.getImageList(1, 2)).rejects.toThrow();
+
+      expect(aggregateSpy).toHaveBeenCalledTimes(1);
+      expect(toArraySpy).toHaveBeenCalledTimes(1);
+    });
+
+    test('Only returns values that can conform to a BlogPost interface from a MongoDB return value', async () => {
+      const cursor = new AggregationCursor<Document>();
+      const toArraySpy = jest.spyOn(cursor, 'toArray');
+      toArraySpy.mockImplementationOnce(async () => [
+        id1Mongo,
+        id2Mongo,
+        {},
+        {},
+      ]);
+
+      const aggregateSpy = jest.spyOn(mockCollection, 'aggregate');
+      aggregateSpy.mockImplementationOnce(() => cursor);
+
+      const svc = new MongoImageDataService(mockMongoDBClient);
+      const result = await svc.getImageList();
+
+      expect(result.images.length).toBe(2);
+      expect(result.morePages).toBe(false);
+
+      const result1 = result.images.filter(
+        (el) => el.originalFilename === imageDetails1.originalFilename,
+      )[0];
+      const result2 = result.images.filter(
+        (el) => el.originalFilename === imageDetails2.originalFilename,
+      )[0];
+
+      expect(result1.toJSON()).toStrictEqual(imageDetails1.toJSON());
+      expect(result2.toJSON()).toStrictEqual(imageDetails2.toJSON());
+
+      expect(aggregateSpy).toHaveBeenCalledTimes(1);
+      expect(toArraySpy).toHaveBeenCalledTimes(1);
     });
   });
 

@@ -8,7 +8,7 @@ import {
   isString,
 } from '@/src/utils/type_guards';
 import { InvalidInputError } from '@/src/errors/invalid_input_error';
-import { isValidDate, ValidDate } from '@/src/utils/valid_date';
+import { ValidDate } from '@/src/utils/valid_date';
 
 interface FilenameComponents {
   name: string;
