@@ -32,7 +32,8 @@ import {
 import { NotFoundError, InvalidStateError } from '@/src/errors';
 import { AuthRequiredIncerceptor } from '@/src/middleware/auth_interceptor';
 import { UserId } from '@/src/middleware/auth_model_decorator';
-import { getNumberFromString } from '@/src/utils/get_number_from_string';
+import { getIntFromString } from '@/src/utils/get_number_from_string';
+import { LoggerService } from '@/src/logger/logger.service';
 
 @UseInterceptors(RequestLogInterceptor)
 @Controller({ path: 'api/image' })
@@ -43,6 +44,7 @@ export class ImageController {
   constructor(
     private configService: ConfigService,
     @Inject('IMAGE_SERVICE') private readonly imageService: ImageDataService,
+    @Inject('LOGGER_SERVICE') private readonly loggerService: LoggerService,
   ) {
     this.init();
   }
@@ -76,12 +78,17 @@ export class ImageController {
     const pageQP = request.query?.page;
     const paginationQP = request.query?.pagination;
 
-    const page = isString(pageQP) ? getNumberFromString(pageQP, 1) : 1;
+    const page = isString(pageQP) ? getIntFromString(pageQP, 1) : 1;
     const pagination = isString(paginationQP)
-      ? getNumberFromString(paginationQP, 20)
+      ? getIntFromString(paginationQP, 20)
       : 20;
 
-    return await this.imageService.getImageList(page, pagination);
+    try {
+      return await this.imageService.getImageList(page, pagination);
+    } catch (e) {
+      await this.loggerService.addErrorLog(e);
+      throw e;
+    }
   }
 
   /**

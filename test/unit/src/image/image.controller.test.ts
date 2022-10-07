@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { ImageController } from '@/src/image/image.controller';
 import { InMemoryImageDataService } from '@/src/image/image_data.memory.service';
 import { UploadedFile } from '@/src/models/image_models';
+import { LoggerService } from '@/src/logger/logger.service';
 
 type FormidableParseCalback = (
   err: any,
@@ -46,7 +47,13 @@ describe('ImageController', () => {
   const newFilename2 = 'newFileName2';
   const originalFilename2 = 'originalFileName2';
 
-  describe('uploadImage', () => {});
+  describe('getImageList', () => {});
+
+  describe('getImageByName', () => {});
+
+  describe('uploadImages', () => {});
+
+  describe('deleteImage', () => {});
 
   describe('parseImageFilesAndFields', () => {
     const image1 = {
@@ -83,7 +90,12 @@ describe('ImageController', () => {
 
       const configService = new ConfigService();
       const imageDataService = new InMemoryImageDataService();
-      const ic = new ImageController(configService, imageDataService);
+      const loggerService = new LoggerService([]);
+      const ic = new ImageController(
+        configService,
+        imageDataService,
+        loggerService,
+      );
       const result = await ic.parseImageFilesAndFields(req, '');
 
       expect(parse).toHaveBeenCalledTimes(1);
@@ -113,7 +125,12 @@ describe('ImageController', () => {
 
       const configService = new ConfigService();
       const imageDataService = new InMemoryImageDataService();
-      const ic = new ImageController(configService, imageDataService);
+      const loggerService = new LoggerService([]);
+      const ic = new ImageController(
+        configService,
+        imageDataService,
+        loggerService,
+      );
       const req = {} as unknown as Request;
 
       const result = await ic.parseImageFilesAndFields(req, '');
@@ -155,7 +172,12 @@ describe('ImageController', () => {
 
       const configService = new ConfigService();
       const imageDataService = new InMemoryImageDataService();
-      const ic = new ImageController(configService, imageDataService);
+      const loggerService = new LoggerService([]);
+      const ic = new ImageController(
+        configService,
+        imageDataService,
+        loggerService,
+      );
       const req = {} as unknown as Request;
 
       const result = await ic.parseImageFilesAndFields(req, '');
@@ -194,7 +216,12 @@ describe('ImageController', () => {
 
       const configService = new ConfigService();
       const imageDataService = new InMemoryImageDataService();
-      const ic = new ImageController(configService, imageDataService);
+      const loggerService = new LoggerService([]);
+      const ic = new ImageController(
+        configService,
+        imageDataService,
+        loggerService,
+      );
       const req = {} as unknown as Request;
 
       const result = await ic.parseImageFilesAndFields(req, '');
@@ -235,7 +262,12 @@ describe('ImageController', () => {
 
       const configService = new ConfigService();
       const imageDataService = new InMemoryImageDataService();
-      const ic = new ImageController(configService, imageDataService);
+      const loggerService = new LoggerService([]);
+      const ic = new ImageController(
+        configService,
+        imageDataService,
+        loggerService,
+      );
       const req = {} as unknown as Request;
 
       const result = await ic.parseImageFilesAndFields(req, '');
@@ -258,7 +290,12 @@ describe('ImageController', () => {
     test('throws an error if parse returns an error', async () => {
       const configService = new ConfigService();
       const imageDataService = new InMemoryImageDataService();
-      const ic = new ImageController(configService, imageDataService);
+      const loggerService = new LoggerService([]);
+      const ic = new ImageController(
+        configService,
+        imageDataService,
+        loggerService,
+      );
 
       const req = {} as unknown as Request;
 

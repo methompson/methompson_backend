@@ -18,7 +18,7 @@ import { BlogService, BlogPostRequestOutput } from '@/src/blog/blog.service';
 import { LoggerService } from '@/src/logger/logger.service';
 import { RequestLogInterceptor } from '@/src/middleware/request_log.interceptor';
 import { AuthRequiredIncerceptor } from '@/src/middleware/auth_interceptor';
-import { getNumberFromString } from '../utils/get_number_from_string';
+import { getIntFromString } from '../utils/get_number_from_string';
 
 @UseInterceptors(RequestLogInterceptor)
 @Controller({ path: 'api/blog' })
@@ -35,9 +35,9 @@ export class BlogController {
     const pageQP = request.query?.page;
     const paginationQP = request.query?.pagination;
 
-    const page = isString(pageQP) ? getNumberFromString(pageQP, 1) : 1;
+    const page = isString(pageQP) ? getIntFromString(pageQP, 1) : 1;
     const pagination = isString(paginationQP)
-      ? getNumberFromString(paginationQP, 10)
+      ? getIntFromString(paginationQP, 10)
       : 10;
 
     try {
