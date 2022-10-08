@@ -142,7 +142,7 @@ export class ImageWriter {
   }
 
   async getFileDimensions(filepath: string): Promise<ImageDimensions> {
-    const script = `magick identify -format "%w,%h" ${filepath}`;
+    const script = `identify -format "%w,%h" ${filepath}`;
 
     return await new Promise((resolve, reject) => {
       exec(script, (err, stdout, stderr) => {
@@ -194,7 +194,7 @@ export class ImageWriter {
       };
     }
 
-    let script = `magick ${filepath}`;
+    let script = `convert ${filepath}`;
     script += ' -quality 90';
 
     if (options.resize !== false) {

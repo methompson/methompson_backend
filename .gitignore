@@ -9,6 +9,7 @@ firebase.json
 
 .env
 package-lock.json
+docker_run.sh
 
 # Logs
 logs

@@ -353,7 +353,7 @@ describe('ImageWriter', () => {
     test('builds and executes a shell script, then returns the results', async () => {
       const iw = new ImageWriter('');
       const filepath = 'path/to/file.ext';
-      const script = `magick identify -format "%w,%h" ${filepath}`;
+      const script = `identify -format "%w,%h" ${filepath}`;
 
       exec.mockImplementationOnce((_, callback: ExecCallback) => {
         callback(null, '640,480', '');
@@ -460,7 +460,7 @@ describe('ImageWriter', () => {
       expect(newFilename).toBe(expectedNewName);
       expect(newFilepath).toBe(expectedNewFilepath);
 
-      expect(script).toContain(`magick ${image1.filepath} -quality 90`);
+      expect(script).toContain(`convert ${image1.filepath} -quality 90`);
       expect(script).toContain(expectedNewFilepath);
 
       expect(script).not.toContain('-resize');
@@ -487,7 +487,7 @@ describe('ImageWriter', () => {
       expect(newFilename).toBe(expectedNewName);
       expect(newFilepath).toBe(expectedNewFilepath);
 
-      expect(script).not.toContain('magick');
+      expect(script).not.toContain('convert');
       expect(script).toContain(expectedNewFilepath);
 
       expect(script).not.toContain('-resize');
@@ -516,7 +516,7 @@ describe('ImageWriter', () => {
       expect(newFilename).toBe(expectedNewName);
       expect(newFilepath).toBe(expectedNewFilepath);
 
-      expect(script).toContain(`magick ${image1.filepath} -quality 90`);
+      expect(script).toContain(`convert ${image1.filepath} -quality 90`);
       expect(script).toContain(expectedNewFilepath);
 
       expect(script).toContain(`-resize ${maxSize}x${maxSize}`);
@@ -543,7 +543,7 @@ describe('ImageWriter', () => {
       expect(newFilename).toBe(expectedNewName);
       expect(newFilepath).toBe(expectedNewFilepath);
 
-      expect(script).toContain(`magick ${image1.filepath} -quality 90`);
+      expect(script).toContain(`convert ${image1.filepath} -quality 90`);
       expect(script).toContain(expectedNewFilepath);
 
       expect(script).not.toContain('-resize');

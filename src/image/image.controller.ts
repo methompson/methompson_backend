@@ -103,6 +103,9 @@ export class ImageController {
     const imageName = request.params?.imageName;
     const pathToImage = path.join(this.savedImagePath, imageName);
 
+    // TODO stat the image AND get the server data at the same time.
+    // If one exists, and the other does not, we can remediate the issue then
+
     try {
       await stat(pathToImage);
     } catch (e) {
