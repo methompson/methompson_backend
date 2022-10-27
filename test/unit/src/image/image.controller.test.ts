@@ -4,8 +4,8 @@ import { ConfigService } from '@nestjs/config';
 
 import { ImageController } from '@/src/image/image.controller';
 import { InMemoryImageDataService } from '@/src/image/image_data.memory.service';
-import { UploadedFile } from '@/src/models/image_models';
 import { LoggerService } from '@/src/logger/logger.service';
+import { UploadedFile } from '@/src/models/file_models';
 
 type FormidableParseCalback = (
   err: any,

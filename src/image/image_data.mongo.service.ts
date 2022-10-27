@@ -34,18 +34,18 @@ export class MongoImageDataService implements ImageDataService {
     const db = await this._mongoDBClient.db;
     const collections = await db.collections();
 
-    let containsBlog = false;
+    let containsImage = false;
     collections.forEach((col) => {
       if (col.collectionName === imageDataCollectionName) {
-        containsBlog = true;
+        containsImage = true;
       }
     });
 
-    return containsBlog;
+    return containsImage;
   }
 
   protected async makeImageCollection() {
-    console.log('Making Blog Collection');
+    console.log('Making Image Collection');
     const db = await this._mongoDBClient.db;
 
     // Enforce required values
@@ -113,14 +113,13 @@ export class MongoImageDataService implements ImageDataService {
   ): Promise<ImageListOutput> {
     const $skip = pagination * (page - 1);
 
-    const imageCollection = await this.imageCollection;
-
     let $sort: Record<string, number> = { dateAdded: -1 };
 
     if (options?.sortBy === ImageSortOption.Filename) {
       $sort = { originalFilename: 1 };
     }
 
+    const imageCollection = await this.imageCollection;
     const rawAggregation = imageCollection.aggregate([
       { $sort },
       { $skip },
@@ -135,7 +134,7 @@ export class MongoImageDataService implements ImageDataService {
       try {
         output.push(ImageDetails.fromMongoDB(agg));
       } catch (e) {
-        console.error('Invalid Blog Post', e);
+        console.error('Invalid Image', e);
       }
     }
 

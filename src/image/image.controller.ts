@@ -18,11 +18,7 @@ import formidable, { Formidable } from 'formidable';
 
 import { RequestLogInterceptor } from '@/src/middleware/request_log.interceptor';
 import { ImageWriter } from '@/src/image/image_writer';
-import {
-  ImageDetails,
-  ParsedFilesAndFields,
-  UploadedFile,
-} from '@/src/models/image_models';
+import { ImageDetails } from '@/src/models/image_models';
 import { isString, isRecord } from '@/src/utils/type_guards';
 import { AuthModel } from '@/src/models/auth_model';
 import {
@@ -34,6 +30,11 @@ import { AuthRequiredIncerceptor } from '@/src/middleware/auth_interceptor';
 import { UserId } from '@/src/middleware/auth_model_decorator';
 import { getIntFromString } from '@/src/utils/get_number_from_string';
 import { LoggerService } from '@/src/logger/logger.service';
+import {
+  ParsedFilesAndFields,
+  ParsedImageFilesAndFields,
+  UploadedFile,
+} from '@/src/models/file_models';
 
 @UseInterceptors(RequestLogInterceptor)
 @Controller({ path: 'api/image' })
@@ -105,6 +106,8 @@ export class ImageController {
 
     // TODO stat the image AND get the server data at the same time.
     // If one exists, and the other does not, we can remediate the issue then
+
+    // TODO reject for permissions before rejecting for file not found
 
     try {
       await stat(pathToImage);
@@ -218,7 +221,7 @@ export class ImageController {
   async parseImageFilesAndFields(
     req: Request,
     uploadPath: string,
-  ): Promise<ParsedFilesAndFields> {
+  ): Promise<ParsedImageFilesAndFields> {
     const options: Partial<formidable.Options> = {
       multiples: true,
       filter: (opts) => {
@@ -243,7 +246,7 @@ export class ImageController {
 
     const form = new Formidable(options);
 
-    return await new Promise<ParsedFilesAndFields>((resolve, reject) => {
+    return await new Promise<ParsedImageFilesAndFields>((resolve, reject) => {
       form.parse(
         req,
         (err, fields: formidable.Fields, files: formidable.Files) => {

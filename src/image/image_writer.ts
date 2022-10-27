@@ -11,9 +11,8 @@ import {
   ImageDimensions,
   ImageResizeOptions,
   NewImageDetails,
-  ParsedFilesAndFields,
-  UploadedFile,
 } from '@/src/models/image_models';
+import { ParsedImageFilesAndFields, UploadedFile } from '../models/file_models';
 
 /**
  * The ImageWriter class represents an API to handle image files. It performs
@@ -28,7 +27,7 @@ export class ImageWriter {
   constructor(private savedImagePath: string) {}
 
   async convertImages(
-    parsedData: ParsedFilesAndFields,
+    parsedData: ParsedImageFilesAndFields,
     authorId: string,
     isPrivate = false,
   ): Promise<NewImageDetails[]> {

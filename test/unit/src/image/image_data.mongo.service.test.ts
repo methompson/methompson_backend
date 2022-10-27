@@ -493,12 +493,12 @@ describe('MongoImageDataService', () => {
       expect(result.images.length).toBe(2);
       expect(result.morePages).toBe(false);
 
-      const result1 = result.images.filter(
+      const result1 = result.images.find(
         (el) => el.originalFilename === imageDetails1.originalFilename,
-      )[0];
-      const result2 = result.images.filter(
+      );
+      const result2 = result.images.find(
         (el) => el.originalFilename === imageDetails2.originalFilename,
-      )[0];
+      );
 
       expect(result1.toJSON()).toStrictEqual(imageDetails1.toJSON());
       expect(result2.toJSON()).toStrictEqual(imageDetails2.toJSON());
@@ -638,12 +638,12 @@ describe('MongoImageDataService', () => {
       expect(result.images.length).toBe(2);
       expect(result.morePages).toBe(false);
 
-      const result1 = result.images.filter(
+      const result1 = result.images.find(
         (el) => el.originalFilename === imageDetails1.originalFilename,
-      )[0];
-      const result2 = result.images.filter(
+      );
+      const result2 = result.images.find(
         (el) => el.originalFilename === imageDetails2.originalFilename,
-      )[0];
+      );
 
       expect(result1.toJSON()).toStrictEqual(imageDetails1.toJSON());
       expect(result2.toJSON()).toStrictEqual(imageDetails2.toJSON());

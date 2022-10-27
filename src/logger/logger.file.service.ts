@@ -67,11 +67,11 @@ export class FileLoggerController implements LoggerController {
 
     // We cycle through all the old logs and
     for (let i = TOTAL_OLD_LOGS - 1; i > 0; i--) {
-      const filePath = `${basePath}.${i}`;
+      const filepath = `${basePath}.${i}`;
 
-      if (await FileLoggerController.fileExists(filePath)) {
+      if (await FileLoggerController.fileExists(filepath)) {
         const newFilePath = `${basePath}.${i + 1}`;
-        await fsPromises.rename(filePath, newFilePath);
+        await fsPromises.rename(filepath, newFilePath);
       }
     }
 
@@ -80,16 +80,16 @@ export class FileLoggerController implements LoggerController {
     this.fileHandle = await FileLoggerController.makeFileHandle();
   }
 
-  static async getFileStat(filePath: string): Promise<Stats | null> {
+  static async getFileStat(filepath: string): Promise<Stats | null> {
     try {
-      return await fsPromises.stat(filePath);
+      return await fsPromises.stat(filepath);
     } catch (e) {
       return null;
     }
   }
 
-  static async fileExists(filePath: string): Promise<boolean> {
-    const stats = await FileLoggerController.getFileStat(filePath);
+  static async fileExists(filepath: string): Promise<boolean> {
+    const stats = await FileLoggerController.getFileStat(filepath);
 
     return stats !== null;
   }
@@ -99,11 +99,11 @@ export class FileLoggerController implements LoggerController {
       recursive: true,
     });
 
-    const filePath = `${FILE_PATH}/${FILE_NAME}`;
+    const filepath = `${FILE_PATH}/${FILE_NAME}`;
 
-    // await FileLoggerController.fileExists(filePath);
+    // await FileLoggerController.fileExists(filepath);
 
-    const fileHandle = await fsPromises.open(filePath, 'a');
+    const fileHandle = await fsPromises.open(filepath, 'a');
 
     return fileHandle;
   }

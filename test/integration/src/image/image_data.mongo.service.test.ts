@@ -1,5 +1,5 @@
 import { MongoImageDataService } from '@/src/image/image_data.mongo.service';
-import { FileDetails, NewImageDetails } from '@/src/models/image_models';
+import { ImageFileDetails, NewImageDetails } from '@/src/models/image_models';
 import { MongoDBClient } from '@/src/utils/mongodb_client_class';
 
 describe('image_data.mongo.service', () => {
@@ -17,7 +17,7 @@ describe('image_data.mongo.service', () => {
   const originalFilename1 = 'originalFileName1';
   const originalFilename2 = 'originalFileName2';
 
-  const fileDetails = new FileDetails(filename0, 'test', { x: 64, y: 32 });
+  const fileDetails = new ImageFileDetails(filename0, 'test', { x: 64, y: 32 });
   const newImageDetails = new NewImageDetails(
     [fileDetails],
     'imageId',
@@ -94,11 +94,11 @@ describe('image_data.mongo.service', () => {
     });
 
     describe('rolling back writes', () => {
-      const fileDetails1 = new FileDetails(filename1, 'test1', {
+      const fileDetails1 = new ImageFileDetails(filename1, 'test1', {
         x: 64,
         y: 32,
       });
-      const fileDetails2 = new FileDetails(filename2, 'test2', {
+      const fileDetails2 = new ImageFileDetails(filename2, 'test2', {
         x: 64,
         y: 32,
       });

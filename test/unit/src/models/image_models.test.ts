@@ -1,10 +1,10 @@
 import { InvalidInputError } from '@/src/errors/invalid_input_error';
+import { UploadedFile } from '@/src/models/file_models';
 import {
-  FileDetails,
+  ImageFileDetails,
   ImageDetails,
   ImageDimensions,
   NewImageDetails,
-  UploadedFile,
 } from '@/src/models/image_models';
 
 const originalFilename = 'originalFilename';
@@ -49,125 +49,17 @@ describe('image_models', () => {
     };
   });
 
-  describe('UploadedFile', () => {
-    describe('nameComponents', () => {
-      test('returns the extension of a file name', () => {
-        expect(
-          new UploadedFile('', 'test.ext', '', 0).nameComponents,
-        ).toStrictEqual({
-          name: 'test',
-          extension: 'ext',
-        });
-        expect(
-          new UploadedFile('', 'file.jpg', '', 0).nameComponents,
-        ).toStrictEqual({
-          name: 'file',
-          extension: 'jpg',
-        });
-        expect(
-          new UploadedFile('', 'img.png', '', 0).nameComponents,
-        ).toStrictEqual({
-          name: 'img',
-          extension: 'png',
-        });
-        expect(
-          new UploadedFile('', 'its a file.bmp', '', 0).nameComponents,
-        ).toStrictEqual({
-          name: 'its a file',
-          extension: 'bmp',
-        });
-        expect(
-          new UploadedFile('', 'something.gif', '', 0).nameComponents,
-        ).toStrictEqual({
-          name: 'something',
-          extension: 'gif',
-        });
-        expect(
-          new UploadedFile('', 'hello.tiff', '', 0).nameComponents,
-        ).toStrictEqual({
-          name: 'hello',
-          extension: 'tiff',
-        });
-        expect(
-          new UploadedFile('', 'abcdefg.heic', '', 0).nameComponents,
-        ).toStrictEqual({
-          name: 'abcdefg',
-          extension: 'heic',
-        });
-      });
-
-      test('returns a file name with periods in it intact', () => {
-        expect(
-          new UploadedFile('', 'test.file.name.ext', '', 0).nameComponents,
-        ).toStrictEqual({
-          name: 'test.file.name',
-          extension: 'ext',
-        });
-      });
-
-      test('returns an empty string for extension if none exists', () => {
-        expect(
-          new UploadedFile('', 'test_file_name', '', 0).nameComponents,
-        ).toStrictEqual({
-          name: 'test_file_name',
-          extension: '',
-        });
-      });
-    });
-
-    describe('sanitizedFilename', () => {
-      test('replaces nothing if none of the characters are outside the regex', () => {
-        const filename = 'filename013.ext';
-        const uf = new UploadedFile('', filename, '', 0);
-        expect(uf.sanitizedFilename).toBe(filename);
-      });
-
-      test('replaces invalid characters with underscores', () => {
-        const filename = 'filename$name.ext';
-        const uf = new UploadedFile('', filename, '', 0);
-        expect(uf.sanitizedFilename).toBe('filename_name.ext');
-      });
-
-      test('replaces multiple invalid characters with a single underscores', () => {
-        const filename = 'filename$$$$$$name.ext';
-        const uf = new UploadedFile('', filename, '', 0);
-        expect(uf.sanitizedFilename).toBe('filename_name.ext');
-      });
-    });
-
-    describe('sanitizeFilename', () => {
-      test('replaces nothing if none of the characters are outside the regex', () => {
-        const filename = 'filename013.ext';
-        expect(UploadedFile.sanitizeFilename(filename)).toBe(filename);
-      });
-
-      test('replaces invalid characters with underscores', () => {
-        const filename = 'filename$name.ext';
-        expect(UploadedFile.sanitizeFilename(filename)).toBe(
-          'filename_name.ext',
-        );
-      });
-
-      test('replaces multiple invalid characters with a single underscores', () => {
-        const filename = 'filename$$$$$$name.ext';
-        expect(UploadedFile.sanitizeFilename(filename)).toBe(
-          'filename_name.ext',
-        );
-      });
-    });
-  });
-
   describe('ImageResizeOptions', () => {});
 
   describe('FileDetails', () => {
     describe('fromJSON', () => {
       test('Returns a fileDetails object given a valid input', () => {
-        const fileDetails1 = FileDetails.fromJSON(validFile1);
+        const fileDetails1 = ImageFileDetails.fromJSON(validFile1);
         expect(fileDetails1.filename).toBe(validFile1.filename);
         expect(fileDetails1.identifier).toBe(validFile1.identifier);
         expect(fileDetails1.dimensions).toBe(validFile1.dimensions);
 
-        const fileDetails2 = FileDetails.fromJSON(validFile2);
+        const fileDetails2 = ImageFileDetails.fromJSON(validFile2);
         expect(fileDetails2.filename).toBe(validFile2.filename);
         expect(fileDetails2.identifier).toBe(validFile2.identifier);
         expect(fileDetails2.dimensions).toBe(validFile2.dimensions);
@@ -176,9 +68,9 @@ describe('image_models', () => {
       test('toJSON can be fed directly into fromJSON and get the same values', () => {
         const dim: ImageDimensions = dimensions1 as unknown as ImageDimensions;
 
-        const fileDetails1 = new FileDetails(filename1, identifier1, dim);
+        const fileDetails1 = new ImageFileDetails(filename1, identifier1, dim);
 
-        const fileDetails2 = FileDetails.fromJSON(fileDetails1.toJSON());
+        const fileDetails2 = ImageFileDetails.fromJSON(fileDetails1.toJSON());
 
         expect(fileDetails1.toJSON()).toStrictEqual(fileDetails2.toJSON());
       });
@@ -189,63 +81,63 @@ describe('image_models', () => {
           junk: 'junk',
         };
 
-        const fileDetails = FileDetails.fromJSON(fileDetailsInt);
+        const fileDetails = ImageFileDetails.fromJSON(fileDetailsInt);
         expect(fileDetails.toJSON()).toStrictEqual(validFile1);
       });
 
       test('Throws an error if the input is invalid', () => {
         let input = { ...validFile1 };
-        expect(() => FileDetails.fromJSON(input)).not.toThrow();
+        expect(() => ImageFileDetails.fromJSON(input)).not.toThrow();
 
         input = { ...validFile1 };
         delete input.filename;
-        expect(() => FileDetails.fromJSON(input)).toThrow(
+        expect(() => ImageFileDetails.fromJSON(input)).toThrow(
           new InvalidInputError('Invalid file details input'),
         );
 
         input = { ...validFile1 };
         delete input.identifier;
-        expect(() => FileDetails.fromJSON(input)).toThrow(
+        expect(() => ImageFileDetails.fromJSON(input)).toThrow(
           new InvalidInputError('Invalid file details input'),
         );
 
         input = { ...validFile1 };
         delete input.dimensions;
-        expect(() => FileDetails.fromJSON(input)).toThrow(
+        expect(() => ImageFileDetails.fromJSON(input)).toThrow(
           new InvalidInputError('Invalid file details input'),
         );
 
         input = { ...validFile1 };
         input.filename = 1;
-        expect(() => FileDetails.fromJSON(input)).toThrow(
+        expect(() => ImageFileDetails.fromJSON(input)).toThrow(
           new InvalidInputError('Invalid file details input'),
         );
 
         input = { ...validFile1 };
         input.identifier = 1;
-        expect(() => FileDetails.fromJSON(input)).toThrow(
+        expect(() => ImageFileDetails.fromJSON(input)).toThrow(
           new InvalidInputError('Invalid file details input'),
         );
 
         input = { ...validFile1 };
         input.dimensions = 1;
-        expect(() => FileDetails.fromJSON(input)).toThrow(
+        expect(() => ImageFileDetails.fromJSON(input)).toThrow(
           new InvalidInputError('Invalid file details input'),
         );
 
-        expect(() => FileDetails.fromJSON([])).toThrow(
+        expect(() => ImageFileDetails.fromJSON([])).toThrow(
           new InvalidInputError('Invalid file details input'),
         );
 
-        expect(() => FileDetails.fromJSON(null)).toThrow(
+        expect(() => ImageFileDetails.fromJSON(null)).toThrow(
           new InvalidInputError('Invalid file details input'),
         );
 
-        expect(() => FileDetails.fromJSON('string')).toThrow(
+        expect(() => ImageFileDetails.fromJSON('string')).toThrow(
           new InvalidInputError('Invalid file details input'),
         );
 
-        expect(() => FileDetails.fromJSON(1)).toThrow(
+        expect(() => ImageFileDetails.fromJSON(1)).toThrow(
           new InvalidInputError('Invalid file details input'),
         );
       });
@@ -253,75 +145,75 @@ describe('image_models', () => {
 
     describe('isFileDetailsInterface', () => {
       test('returns true if the input is a valid FileDetailsInterface', () => {
-        expect(FileDetails.isFileDetailsInterface(validFile1)).toBe(true);
-        expect(FileDetails.isFileDetailsInterface(validFile2)).toBe(true);
+        expect(ImageFileDetails.isFileDetailsInterface(validFile1)).toBe(true);
+        expect(ImageFileDetails.isFileDetailsInterface(validFile2)).toBe(true);
       });
 
       test('returns true if the input is a valid FileDetailsInterface with extra data', () => {
         const vf1 = { ...validFile1, test: 'test' };
-        expect(FileDetails.isFileDetailsInterface(vf1)).toBe(true);
+        expect(ImageFileDetails.isFileDetailsInterface(vf1)).toBe(true);
       });
 
       test('returns false if any of the data points are the incorrect type or missing', () => {
         let input = { ...validFile1 };
-        expect(FileDetails.isFileDetailsInterface(input)).toBe(true);
+        expect(ImageFileDetails.isFileDetailsInterface(input)).toBe(true);
 
         input = { ...validFile1 };
         delete input.filename;
-        expect(FileDetails.isFileDetailsInterface(input)).toBe(false);
+        expect(ImageFileDetails.isFileDetailsInterface(input)).toBe(false);
 
         input = { ...validFile1 };
         input.filename = 1;
-        expect(FileDetails.isFileDetailsInterface(input)).toBe(false);
+        expect(ImageFileDetails.isFileDetailsInterface(input)).toBe(false);
 
         input = { ...validFile1 };
         delete input.identifier;
-        expect(FileDetails.isFileDetailsInterface(input)).toBe(false);
+        expect(ImageFileDetails.isFileDetailsInterface(input)).toBe(false);
 
         input = { ...validFile1 };
         input.identifier = 1;
-        expect(FileDetails.isFileDetailsInterface(input)).toBe(false);
+        expect(ImageFileDetails.isFileDetailsInterface(input)).toBe(false);
 
         input = { ...validFile1 };
         delete input.dimensions;
-        expect(FileDetails.isFileDetailsInterface(input)).toBe(false);
+        expect(ImageFileDetails.isFileDetailsInterface(input)).toBe(false);
 
         input = { ...validFile1 };
         input.dimensions = 1;
-        expect(FileDetails.isFileDetailsInterface(input)).toBe(false);
+        expect(ImageFileDetails.isFileDetailsInterface(input)).toBe(false);
       });
     });
 
     describe('isImageDimensions', () => {
       test('returns true if the input is a valid ImageDimensions', () => {
-        expect(FileDetails.isImageDimensions(dimensions1)).toBe(true);
-        expect(FileDetails.isImageDimensions(dimensions2)).toBe(true);
+        expect(ImageFileDetails.isImageDimensions(dimensions1)).toBe(true);
+        expect(ImageFileDetails.isImageDimensions(dimensions2)).toBe(true);
       });
 
       test('returns true if the input is a valid ImageDimensions with extra data', () => {
         const dim = { ...dimensions1, test: 'test' };
-        expect(FileDetails.isImageDimensions(dim)).toBe(true);
+        expect(ImageFileDetails.isImageDimensions(dim)).toBe(true);
       });
 
       test('returns false if the input is missing any data or the data is the incorrect type', () => {
         let input = { ...dimensions1 };
-        expect(FileDetails.isImageDimensions(input)).toBe(true);
+        expect(ImageFileDetails.isImageDimensions(input)).toBe(true);
 
         input = { ...dimensions1 };
         delete input.x;
-        expect(FileDetails.isImageDimensions(input)).toBe(false);
+        expect(ImageFileDetails.isImageDimensions(input)).toBe(false);
 
         input = { ...dimensions1 };
         input.x = '1';
-        expect(FileDetails.isImageDimensions(input)).toBe(false);
+        expect(ImageFileDetails.isImageDimensions(input)).toBe(false);
 
         input = { ...dimensions1 };
         delete input.y;
-        expect(FileDetails.isImageDimensions(input)).toBe(false);
+        expect(ImageFileDetails.isImageDimensions(input)).toBe(false);
 
         input = { ...dimensions1 };
         input.y = '1';
-        expect(FileDetails.isImageDimensions(input)).toBe(false);
+        expect(ImageFileDetails.isImageDimensions(input)).toBe(false);
       });
     });
   });

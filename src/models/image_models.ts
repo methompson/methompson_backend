@@ -1,4 +1,3 @@
-import formidable from 'formidable';
 import { WithId, Document } from 'mongodb';
 
 import {
@@ -9,74 +8,6 @@ import {
 } from '@/src/utils/type_guards';
 import { InvalidInputError } from '@/src/errors/invalid_input_error';
 import { ValidDate } from '@/src/utils/valid_date';
-
-interface FilenameComponents {
-  name: string;
-  extension: string;
-}
-
-export class UploadedFile {
-  constructor(
-    protected _filepath: string,
-    protected _originalFilename: string,
-    protected _mimetype: string,
-    protected _size: number,
-  ) {}
-
-  get filepath() {
-    return this._filepath;
-  }
-  get originalFilename() {
-    return this._originalFilename;
-  }
-  get mimetype() {
-    return this._mimetype;
-  }
-  get size() {
-    return this._size;
-  }
-
-  get nameComponents(): FilenameComponents {
-    const split = this.originalFilename.split('.');
-    if (split.length === 1) {
-      return {
-        name: this.originalFilename,
-        extension: '',
-      };
-    }
-
-    const splitPoint = split.length - 1;
-
-    return {
-      name: split.slice(0, splitPoint).join('.'),
-      extension: split[splitPoint],
-    };
-  }
-
-  get sanitizedFilename(): string {
-    return UploadedFile.sanitizeFilename(this.originalFilename);
-  }
-
-  static fromFormidable(file: formidable.File): UploadedFile {
-    return new UploadedFile(
-      file.filepath,
-      file.originalFilename,
-      file.mimetype,
-      file.size,
-    );
-  }
-
-  static sanitizeFilename(filename: string): string {
-    const sanitizedName = filename.replace(/[^A-Za-z0-9._-]+/g, '_');
-
-    return sanitizedName.replace(/[_]+/g, '_');
-  }
-}
-
-export type ParsedFilesAndFields = {
-  imageFiles: UploadedFile[];
-  ops: Record<string, Record<string, unknown>>;
-};
 
 export enum ImageType {
   png = 'png',
@@ -273,7 +204,7 @@ export interface FileDetailsInterface {
   dimensions: ImageDimensions;
 }
 
-export class FileDetails {
+export class ImageFileDetails {
   constructor(
     protected _filename: string,
     protected _identifier: string,
@@ -298,12 +229,16 @@ export class FileDetails {
     };
   }
 
-  static fromJSON(input: unknown): FileDetails {
-    if (!FileDetails.isFileDetailsInterface(input)) {
+  static fromJSON(input: unknown): ImageFileDetails {
+    if (!ImageFileDetails.isFileDetailsInterface(input)) {
       throw new InvalidInputError('Invalid file details input');
     }
 
-    return new FileDetails(input.filename, input.identifier, input.dimensions);
+    return new ImageFileDetails(
+      input.filename,
+      input.identifier,
+      input.dimensions,
+    );
   }
 
   static isFileDetailsInterface(input: unknown): input is FileDetailsInterface {
@@ -311,7 +246,7 @@ export class FileDetails {
       isRecord(input) &&
       isString(input.filename) &&
       isString(input.identifier) &&
-      FileDetails.isImageDimensions(input.dimensions)
+      ImageFileDetails.isImageDimensions(input.dimensions)
     );
   }
 
@@ -330,11 +265,11 @@ export interface NewImageDetailsInterface {
 }
 
 export class NewImageDetails {
-  protected _fileMap: Record<string, FileDetails>;
+  protected _fileMap: Record<string, ImageFileDetails>;
   protected _filenames: string[];
 
   constructor(
-    files: FileDetails[],
+    files: ImageFileDetails[],
     protected _imageId: string,
     protected _originalFilename: string,
     protected _dateAdded: ValidDate,
@@ -353,7 +288,7 @@ export class NewImageDetails {
     this._filenames = filenames;
   }
 
-  get files(): FileDetails[] {
+  get files(): ImageFileDetails[] {
     return Object.values(this._fileMap);
   }
   get imageId(): string {
@@ -372,7 +307,7 @@ export class NewImageDetails {
     return this._isPrivate;
   }
 
-  getFileById(id: string): FileDetails | null {
+  getFileById(id: string): ImageFileDetails | null {
     return this._fileMap[id] ?? null;
   }
 
@@ -393,13 +328,9 @@ export class NewImageDetails {
   }
 
   toMongo(): Record<string, unknown> {
-    const json = this.toJSON();
-
-    const dateAdded = new Date(this.dateAdded);
-
     return {
-      ...json,
-      dateAdded,
+      ...this.toJSON(),
+      dateAdded: this.dateAdded,
     };
   }
 
@@ -408,9 +339,9 @@ export class NewImageDetails {
       throw new InvalidInputError('Invalid Image Details');
     }
 
-    const details: FileDetails[] = [];
+    const details: ImageFileDetails[] = [];
     for (const file of input.files) {
-      details.push(FileDetails.fromJSON(file));
+      details.push(ImageFileDetails.fromJSON(file));
     }
 
     return new NewImageDetails(
@@ -435,7 +366,7 @@ export class NewImageDetails {
     }
 
     for (const file of input.files) {
-      if (!FileDetails.isFileDetailsInterface(file)) {
+      if (!ImageFileDetails.isFileDetailsInterface(file)) {
         return false;
       }
     }
@@ -463,7 +394,7 @@ export interface ImageDetailsInterface {
 export class ImageDetails extends NewImageDetails {
   constructor(
     protected _id: string,
-    files: FileDetails[],
+    files: ImageFileDetails[],
     imageId: string,
     originalFilename: string,
     dateAdded: ValidDate,

@@ -417,10 +417,10 @@ describe('MongoBlogService', () => {
 
       expect(result.posts.length).toBe(4);
 
-      const result1 = result.posts.filter((el) => el.title === post1.title)[0];
-      const result2 = result.posts.filter((el) => el.title === post2.title)[0];
-      const result3 = result.posts.filter((el) => el.title === post3.title)[0];
-      const result4 = result.posts.filter((el) => el.title === post4.title)[0];
+      const result1 = result.posts.find((el) => el.title === post1.title);
+      const result2 = result.posts.find((el) => el.title === post2.title);
+      const result3 = result.posts.find((el) => el.title === post3.title);
+      const result4 = result.posts.find((el) => el.title === post4.title);
 
       expect(result1.toJSON()).toStrictEqual(post1.toJSON());
       expect(result2.toJSON()).toStrictEqual(post2.toJSON());

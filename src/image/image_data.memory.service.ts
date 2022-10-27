@@ -43,9 +43,10 @@ export class InMemoryImageDataService extends ImageDataService {
   async getImageList(
     page = 1,
     pagination = 10,
-    options: GetImageListOptions,
+    options?: GetImageListOptions,
   ): Promise<ImageListOutput> {
     const stringCompare = (a: string, b: string) => a.localeCompare(b);
+
     const sortByName = (a: ImageDetails, b: ImageDetails) =>
       stringCompare(a.originalFilename, b.originalFilename);
 
@@ -122,9 +123,8 @@ export class InMemoryImageDataService extends ImageDataService {
   }
 
   async addImages(imageDetails: NewImageDetails[]): Promise<ImageDetails[]> {
-    const id = uuidv4();
-
     const images = imageDetails.map((imageDetail) => {
+      const id = uuidv4();
       const image = ImageDetails.fromNewImageDetails(id, imageDetail);
 
       this.images[image.imageId] = image;
