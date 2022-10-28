@@ -8,7 +8,7 @@ import {
   ImageListOutput,
   ImageSortOption,
 } from '@/src/image/image_data.service';
-import { ImageDetails, NewImageDetails } from '@/src/models/image_models';
+import { ImageDetails, NewImageDetails } from '@/src/models/image_models.old';
 import {
   NotFoundError,
   InvalidStateError,

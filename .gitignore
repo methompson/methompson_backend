@@ -6,6 +6,7 @@ firebase.json
 /scripts/docker_run.sh
 /temp_image_files
 /images
+/files
 
 .env
 package-lock.json

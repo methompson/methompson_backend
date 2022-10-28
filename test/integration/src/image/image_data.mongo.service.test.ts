@@ -1,5 +1,8 @@
 import { MongoImageDataService } from '@/src/image/image_data.mongo.service';
-import { ImageFileDetails, NewImageDetails } from '@/src/models/image_models';
+import {
+  ImageFileDetails,
+  NewImageDetails,
+} from '@/src/models/image_models.old';
 import { MongoDBClient } from '@/src/utils/mongodb_client_class';
 
 describe('image_data.mongo.service', () => {

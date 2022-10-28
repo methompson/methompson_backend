@@ -18,7 +18,7 @@ import formidable, { Formidable } from 'formidable';
 
 import { RequestLogInterceptor } from '@/src/middleware/request_log.interceptor';
 import { ImageWriter } from '@/src/image/image_writer';
-import { ImageDetails } from '@/src/models/image_models';
+import { ImageDetails } from '@/src/models/image_models.old';
 import { isString, isRecord } from '@/src/utils/type_guards';
 import { AuthModel } from '@/src/models/auth_model';
 import {
@@ -156,8 +156,9 @@ export class ImageController {
     @Req() request: Request,
     @UserId() userId: string,
   ): Promise<void> {
-    let parsedData;
+    let parsedData: ParsedImageFilesAndFields;
 
+    // Step 1: Parse the image file and operations
     try {
       parsedData = await this.parseImageFilesAndFields(
         request,
@@ -168,13 +169,11 @@ export class ImageController {
       throw new HttpException(msg, HttpStatus.BAD_REQUEST);
     }
 
+    // Step 2: Create new files based on the ops.
     const iw = new ImageWriter(this.savedImagePath);
     const imageDetails = await iw.convertImages(parsedData, userId);
 
-    // const promises: Promise<unknown>[] = imageDetails.map((img) =>
-    //   this.imageService.addImage(img),
-    // );
-
+    // Step 3: Save the files using the file ops service
     try {
       await this.imageService.addImages(imageDetails);
     } catch (e) {
@@ -254,36 +253,39 @@ export class ImageController {
             console.error(err);
             reject(err);
           }
+          try {
+            // Parse the operations passed
+            const opsRaw = isString(fields?.ops) ? fields.ops : '[]';
+            const parsedOps = JSON.parse(opsRaw);
 
-          // Parse the operations passed
-          const opsRaw = isString(fields?.ops) ? fields.ops : '[]';
-          const parsedOps = JSON.parse(opsRaw);
-
-          if (!Array.isArray(parsedOps)) {
-            reject(new Error('Invalid Ops Input'));
-          }
-
-          const ops: Record<string, Record<string, unknown>> = {};
-
-          parsedOps.forEach((op) => {
-            if (isRecord(op)) {
-              const id = isString(op?.identifier) ? op.identifier : '';
-
-              ops[id] = op;
+            if (!Array.isArray(parsedOps)) {
+              reject(new Error('Invalid Ops Input'));
             }
-          });
 
-          if (Array.isArray(files.image)) {
-            const uploadedFiles: UploadedFile[] = files.image.map((image) =>
-              UploadedFile.fromFormidable(image),
-            );
+            const ops: Record<string, Record<string, unknown>> = {};
+
+            parsedOps.forEach((op) => {
+              if (isRecord(op)) {
+                const id = isString(op?.identifier) ? op.identifier : '';
+
+                ops[id] = op;
+              }
+            });
+
+            const uploadedFiles: UploadedFile[] = [];
+
+            if (Array.isArray(files.image)) {
+              for (const image of files.image) {
+                uploadedFiles.push(UploadedFile.fromFormidable(image));
+              }
+            } else {
+              uploadedFiles.push(UploadedFile.fromFormidable(files.image));
+            }
 
             resolve({ imageFiles: uploadedFiles, ops });
-            return;
+          } catch (e) {
+            reject(e);
           }
-
-          const uploadedFile = UploadedFile.fromFormidable(files.image);
-          resolve({ imageFiles: [uploadedFile], ops });
         },
       );
     });

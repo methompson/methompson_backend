@@ -3,7 +3,7 @@ import * as uuid from 'uuid';
 import * as fsPromises from 'fs/promises';
 
 import { ImageWriter } from '@/src/image/image_writer';
-import { ImageResizeOptions } from '@/src/models/image_models';
+import { ImageResizeOptions } from '@/src/models/image_models.old';
 import { UploadedFile } from '@/src/models/file_models';
 
 type ExecCallback = (

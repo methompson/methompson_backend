@@ -6,12 +6,12 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 
 import {
-  FileDetailsInterface,
+  ImageFileDetailsInterface,
   ImageDetails,
   ImageDimensions,
   ImageResizeOptions,
   NewImageDetails,
-} from '@/src/models/image_models';
+} from '@/src/models/image_models.old';
 import { ParsedImageFilesAndFields, UploadedFile } from '../models/file_models';
 
 /**
@@ -39,7 +39,7 @@ export class ImageWriter {
     const { ops, imageFiles } = parsedData;
 
     // otherOps are the default operations that we utilize to make sure that
-    // things run as intend. If no operations are provided by the user, we
+    // things run as intended. If no operations are provided by the user, we
     // add a default, empty operation here.
     const otherOps = {};
     if (Object.keys(ops).length === 0) {
@@ -71,7 +71,7 @@ export class ImageWriter {
     const conversionPromises: Promise<NewImageDetails>[] = imageFiles.map(
       async (imageFile) => {
         const newFilename = uuidv4();
-        const promises: Promise<FileDetailsInterface>[] = [];
+        const promises: Promise<ImageFileDetailsInterface>[] = [];
 
         Object.keys(opsFinal).forEach((key) => {
           const op = opsFinal[key];
@@ -83,7 +83,7 @@ export class ImageWriter {
           promises.push(this.makeAndRunResizeScript(imageFile, resizeOptions));
         });
 
-        const files: FileDetailsInterface[] = await Promise.all(promises);
+        const files: ImageFileDetailsInterface[] = await Promise.all(promises);
 
         await rm(imageFile.filepath);
 
@@ -113,7 +113,8 @@ export class ImageWriter {
   async makeAndRunResizeScript(
     imageFile: UploadedFile,
     resizeOptions: ImageResizeOptions,
-  ): Promise<FileDetailsInterface> {
+  ): Promise<ImageFileDetailsInterface> {
+    // We make the resize script and run it here.
     const result = this.buildResizeScript(imageFile, resizeOptions);
 
     await new Promise((resolve, reject) => {

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ImageDetails, NewImageDetails } from '@/src/models/image_models';
+import { ImageDetails, NewImageDetails } from '@/src/models/image_models.old';
 
 export interface DeleteImageOptions {
   id?: string;

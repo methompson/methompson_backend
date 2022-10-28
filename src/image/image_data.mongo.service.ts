@@ -9,7 +9,7 @@ import {
   ImageListOutput,
   ImageSortOption,
 } from '@/src/image/image_data.service';
-import { ImageDetails, NewImageDetails } from '@/src/models/image_models';
+import { ImageDetails, NewImageDetails } from '@/src/models/image_models.old';
 import { NotFoundError, InvalidInputError } from '@/src/errors';
 import { MongoDBClient } from '@/src/utils/mongodb_client_class';
 import { isNullOrUndefined } from '@/src/utils/type_guards';

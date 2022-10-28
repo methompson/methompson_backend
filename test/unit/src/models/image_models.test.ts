@@ -5,7 +5,7 @@ import {
   ImageDetails,
   ImageDimensions,
   NewImageDetails,
-} from '@/src/models/image_models';
+} from '@/src/models/image_models.old';
 
 const originalFilename = 'originalFilename';
 const dateAdded = '2022-06-26T11:42:56.673Z';
