@@ -12,6 +12,7 @@ import {
 import { FileDataService } from '@/src/file/file_data.service';
 import { FileSystemService } from '@/src/file/file_system_service';
 import { isNullOrUndefined } from '../utils/type_guards';
+import { ImageWriter } from '../image/image_writer';
 
 export class FileOpsService {
   constructor(
@@ -30,19 +31,48 @@ export class FileOpsService {
     return this._fileService;
   }
 
+  // Main entry point for uploading files
   async saveUploadedFiles(
-    data: ParsedFilesAndFields,
+    parsedData: ParsedFilesAndFields,
     userId: string,
   ): Promise<FileDetails[]> {
     let newFiles: NewFileDetails[];
     try {
-      newFiles = this.makeNewFileDetails(data, userId);
+      newFiles = this.makeNewFileDetails(parsedData, userId);
       const result = await this.saveFiles(newFiles);
 
       return result;
     } catch (e) {
       if (!isNullOrUndefined(newFiles)) {
-        await this.rollBackWrites(newFiles, data.files);
+        await this.rollBackWrites(newFiles, parsedData.files);
+      }
+
+      throw e;
+    }
+  }
+
+  /**
+   * Main entry point for uploading image files. This function will do the following:
+   * - Take the parsed uploaded files and the respective image conversion ops:
+   * - Generate new image files for each conversion op
+   * - Save the image files to database
+   */
+  async saveUploadedImages(
+    parsedData: ParsedImageFilesAndFields,
+    userId: string,
+  ) {
+    const iw = new ImageWriter(this.savedFilePath);
+    let newFiles: NewFileDetails[];
+
+    try {
+      newFiles = await iw.convertImages(parsedData, userId);
+
+      const result = await this.saveFilesToService(newFiles);
+
+      return result;
+    } catch (e) {
+      if (!isNullOrUndefined(newFiles)) {
+        await this.rollBackWrites(newFiles, parsedData.imageFiles);
       }
 
       throw e;
@@ -71,6 +101,9 @@ export class FileOpsService {
     return newFileDetails;
   }
 
+  /**
+   * Saves files to the file system and saves files to the database
+   */
   async saveFiles(newFileDetails: NewFileDetails[]): Promise<FileDetails[]> {
     const [_, fileDetails] = await Promise.all([
       this.saveFilesToFileSystem(newFileDetails),
@@ -79,8 +112,6 @@ export class FileOpsService {
 
     return fileDetails;
   }
-
-  async saveImages(images: ParsedImageFilesAndFields) {}
 
   async saveFilesToFileSystem(
     files: NewFileDetails[],

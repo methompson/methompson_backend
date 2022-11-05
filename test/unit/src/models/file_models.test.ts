@@ -5,6 +5,7 @@ import {
   FileDetails,
   FileDetailsBaseJSON,
   NewFileDetailsJSON,
+  FileDetailsMetadata,
 } from '@/src/models/file_models';
 
 const originalFilename = 'originalFilename';
@@ -21,6 +22,7 @@ describe('file_models', () => {
   const isPrivate = false;
   const size = 1024;
   const mimetype = 'image/jpeg';
+  const metadata: FileDetailsMetadata = {};
 
   beforeEach(() => {
     validBaseFileDetails = {
@@ -31,6 +33,7 @@ describe('file_models', () => {
       mimetype,
       size,
       isPrivate,
+      metadata,
     };
   });
 
@@ -168,6 +171,7 @@ describe('file_models', () => {
           mimetype,
           size,
           isPrivate,
+          metadata,
         });
       });
     });
@@ -300,6 +304,7 @@ describe('file_models', () => {
           mimetype,
           size,
           isPrivate,
+          metadata,
         });
       });
     });
@@ -321,6 +326,7 @@ describe('file_models', () => {
           mimetype,
           size,
           isPrivate,
+          metadata,
         });
       });
     });

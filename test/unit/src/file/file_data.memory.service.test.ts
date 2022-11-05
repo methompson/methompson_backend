@@ -1,6 +1,10 @@
 import { InMemoryFileDataService } from '@/src/file/file_data.memory.service';
 import { FileSortOption } from '@/src/file/file_data.service';
-import { FileDetails, NewFileDetails } from '@/src/models/file_models';
+import {
+  FileDetails,
+  FileDetailsMetadata,
+  NewFileDetails,
+} from '@/src/models/file_models';
 
 const filepath = 'path/to/file';
 
@@ -11,6 +15,7 @@ const authorId1 = 'authorId1 ;aoidsl';
 const mimetype1 = 'image/jpeg';
 const size1 = 1024;
 const isPriave1 = true;
+const metadata1: FileDetailsMetadata = {};
 
 const newFile1 = new NewFileDetails(
   filepath,
@@ -21,6 +26,7 @@ const newFile1 = new NewFileDetails(
   mimetype1,
   size1,
   isPriave1,
+  metadata1,
 );
 
 const originalFileName2 = 'abc originalFileName2 aspdfiln';
@@ -30,6 +36,7 @@ const authorId2 = 'authorId2 awosdln';
 const mimetype2 = 'application/json';
 const size2 = 2048;
 const isPriave2 = false;
+const metadata2: FileDetailsMetadata = {};
 
 const newFile2 = new NewFileDetails(
   filepath,
@@ -40,6 +47,7 @@ const newFile2 = new NewFileDetails(
   mimetype2,
   size2,
   isPriave2,
+  metadata2,
 );
 
 const id1 = 'ca1fafe9-7fab-4401-82dc-2b3f3f8cd1e1';

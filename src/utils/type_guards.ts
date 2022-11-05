@@ -1,4 +1,4 @@
-function isRecord(value: unknown): value is Record<string, unknown> {
+export function isRecord(value: unknown): value is Record<string, unknown> {
   return (
     !isNullOrUndefined(value) &&
     typeof value === 'object' &&
@@ -6,35 +6,39 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   );
 }
 
-function isString(value: unknown): value is string {
+export function isString(value: unknown): value is string {
   return typeof value === 'string';
 }
 
-function isNumber(value: unknown): value is number {
+export function isNumber(value: unknown): value is number {
   return typeof value === 'number';
 }
 
-function isBoolean(value: unknown): value is boolean {
+export function isInteger(value: unknown): value is number {
+  return isNumber(value) && Number.isInteger(value);
+}
+
+export function isBoolean(value: unknown): value is boolean {
   return typeof value === 'boolean';
 }
 
-function isDate(value: unknown): value is Date {
+export function isDate(value: unknown): value is Date {
   return value instanceof Date;
 }
 
-function isNull(value: unknown): value is null {
+export function isNull(value: unknown): value is null {
   return value === null;
 }
 
-function isUndefined(value: unknown): value is undefined {
+export function isUndefined(value: unknown): value is undefined {
   return value === undefined;
 }
 
-function isNullOrUndefined(value: unknown): value is null | undefined {
+export function isNullOrUndefined(value: unknown): value is null | undefined {
   return isNull(value) || isUndefined(value);
 }
 
-function isStringArray(value: unknown): value is string[] {
+export function isStringArray(value: unknown): value is string[] {
   if (Array.isArray(value)) {
     for (const t of value) {
       if (!isString(t)) {
@@ -48,15 +52,3 @@ function isStringArray(value: unknown): value is string[] {
 
   return true;
 }
-
-export {
-  isRecord,
-  isString,
-  isNumber,
-  isBoolean,
-  isDate,
-  isStringArray,
-  isNull,
-  isUndefined,
-  isNullOrUndefined,
-};

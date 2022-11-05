@@ -95,6 +95,49 @@ export type ParsedImageFilesAndFields = {
   ops: Record<string, Record<string, unknown>>;
 };
 
+export type FileDetailsMetadata = Record<string, string | number | boolean>;
+
+function fileDetailsBaseTest(input: unknown): boolean {
+  if (!isRecord(input)) {
+    return false;
+  }
+
+  const metadataTest = isFileDetailsMetadata(input.metadata);
+
+  const originalFilenameTest = isString(input.originalFilename);
+  const filenameTest = isString(input.filename);
+  const dateAddedTest = isString(input.dateAdded);
+  const authorIdTest = isString(input.authorId);
+  const mimetypeTest = isString(input.mimetype);
+  const sizeTest = isNumber(input.size);
+  const isPrivateTest = isBoolean(input.isPrivate);
+
+  return (
+    originalFilenameTest &&
+    filenameTest &&
+    dateAddedTest &&
+    authorIdTest &&
+    mimetypeTest &&
+    sizeTest &&
+    isPrivateTest &&
+    metadataTest
+  );
+}
+
+function isFileDetailsMetadata(input: unknown): input is FileDetailsMetadata {
+  if (!isRecord(input)) {
+    return false;
+  }
+
+  for (const val of Object.values(input)) {
+    if (!(isString(val) || isNumber(val) || isBoolean(val))) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 export interface FileDetailsBaseJSON {
   originalFilename: string;
   filename: string;
@@ -103,6 +146,7 @@ export interface FileDetailsBaseJSON {
   mimetype: string;
   size: number;
   isPrivate: boolean;
+  metadata: FileDetailsMetadata;
 }
 
 class FileDetailsBase {
@@ -114,6 +158,7 @@ class FileDetailsBase {
     protected _mimetype: string,
     protected _size: number,
     protected _isPrivate: boolean,
+    protected _metadata: FileDetailsMetadata,
   ) {}
 
   get originalFilename(): string {
@@ -137,6 +182,9 @@ class FileDetailsBase {
   get isPrivate(): boolean {
     return this._isPrivate;
   }
+  get metadata(): Record<string, string | number | boolean> {
+    return this._metadata;
+  }
 
   baseDetails(): FileDetailsBaseJSON {
     return {
@@ -147,6 +195,7 @@ class FileDetailsBase {
       mimetype: this.mimetype,
       size: this.size,
       isPrivate: this.isPrivate,
+      metadata: this.metadata,
     };
   }
 
@@ -162,27 +211,7 @@ class FileDetailsBase {
   }
 
   static isFileDetailsBaseJSON(input: unknown): input is FileDetailsBaseJSON {
-    if (!isRecord(input)) {
-      return false;
-    }
-
-    const originalFilenameTest = isString(input.originalFilename);
-    const filenameTest = isString(input.filename);
-    const dateAddedTest = isString(input.dateAdded);
-    const authorIdTest = isString(input.authorId);
-    const mimetypeTest = isString(input.mimetype);
-    const sizeTest = isNumber(input.size);
-    const isPrivateTest = isBoolean(input.isPrivate);
-
-    return (
-      originalFilenameTest &&
-      filenameTest &&
-      dateAddedTest &&
-      authorIdTest &&
-      mimetypeTest &&
-      sizeTest &&
-      isPrivateTest
-    );
+    return fileDetailsBaseTest(input);
   }
 }
 
@@ -200,6 +229,7 @@ export class NewFileDetails extends FileDetailsBase {
     mimetype: string,
     size: number,
     isPrivate: boolean,
+    metadata: FileDetailsMetadata,
   ) {
     super(
       originalFilename,
@@ -209,6 +239,7 @@ export class NewFileDetails extends FileDetailsBase {
       mimetype,
       size,
       isPrivate,
+      metadata,
     );
   }
 
@@ -217,10 +248,9 @@ export class NewFileDetails extends FileDetailsBase {
   }
 
   toJSON(): NewFileDetailsJSON {
-    const json = super.toJSON();
     return {
+      ...super.toJSON(),
       filepath: this._filepath,
-      ...json,
     };
   }
 
@@ -247,6 +277,7 @@ export class NewFileDetails extends FileDetailsBase {
       input.mimetype,
       input.size,
       input.isPrivate,
+      input.metadata,
     );
   }
 
@@ -256,24 +287,8 @@ export class NewFileDetails extends FileDetailsBase {
     }
 
     const filepathTest = isString(input.filepath);
-    const originalFilenameTest = isString(input.originalFilename);
-    const filenameTest = isString(input.filename);
-    const dateAddedTest = isString(input.dateAdded);
-    const authorIdTest = isString(input.authorId);
-    const mimetypeTest = isString(input.mimetype);
-    const sizeTest = isNumber(input.size);
-    const isPrivateTest = isBoolean(input.isPrivate);
 
-    return (
-      filepathTest &&
-      originalFilenameTest &&
-      filenameTest &&
-      dateAddedTest &&
-      authorIdTest &&
-      mimetypeTest &&
-      sizeTest &&
-      isPrivateTest
-    );
+    return fileDetailsBaseTest(input) && filepathTest;
   }
 }
 
@@ -291,6 +306,7 @@ export class FileDetails extends FileDetailsBase {
     mimetype: string,
     size: number,
     isPrivate: boolean,
+    metadata: FileDetailsMetadata,
   ) {
     super(
       originalFilename,
@@ -300,6 +316,7 @@ export class FileDetails extends FileDetailsBase {
       mimetype,
       size,
       isPrivate,
+      metadata,
     );
   }
 
@@ -327,6 +344,7 @@ export class FileDetails extends FileDetailsBase {
       fileDetails.mimetype,
       fileDetails.size,
       fileDetails.isPrivate,
+      fileDetails.metadata,
     );
   }
 
@@ -346,6 +364,7 @@ export class FileDetails extends FileDetailsBase {
       input.mimetype,
       input.size,
       input.isPrivate,
+      input.metadata,
     );
   }
 
@@ -367,23 +386,7 @@ export class FileDetails extends FileDetailsBase {
     }
 
     const idTest = isString(input.id);
-    const originalFilenameTest = isString(input.originalFilename);
-    const filenameTest = isString(input.filename);
-    const dateAddedTest = isString(input.dateAdded);
-    const authorIdTest = isString(input.authorId);
-    const mimetypeTest = isString(input.mimetype);
-    const sizeTest = isNumber(input.size);
-    const isPrivateTest = isBoolean(input.isPrivate);
 
-    return (
-      idTest &&
-      originalFilenameTest &&
-      filenameTest &&
-      dateAddedTest &&
-      authorIdTest &&
-      mimetypeTest &&
-      sizeTest &&
-      isPrivateTest
-    );
+    return fileDetailsBaseTest(input) && idTest;
   }
 }

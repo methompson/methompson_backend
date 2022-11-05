@@ -12,7 +12,7 @@ import {
   fileCollectionName,
 } from '@/src/file/file_data.mongo.service';
 import { MongoDBClient } from '@/src/utils/mongodb_client_class';
-import { NewFileDetails } from '@/src/models/file_models';
+import { FileDetailsMetadata, NewFileDetails } from '@/src/models/file_models';
 import { FileSortOption } from '@/src/file/file_data.service';
 import { ConfigService } from '@nestjs/config';
 
@@ -67,6 +67,8 @@ describe('MongoFileDataService', () => {
   const mimetype1 = 'image/jpeg';
   const size1 = 1024;
   const isPrivate1 = true;
+  const metadata1: FileDetailsMetadata = {};
+
   const nfd1 = new NewFileDetails(
     filepath,
     originalFilename1,
@@ -76,6 +78,7 @@ describe('MongoFileDataService', () => {
     mimetype1,
     size1,
     isPrivate1,
+    metadata1,
   );
 
   const originalFilename2 = 'originalFilename2';
@@ -85,6 +88,8 @@ describe('MongoFileDataService', () => {
   const mimetype2 = 'application/json';
   const size2 = 512;
   const isPrivate2 = false;
+  const metadata2: FileDetailsMetadata = {};
+
   const nfd2 = new NewFileDetails(
     filepath,
     originalFilename2,
@@ -94,6 +99,7 @@ describe('MongoFileDataService', () => {
     mimetype2,
     size2,
     isPrivate2,
+    metadata2,
   );
 
   const collection = Db.prototype.collection as unknown as jest.Mock;

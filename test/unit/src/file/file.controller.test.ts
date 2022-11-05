@@ -10,7 +10,11 @@ import { FileController } from '@/src/file/file.controller';
 import { InMemoryFileDataService } from '@/src/file/file_data.memory.service';
 import { FileSystemService } from '@/src/file/file_system_service';
 import { AuthModel } from '@/src/models/auth_model';
-import { FileDetails } from '@/src/models/file_models';
+import {
+  FileDetails,
+  FileDetailsJSON,
+  FileDetailsMetadata,
+} from '@/src/models/file_models';
 import { LoggerService } from '@/src/logger/logger.service';
 
 jest.mock('@/src/file/file_system_service', () => {
@@ -64,6 +68,7 @@ describe('FileController', () => {
   const authorId1 = 'bd70a89c-b862-44ad-a980-a884ae9df5ad';
   const mimetype1 = 'image/jpeg';
   const size1 = 1024;
+  const metadata1: FileDetailsMetadata = {};
 
   const id2 = '8c17b304-4fbf-477a-be84-05117ed4393e';
   const newFilename2 = 'newFileName2';
@@ -71,8 +76,9 @@ describe('FileController', () => {
   const authorId2 = '32ea27be-c5b4-425b-b6ba-c5b67ecf9c63';
   const mimetype2 = 'application/json';
   const size2 = 512;
+  const metadata2: FileDetailsMetadata = {};
 
-  const fileDetails1 = FileDetails.fromJSON({
+  const fileDetailsJSON1: FileDetailsJSON = {
     id: id1,
     originalFilename: originalFilename1,
     filename: newFilename1,
@@ -81,9 +87,11 @@ describe('FileController', () => {
     mimetype: mimetype1,
     size: size1,
     isPrivate: true,
-  });
+    metadata: metadata1,
+  };
+  const fileDetails1 = FileDetails.fromJSON(fileDetailsJSON1);
 
-  const fileDetails2 = FileDetails.fromJSON({
+  const fileDetailsJSON2: FileDetailsJSON = {
     id: id2,
     originalFilename: originalFilename2,
     filename: newFilename2,
@@ -92,7 +100,9 @@ describe('FileController', () => {
     mimetype: mimetype2,
     size: size2,
     isPrivate: false,
-  });
+    metadata: metadata2,
+  };
+  const fileDetails2 = FileDetails.fromJSON(fileDetailsJSON2);
 
   const validToken = sign(
     {

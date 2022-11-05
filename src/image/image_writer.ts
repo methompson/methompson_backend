@@ -1,18 +1,17 @@
 import { exec } from 'child_process';
-import path from 'path';
 import { rm } from 'fs/promises';
 
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 
+import { ImageDimensions, ImageResizeOptions } from '@/src/models/image_models';
 import {
-  ImageFileDetailsInterface,
-  ImageDetails,
-  ImageDimensions,
-  ImageResizeOptions,
-  NewImageDetails,
-} from '@/src/models/image_models.old';
-import { ParsedImageFilesAndFields, UploadedFile } from '../models/file_models';
+  NewFileDetails,
+  NewFileDetailsJSON,
+  ParsedImageFilesAndFields,
+  UploadedFile,
+} from '@/src/models/file_models';
+import { isBoolean } from '../utils/type_guards';
 
 /**
  * The ImageWriter class represents an API to handle image files. It performs
@@ -29,8 +28,7 @@ export class ImageWriter {
   async convertImages(
     parsedData: ParsedImageFilesAndFields,
     authorId: string,
-    isPrivate = false,
-  ): Promise<NewImageDetails[]> {
+  ): Promise<NewFileDetails[]> {
     if (parsedData.imageFiles.length == 0) {
       throw new HttpException('No Image File Provided', HttpStatus.BAD_REQUEST);
     }
@@ -38,69 +36,39 @@ export class ImageWriter {
     // We extract all of the details from the arguments
     const { ops, imageFiles } = parsedData;
 
-    // otherOps are the default operations that we utilize to make sure that
-    // things run as intended. If no operations are provided by the user, we
-    // add a default, empty operation here.
-    const otherOps = {};
-    if (Object.keys(ops).length === 0) {
-      otherOps[''] = {};
-    }
-
-    // We also add a default thumb operation here. If the user supersedes the
-    // thumb operation, that's fine.
-    otherOps['thumb'] = {
-      identifier: 'thumb',
-      resize: true,
-      maxSize: 128,
-      stripMeta: true,
-    };
-
-    // opsFinal represent the final list of operations that we will use to
-    // convert images.
-    const opsFinal = {
-      ...otherOps,
-      ...ops,
-    };
-
-    // This date is used for adding metadata to the eventual return data for this function
-    const now = new Date();
+    const finalOps =
+      Object.keys(ops).length === 0 ? { '': { retainImage: true } } : ops;
 
     // the conversionPromises variable holds the end result for all of the conversions
     // that we're executing. We map the image files themselves, and perform all image
     // ops within the map function
-    const conversionPromises: Promise<NewImageDetails>[] = imageFiles.map(
+    const conversionPromises: Promise<NewFileDetailsJSON[]>[] = imageFiles.map(
       async (imageFile) => {
-        const newFilename = uuidv4();
-        const promises: Promise<ImageFileDetailsInterface>[] = [];
+        const promises = Object.keys(finalOps).map((key) => {
+          const op = finalOps[key];
+          const resizeOptions = ImageResizeOptions.fromWebFields(op);
 
-        Object.keys(opsFinal).forEach((key) => {
-          const op = opsFinal[key];
-          const resizeOptions = ImageResizeOptions.fromWebFields(
-            newFilename,
-            op,
+          const isPrivate = isBoolean(op.isPrivate) ? op.isPrivate : true;
+
+          return this.makeAndRunResizeScript(
+            imageFile,
+            resizeOptions,
+            authorId,
+            isPrivate,
           );
-
-          promises.push(this.makeAndRunResizeScript(imageFile, resizeOptions));
         });
 
-        const files: ImageFileDetailsInterface[] = await Promise.all(promises);
+        const imageDetails = await Promise.all(promises);
 
         await rm(imageFile.filepath);
 
-        return NewImageDetails.fromJSON({
-          files,
-          imageId: newFilename,
-          originalFilename: imageFile.originalFilename,
-          dateAdded: now.toISOString(),
-          authorId,
-          isPrivate,
-        });
+        return imageDetails;
       },
     );
 
     const imageDetails = await Promise.all(conversionPromises);
 
-    return imageDetails;
+    return imageDetails.flat().map((detail) => NewFileDetails.fromJSON(detail));
   }
 
   /**
@@ -113,9 +81,17 @@ export class ImageWriter {
   async makeAndRunResizeScript(
     imageFile: UploadedFile,
     resizeOptions: ImageResizeOptions,
-  ): Promise<ImageFileDetailsInterface> {
+    authorId: string,
+    isPrivate: boolean,
+  ): Promise<NewFileDetailsJSON> {
     // We make the resize script and run it here.
-    const result = this.buildResizeScript(imageFile, resizeOptions);
+
+    const newFilename = uuidv4();
+    const result = this.buildResizeScript(
+      imageFile,
+      resizeOptions,
+      newFilename,
+    );
 
     await new Promise((resolve, reject) => {
       exec(result.script, (err, _stdout, stderr) => {
@@ -131,13 +107,21 @@ export class ImageWriter {
       });
     });
 
-    const dimensions = await this.getFileDimensions(result.newFilepath);
-    // console.log(result.newFilename, `${dimensions.x}x${dimensions.y}`);
-
+    const resolution = await this.getFileDimensions(result.newFilepath);
     return {
-      filename: this.getNewFileName(imageFile, resizeOptions),
-      dimensions,
-      identifier: resizeOptions.identifier,
+      filepath: imageFile.filepath,
+      authorId,
+      originalFilename: imageFile.originalFilename,
+      dateAdded: new Date().toISOString(),
+      mimetype: imageFile.mimetype,
+      filename: newFilename,
+      size: imageFile.size,
+      isPrivate,
+      metadata: {
+        'resolution.x': resolution.x,
+        'resolution.y': resolution.y,
+        imageIdentifier: resizeOptions.identifier,
+      },
     };
   }
 
@@ -179,9 +163,12 @@ export class ImageWriter {
    * @param {ImageResizeOptions} options the options used to construct an ImageMagick shell script
    * @returns {string} the ImageMagick shell script meant to run in a POSIX shell
    */
-  buildResizeScript(imageFile: UploadedFile, options: ImageResizeOptions) {
+  buildResizeScript(
+    imageFile: UploadedFile,
+    options: ImageResizeOptions,
+    newFilename: string,
+  ) {
     const { filepath } = imageFile;
-    const newFilename = this.getNewFileName(imageFile, options);
     const newFilepath = `${this.savedImagePath}/${newFilename}`;
 
     // If we get here, we should just copy the file from the original location
@@ -211,35 +198,35 @@ export class ImageWriter {
     return { newFilename, newFilepath, script };
   }
 
-  getNewFileName(imageFile: UploadedFile, options: ImageResizeOptions) {
-    let ext = options.newFileNameInfo.ext;
-    if (options.doNotConvert) {
-      ext = imageFile.nameComponents.extension;
-    }
+  // getNewFileName(imageFile: UploadedFile, options: ImageResizeOptions) {
+  //   let ext = options.newFileNameInfo.ext;
+  //   if (options.doNotConvert) {
+  //     ext = imageFile.nameComponents.extension;
+  //   }
 
-    return `${options.newFileNameInfo.name}.${ext}`;
-  }
+  //   return `${options.newFileNameInfo.name}.${ext}`;
+  // }
 
-  async deleteImages(imageDetails: ImageDetails) {
-    const paths = imageDetails.files.map((file) =>
-      path.join(this.savedImagePath, file.filename),
-    );
+  // async deleteImages(imageDetails: FileDetails) {
+  //   const paths = imageDetails.imageDetailsList.map((file) =>
+  //     path.join(this.savedImagePath, file.filename),
+  //   );
 
-    const deletePromises = paths.map((path) => rm(path));
+  //   const deletePromises = paths.map((path) => rm(path));
 
-    const results = await Promise.allSettled(deletePromises);
+  //   const results = await Promise.allSettled(deletePromises);
 
-    console.log('delete results', results);
-  }
+  //   console.log('delete results', results);
+  // }
 
-  /**
-   * Attempts to roll back any writes that occurred in case of an error
-   */
-  async rollBackWrites(details: NewImageDetails) {
-    const promises = details.files.map((file) =>
-      rm(`${this.savedImagePath}/${file.filename}`),
-    );
+  // /**
+  //  * Attempts to roll back any writes that occurred in case of an error
+  //  */
+  // async rollBackWrites(details: FileDetails) {
+  //   const promises = details.imageDetailsList.map((file) =>
+  //     rm(`${this.savedImagePath}/${file.filename}`),
+  //   );
 
-    await Promise.all(promises);
-  }
+  //   await Promise.all(promises);
+  // }
 }
