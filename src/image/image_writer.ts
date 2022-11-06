@@ -85,7 +85,6 @@ export class ImageWriter {
     isPrivate: boolean,
   ): Promise<NewFileDetailsJSON> {
     // We make the resize script and run it here.
-
     const newFilename = uuidv4();
     const result = this.buildResizeScript(
       imageFile,
@@ -107,13 +106,15 @@ export class ImageWriter {
       });
     });
 
+    const newMimetype = resizeOptions.newMimetype ?? imageFile.mimetype;
+
     const resolution = await this.getFileDimensions(result.newFilepath);
     return {
       filepath: imageFile.filepath,
       authorId,
       originalFilename: imageFile.originalFilename,
       dateAdded: new Date().toISOString(),
-      mimetype: imageFile.mimetype,
+      mimetype: newMimetype,
       filename: newFilename,
       size: imageFile.size,
       isPrivate,
@@ -193,7 +194,12 @@ export class ImageWriter {
       script += ' -strip';
     }
 
-    script += ` "${newFilepath}"`;
+    const outputType =
+      options.imageFormatPrefix.length > 0
+        ? `${options.imageFormatPrefix}:`
+        : '';
+
+    script += ` ${outputType}"${newFilepath}"`;
 
     return { newFilename, newFilepath, script };
   }

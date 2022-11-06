@@ -5,10 +5,10 @@ module.exports = {
     sourceType: 'module',
   },
   settings: {
-    "import/resolver": {
-      "typescript": {
-        "alwaysTryTypes": true,
-        "project": "./tsconfig.json"
+    'import/resolver': {
+      'typescript': {
+        'alwaysTryTypes': true,
+        'project': './tsconfig.json'
       }
     }
   },
@@ -97,7 +97,7 @@ module.exports = {
       }
     ],
     'max-len': [
-      "warn",
+      'warn',
       {
         'ignoreStrings': true,
         'code': 120,
@@ -113,5 +113,18 @@ module.exports = {
       'single',
     ],
     'import/no-named-as-default-member': 'off',
+    'no-restricted-imports': [
+      'warn',
+      {
+        'patterns': [
+          {
+            'group': [
+              '../*'
+            ],
+            'message': 'Usage of relative parent imports is not allowed.',
+          },
+        ],
+      },
+    ],
   },
 };

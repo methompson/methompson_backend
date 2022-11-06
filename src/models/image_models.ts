@@ -1,15 +1,4 @@
-import {
-  FileDetails,
-  FileDetailsJSON,
-  NewFileDetailsJSON,
-} from '@/src/models/file_models';
-import {
-  isInteger,
-  isNumber,
-  isRecord,
-  isString,
-} from '@/src/utils/type_guards';
-import { InvalidInputError } from '@/src/errors';
+import { isNumber, isString } from '@/src/utils/type_guards';
 
 export enum ImageType {
   png = 'png',
@@ -43,7 +32,7 @@ export class ImageResizeOptions {
   protected _retainImage: boolean;
 
   // If the user wants to convert to a specific image format (e.g. png), they can
-  // use this value to do that. Otherwise, it will default to jpg.
+  // use this value to do that.
   protected _newFormat: ImageType | null;
 
   // If set to true, the image will be resized to maxSize
@@ -66,26 +55,60 @@ export class ImageResizeOptions {
     this._maxSize = options.maxSize ?? null;
   }
 
-  // get newFilename() {
-  //   return this._newFilename;
-  // }
-  get doNotConvert() {
+  get doNotConvert(): boolean {
     return this._retainImage;
   }
-  get newFormat() {
+  get newFormat(): ImageType | null {
     return this._newFormat;
   }
-  get resize() {
+  get resize(): boolean {
     return this._resize;
   }
-  get stripMeta() {
+  get stripMeta(): boolean {
     return this._stripMeta;
   }
-  get maxSize() {
+  get maxSize(): number | null {
     return this._maxSize;
   }
-  get identifier() {
+  get identifier(): string {
     return this._identifier;
+  }
+  get newMimetype(): string | null {
+    switch (this.newFormat) {
+      case ImageType.png:
+        return 'image/png';
+      case ImageType.jpeg:
+        return 'image/jpeg';
+      case ImageType.gif:
+        return 'image/gif';
+      case ImageType.heic:
+        return 'image/heic';
+      case ImageType.bmp:
+        return 'image/bmp';
+      case ImageType.tiff:
+        return 'image/tiff';
+      default:
+        return null;
+    }
+  }
+
+  get imageFormatPrefix(): string {
+    switch (this.newFormat) {
+      case ImageType.png:
+        return 'png';
+      case ImageType.jpeg:
+        return 'jpeg';
+      case ImageType.gif:
+        return 'gif';
+      case ImageType.heic:
+        return 'heic';
+      case ImageType.bmp:
+        return 'bmp3';
+      case ImageType.tiff:
+        return 'tiff';
+      default:
+        return '';
+    }
   }
 
   static fromWebFields(op: Record<string, unknown>): ImageResizeOptions {
@@ -156,173 +179,3 @@ export interface ImageDimensions {
   x: number;
   y: number;
 }
-
-// export interface NewImageFileDetailsJSON extends NewFileDetailsJSON {
-//   identifier: string;
-//   resolution: ImageDimensions;
-// }
-
-// export interface ImageFileDetailsJSON extends FileDetailsJSON {
-//   identifier: string;
-//   resolution: ImageDimensions;
-// }
-
-// export class ImageFileDetails extends FileDetails {
-//   constructor(
-//     protected _identifier: string,
-//     protected _resolution: ImageDimensions,
-//     id: string,
-//     originalFilename: string,
-//     filename: string,
-//     dateAdded: Date,
-//     authorId: string,
-//     mimetype: string,
-//     size: number,
-//     isPrivate: boolean,
-//   ) {
-//     super(
-//       id,
-//       originalFilename,
-//       filename,
-//       dateAdded,
-//       authorId,
-//       mimetype,
-//       size,
-//       isPrivate,
-//     );
-//   }
-
-//   get identifier(): string {
-//     return this._identifier;
-//   }
-//   get resolution(): ImageDimensions {
-//     return this._resolution;
-//   }
-
-//   get fileDetails(): FileDetails {
-//     return FileDetails.fromJSON(super.toJSON());
-//   }
-
-//   toJSON(): ImageFileDetailsJSON {
-//     const superJSON = super.toJSON();
-//     return {
-//       identifier: this.identifier,
-//       resolution: this.resolution,
-//       ...superJSON,
-//     };
-//   }
-
-//   static fromJSON(input: unknown): ImageFileDetails {
-//     if (!ImageFileDetails.isImageFileDetailJSON(input)) {
-//       throw new InvalidInputError('Invalid ImageFileDetail input');
-//     }
-
-//     const dateAdded = new Date(input.dateAdded);
-
-//     return new ImageFileDetails(
-//       input.identifier,
-//       input.resolution,
-//       input.id,
-//       input.originalFilename,
-//       input.filename,
-//       dateAdded,
-//       input.authorId,
-//       input.mimetype,
-//       input.size,
-//       input.isPrivate,
-//     );
-//   }
-
-//   static isImageFileDetailJSON(input: unknown): input is ImageFileDetailsJSON {
-//     if (!isRecord(input)) {
-//       return false;
-//     }
-
-//     const identifierTest = isString(input.identifier);
-//     const resolutionTest = ImageFileDetails.isResolution(input.resolution);
-//     const fileDetailsTest = FileDetails.isFileDetailsJSON(input);
-
-//     return identifierTest && resolutionTest && fileDetailsTest;
-//   }
-
-//   static isResolution(input: unknown): input is ImageDimensions {
-//     if (!isRecord(input)) {
-//       return false;
-//     }
-
-//     const xTest = isInteger(input.x);
-//     const yTest = isInteger(input.y);
-
-//     return xTest && yTest;
-//   }
-// }
-
-// export interface ImageDetailsJSON {
-//   originalFilename: string;
-//   imageDetails: ImageFileDetailsJSON[];
-// }
-
-// export interface NewImageDetailsJSON {
-//   originalFilename: string;
-//   imageDetails: NewImageFileDetailsJSON[];
-// }
-
-// export class ImageDetails {
-//   protected _imageDetails: Record<string, ImageFileDetails> = {};
-
-//   constructor(
-//     protected _originalFilename: string,
-//     imageDetails: ImageFileDetails[],
-//   ) {
-//     for (const detail of imageDetails) {
-//       this._imageDetails[detail.identifier] = detail;
-//     }
-//   }
-
-//   get originalFilename(): string {
-//     return this._originalFilename;
-//   }
-//   get imageDetails(): Record<string, ImageFileDetails> {
-//     return this._imageDetails;
-//   }
-//   get imageDetailsList(): ImageFileDetails[] {
-//     return Object.values(this.imageDetails);
-//   }
-
-//   toJSON(): ImageDetailsJSON {
-//     const details = this.imageDetailsList.map((el) => el.toJSON());
-
-//     return {
-//       originalFilename: this.originalFilename,
-//       imageDetails: details,
-//     };
-//   }
-
-//   static fromJSON(input: unknown): ImageDetails {
-//     if (!ImageDetails.isImageDetailsJSON(input)) {
-//       throw new InvalidInputError('Invalid ImageDetails input');
-//     }
-
-//     const details = input.imageDetails.map((el) =>
-//       ImageFileDetails.fromJSON(el),
-//     );
-
-//     return new ImageDetails(input.originalFilename, details);
-//   }
-
-//   static isImageDetailsJSON(input): input is ImageDetailsJSON {
-//     if (!isRecord(input) || !Array.isArray(input.imageDetails)) {
-//       return false;
-//     }
-
-//     const filenameTest = isString(input.originalFilename);
-//     const detailsTest = input.imageDetails.reduce((prev, cur) => {
-//       if (!prev) {
-//         return prev;
-//       }
-//       return ImageFileDetails.isImageFileDetailJSON(cur);
-//     }, true);
-
-//     return filenameTest && detailsTest;
-//   }
-// }
