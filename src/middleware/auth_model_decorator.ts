@@ -1,6 +1,7 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { Request } from 'express';
-import { AuthModel } from '../models/auth_model';
+
+import { AuthModel } from '@/src/models/auth_model';
 
 export interface UserAuthRequest extends Request {
   authModel: AuthModel;

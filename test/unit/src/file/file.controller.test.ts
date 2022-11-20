@@ -52,7 +52,6 @@ const makeDirectory = FileSystemService.prototype.makeDirectory as jest.Mock;
 const moveFile = FileSystemService.prototype.moveFile as jest.Mock;
 const deleteFile = FileSystemService.prototype.deleteFile as jest.Mock;
 const deleteFiles = FileSystemService.prototype.deleteFiles as jest.Mock;
-const rollBackWrites = FileSystemService.prototype.rollBackWrites as jest.Mock;
 
 const errorSpy = jest.spyOn(console, 'error');
 errorSpy.mockImplementation(() => {});
@@ -123,7 +122,6 @@ describe('FileController', () => {
     moveFile.mockReset();
     deleteFile.mockReset();
     deleteFiles.mockReset();
-    rollBackWrites.mockReset();
   });
 
   describe('getFileByName', () => {

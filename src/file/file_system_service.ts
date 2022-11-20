@@ -54,11 +54,4 @@ export class FileSystemService {
 
     return output;
   }
-
-  /**
-   * Attempts to roll back any writes that occurred in case of an error
-   */
-  async rollBackWrites() {
-    throw new Error('unimplemented');
-  }
 }

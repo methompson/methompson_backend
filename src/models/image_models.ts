@@ -73,6 +73,7 @@ export class ImageResizeOptions {
   get identifier(): string {
     return this._identifier;
   }
+
   get newMimetype(): string | null {
     switch (this.newFormat) {
       case ImageType.png:
@@ -144,8 +145,8 @@ export class ImageResizeOptions {
     // default values. stripMeta is true only if the string is 'true'. This allows
     // us to easily default to false. Resize is true in all situations, unless
     // resize is set to 'false'.
-    options.stripMeta = op?.stripMeta === 'true';
-    options.resize = op?.resize !== 'false';
+    options.stripMeta = op?.stripMeta === 'true' || op?.stripMeta === true;
+    options.resize = op?.resize !== 'false' && op?.resize !== false;
 
     return new ImageResizeOptions(identifier, options);
   }

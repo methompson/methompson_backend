@@ -26,6 +26,7 @@ type FormidableParseCallback = (
 jest.mock('@/src/file/file_ops.service', () => {
   function FileOpsService() {}
   FileOpsService.prototype.saveUploadedFiles = jest.fn();
+  FileOpsService.prototype.saveUploadedImages = jest.fn();
 
   return {
     FileOpsService,
@@ -67,10 +68,11 @@ const makeDirectory = FileSystemService.prototype.makeDirectory as jest.Mock;
 const moveFile = FileSystemService.prototype.moveFile as jest.Mock;
 const deleteFile = FileSystemService.prototype.deleteFile as jest.Mock;
 const deleteFiles = FileSystemService.prototype.deleteFiles as jest.Mock;
-const rollBackWrites = FileSystemService.prototype.rollBackWrites as jest.Mock;
 
 const saveUploadedFiles = FileOpsService.prototype
   .saveUploadedFiles as jest.Mock;
+const saveUploadedImages = FileOpsService.prototype
+  .saveUploadedImages as jest.Mock;
 
 const errorSpy = jest.spyOn(console, 'error');
 errorSpy.mockImplementation(() => {});
@@ -136,6 +138,9 @@ describe('FileController', () => {
   };
   const fileDetails2 = FileDetails.fromJSON(fileDetailsJSON2);
 
+  const uploadedFile1 = UploadedFile.fromFormidable(file1);
+  const uploadedFile2 = UploadedFile.fromFormidable(file2);
+
   beforeEach(() => {
     parse.mockReset();
     parse.mockClear();
@@ -146,9 +151,9 @@ describe('FileController', () => {
     moveFile.mockReset();
     deleteFile.mockReset();
     deleteFiles.mockReset();
-    rollBackWrites.mockReset();
 
     saveUploadedFiles.mockReset();
+    saveUploadedImages.mockReset();
   });
 
   const userId = '99c44a1a-2582-4792-9879-45b5e43b0f33';
@@ -286,6 +291,73 @@ describe('FileController', () => {
     });
   });
 
+  describe('getTotal', () => {
+    test('Returns the value returned by the fileSerivce in a specific format', async () => {
+      const fileDataService = new InMemoryFileDataService([
+        fileDetails1,
+        fileDetails2,
+      ]);
+      const totalSpy = jest.spyOn(fileDataService, 'getTotalFiles');
+
+      const fc = new FileAPIController(
+        new ConfigService(),
+        fileDataService,
+        new LoggerService([]),
+      );
+
+      const total = await fc.getTotal();
+      expect(total).toStrictEqual({ totalFiles: 2 });
+      expect(totalSpy).toHaveBeenCalledTimes(1);
+    });
+
+    test('Returns the value returned by the fileSerivce', async () => {
+      const fileDataService = new InMemoryFileDataService([]);
+      const totalSpy = jest.spyOn(fileDataService, 'getTotalFiles');
+
+      const fc = new FileAPIController(
+        new ConfigService(),
+        fileDataService,
+        new LoggerService([]),
+      );
+
+      totalSpy.mockImplementationOnce(async () => 3);
+      expect(await fc.getTotal()).toStrictEqual({ totalFiles: 3 });
+
+      totalSpy.mockImplementationOnce(async () => 4);
+      expect(await fc.getTotal()).toStrictEqual({ totalFiles: 4 });
+
+      totalSpy.mockImplementationOnce(async () => 5);
+      expect(await fc.getTotal()).toStrictEqual({ totalFiles: 5 });
+
+      totalSpy.mockImplementationOnce(async () => 6);
+      expect(await fc.getTotal()).toStrictEqual({ totalFiles: 6 });
+
+      totalSpy.mockImplementationOnce(async () => 0);
+      expect(await fc.getTotal()).toStrictEqual({ totalFiles: 0 });
+    });
+
+    test('Throws an error if fileService.getTotalFiles throws an error', async () => {
+      const fileDataService = new InMemoryFileDataService([]);
+      const totalSpy = jest.spyOn(fileDataService, 'getTotalFiles');
+
+      const fc = new FileAPIController(
+        new ConfigService(),
+        fileDataService,
+        new LoggerService([]),
+      );
+
+      totalSpy.mockImplementationOnce(async () => {
+        throw new Error(testError);
+      });
+
+      await expect(() => fc.getTotal()).rejects.toThrow(
+        'Error getting total files',
+      );
+
+      expect(totalSpy).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('uploadFiles', () => {
     test('Runs parseFilesAndFields and saveUploadedFiles', async () => {
       const fileDataService = new InMemoryFileDataService();
@@ -324,7 +396,7 @@ describe('FileController', () => {
       );
     });
 
-    test('Returns an array of JSON', async () => {
+    test('Returns an array of objects', async () => {
       const fileDataService = new InMemoryFileDataService();
       const fc = new FileAPIController(
         new ConfigService(),
@@ -452,6 +524,140 @@ describe('FileController', () => {
 
       expect(parseSpy).toHaveBeenCalledTimes(1);
       expect(saveUploadedFiles).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('uploadImages', () => {
+    test('Runs parseImageFilesAndFields and saveUploadedImages', async () => {
+      const fileDataService = new InMemoryFileDataService();
+      const fc = new FileAPIController(
+        new ConfigService(),
+        fileDataService,
+        new LoggerService([]),
+      );
+
+      const req = {} as unknown as Request;
+
+      const parseSpy = jest.spyOn(fc, 'parseImageFilesAndFields');
+      parseSpy.mockImplementationOnce(async () => ({
+        imageFiles: [uploadedFile1, uploadedFile2],
+        ops: {},
+      }));
+
+      saveUploadedImages.mockImplementationOnce(() => [
+        fileDetails1,
+        fileDetails2,
+      ]);
+
+      await fc.uploadImages(req, userId);
+
+      expect(parseSpy).toHaveBeenCalledTimes(1);
+      expect(parseSpy).toHaveBeenCalledWith(req, '');
+
+      expect(saveUploadedImages).toHaveBeenCalledTimes(1);
+      expect(saveUploadedImages).toHaveBeenCalledWith(
+        {
+          imageFiles: [uploadedFile1, uploadedFile2],
+          ops: {},
+        },
+        userId,
+      );
+    });
+
+    test('Returns an array of objects', async () => {
+      const fileDataService = new InMemoryFileDataService();
+      const fc = new FileAPIController(
+        new ConfigService(),
+        fileDataService,
+        new LoggerService([]),
+      );
+
+      const req = {} as unknown as Request;
+
+      const parseSpy = jest.spyOn(fc, 'parseImageFilesAndFields');
+      parseSpy.mockImplementationOnce(async () => ({
+        imageFiles: [uploadedFile1, uploadedFile2],
+        ops: {},
+      }));
+
+      saveUploadedImages.mockImplementationOnce(() => [
+        fileDetails1,
+        fileDetails2,
+      ]);
+
+      const result = await fc.uploadImages(req, userId);
+
+      expect(result).toStrictEqual([
+        fileDetails1.toJSON(),
+        fileDetails2.toJSON(),
+      ]);
+    });
+
+    test('throws an error if parseImageFilesAndFields throws an error', async () => {
+      const fileDataService = new InMemoryFileDataService();
+      const fc = new FileAPIController(
+        new ConfigService(),
+        fileDataService,
+        new LoggerService([]),
+      );
+
+      const req = {} as unknown as Request;
+
+      const parseSpy = jest.spyOn(fc, 'parseImageFilesAndFields');
+      parseSpy.mockImplementationOnce(async () => {
+        throw new Error(testError);
+      });
+
+      saveUploadedImages.mockImplementationOnce(() => [
+        fileDetails1,
+        fileDetails2,
+      ]);
+
+      await expect(() => fc.uploadImages(req, userId)).rejects.toThrow(
+        'Error Uploading Files',
+      );
+
+      expect(parseSpy).toHaveBeenCalledTimes(1);
+      expect(parseSpy).toHaveBeenCalledWith(req, '');
+
+      expect(saveUploadedImages).toHaveBeenCalledTimes(0);
+    });
+
+    test('throws an error if saveUploadedImages throws an error', async () => {
+      const fileDataService = new InMemoryFileDataService();
+      const fc = new FileAPIController(
+        new ConfigService(),
+        fileDataService,
+        new LoggerService([]),
+      );
+
+      const req = {} as unknown as Request;
+
+      const parseSpy = jest.spyOn(fc, 'parseImageFilesAndFields');
+      parseSpy.mockImplementationOnce(async () => ({
+        imageFiles: [uploadedFile1, uploadedFile2],
+        ops: {},
+      }));
+
+      saveUploadedImages.mockImplementationOnce(() => {
+        throw new Error(testError);
+      });
+
+      await expect(() => fc.uploadImages(req, userId)).rejects.toThrow(
+        'Error Uploading Files',
+      );
+
+      expect(parseSpy).toHaveBeenCalledTimes(1);
+      expect(parseSpy).toHaveBeenCalledWith(req, '');
+
+      expect(saveUploadedImages).toHaveBeenCalledTimes(1);
+      expect(saveUploadedImages).toHaveBeenCalledWith(
+        {
+          imageFiles: [uploadedFile1, uploadedFile2],
+          ops: {},
+        },
+        userId,
+      );
     });
   });
 

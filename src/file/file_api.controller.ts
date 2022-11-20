@@ -1,5 +1,3 @@
-import * as path from 'path';
-
 import {
   Controller,
   Get,
@@ -26,7 +24,6 @@ import {
 import { LoggerService } from '@/src/logger/logger.service';
 import {
   FileDetailsJSON,
-  NewFileDetails,
   ParsedFilesAndFields,
   ParsedImageFilesAndFields,
   UploadedFile,
@@ -211,7 +208,10 @@ export class FileAPIController {
       );
     } catch (e) {
       const msg = isString(e?.message) ? e.message : `${e}`;
-      throw new HttpException(msg, HttpStatus.BAD_REQUEST);
+
+      this.loggerService.addErrorLog(`${msg}: ${e}`);
+
+      throw new HttpException('Error Uploading Files', HttpStatus.BAD_REQUEST);
     }
 
     const opsController = new FileOpsService(
@@ -433,24 +433,5 @@ export class FileAPIController {
         },
       );
     });
-  }
-
-  async rollBackWrites(files: NewFileDetails[], uploadedFiles: UploadedFile[]) {
-    try {
-      const ops: Promise<unknown>[] = [];
-
-      files.forEach((el) => {
-        const newFilePath = path.join(this._savedFilePath, el.filename);
-        ops.push(new FileSystemService().deleteFile(newFilePath));
-      });
-
-      uploadedFiles.forEach((el) => {
-        ops.push(new FileSystemService().deleteFile(el.filepath));
-      });
-
-      await Promise.allSettled(ops);
-    } catch (e) {
-      this.loggerService.addErrorLog(`Unable to roll back writes: ${e}`);
-    }
   }
 }

@@ -18,6 +18,19 @@
       "internalConsoleOptions": "neverOpen",
     },
     {
+      "name": "Debug Specific Jest Test",
+      "type": "node",
+      "request": "launch",
+      "runtimeArgs": [
+        "--inspect-brk",
+        "${workspaceRoot}/node_modules/.bin/jest",
+        "${workspaceRoot}/test/unit/src/models/file_models.test.ts",
+        "--runInBand"
+      ],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+    },
+    {
       "name": "Debug Jest Integration Tests",
       "type": "node",
       "request": "launch",

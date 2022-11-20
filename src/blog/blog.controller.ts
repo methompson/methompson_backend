@@ -18,7 +18,7 @@ import { BlogService, BlogPostRequestOutput } from '@/src/blog/blog.service';
 import { LoggerService } from '@/src/logger/logger.service';
 import { RequestLogInterceptor } from '@/src/middleware/request_log.interceptor';
 import { AuthRequiredIncerceptor } from '@/src/middleware/auth_interceptor';
-import { getIntFromString } from '../utils/get_number_from_string';
+import { getIntFromString } from '@/src/utils/get_number_from_string';
 
 @UseInterceptors(RequestLogInterceptor)
 @Controller({ path: 'api/blog' })

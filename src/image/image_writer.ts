@@ -11,7 +11,7 @@ import {
   ParsedImageFilesAndFields,
   UploadedFile,
 } from '@/src/models/file_models';
-import { isBoolean } from '../utils/type_guards';
+import { isBoolean } from '@/src/utils/type_guards';
 
 /**
  * The ImageWriter class represents an API to handle image files. It performs
@@ -203,36 +203,4 @@ export class ImageWriter {
 
     return { newFilename, newFilepath, script };
   }
-
-  // getNewFileName(imageFile: UploadedFile, options: ImageResizeOptions) {
-  //   let ext = options.newFileNameInfo.ext;
-  //   if (options.doNotConvert) {
-  //     ext = imageFile.nameComponents.extension;
-  //   }
-
-  //   return `${options.newFileNameInfo.name}.${ext}`;
-  // }
-
-  // async deleteImages(imageDetails: FileDetails) {
-  //   const paths = imageDetails.imageDetailsList.map((file) =>
-  //     path.join(this.savedImagePath, file.filename),
-  //   );
-
-  //   const deletePromises = paths.map((path) => rm(path));
-
-  //   const results = await Promise.allSettled(deletePromises);
-
-  //   console.log('delete results', results);
-  // }
-
-  // /**
-  //  * Attempts to roll back any writes that occurred in case of an error
-  //  */
-  // async rollBackWrites(details: FileDetails) {
-  //   const promises = details.imageDetailsList.map((file) =>
-  //     rm(`${this.savedImagePath}/${file.filename}`),
-  //   );
-
-  //   await Promise.all(promises);
-  // }
 }

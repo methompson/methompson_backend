@@ -10,7 +10,8 @@ import {
 // eslint-disable-next-line import/no-unresolved
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { AuthModel } from '../models/auth_model';
+
+import { AuthModel } from '@/src/models/auth_model';
 
 @Injectable()
 export class AuthRequiredIncerceptor implements NestInterceptor {

@@ -126,5 +126,7 @@ module.exports = {
         ],
       },
     ],
+    'import/namespace': 'off',
+    'import/named': 'off',
   },
 };

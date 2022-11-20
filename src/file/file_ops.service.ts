@@ -11,8 +11,8 @@ import {
 } from '@/src/models/file_models';
 import { FileDataService } from '@/src/file/file_data.service';
 import { FileSystemService } from '@/src/file/file_system_service';
-import { isNullOrUndefined } from '../utils/type_guards';
-import { ImageWriter } from '../image/image_writer';
+import { ImageWriter } from '@/src/image/image_writer';
+import { isNullOrUndefined } from '@/src/utils/type_guards';
 
 export class FileOpsService {
   constructor(
@@ -60,8 +60,9 @@ export class FileOpsService {
   async saveUploadedImages(
     parsedData: ParsedImageFilesAndFields,
     userId: string,
+    imageWriter?: ImageWriter,
   ) {
-    const iw = new ImageWriter(this.savedFilePath);
+    const iw = imageWriter ?? new ImageWriter(this.savedFilePath);
     let newFiles: NewFileDetails[];
 
     try {
@@ -95,6 +96,7 @@ export class FileOpsService {
         mimetype: file.mimetype,
         size: file.size,
         isPrivate: data.ops.isPrivate ?? true,
+        metadata: {},
       });
     });
 
@@ -134,17 +136,16 @@ export class FileOpsService {
   }
 
   async rollBackWrites(files: NewFileDetails[], uploadedFiles: UploadedFile[]) {
-    const ops: Promise<unknown>[] = [];
-
-    files.forEach((el) => {
+    const fss = new FileSystemService();
+    const deleteOps1 = files.map((el) => {
       const newFilePath = path.join(this._savedFilePath, el.filename);
-      ops.push(new FileSystemService().deleteFile(newFilePath));
+      return fss.deleteFile(newFilePath);
     });
 
-    uploadedFiles.forEach((el) => {
-      ops.push(new FileSystemService().deleteFile(el.filepath));
+    const deleteOps2 = uploadedFiles.map((el) => {
+      fss.deleteFile(el.filepath);
     });
 
-    await Promise.allSettled(ops);
+    await Promise.allSettled([...deleteOps1, ...deleteOps2]);
   }
 }

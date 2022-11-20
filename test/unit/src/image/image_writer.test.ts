@@ -524,10 +524,4 @@ describe('ImageWriter', () => {
       expect(script).not.toContain('cp ');
     });
   });
-
-  describe('getNewFileName', () => {});
-
-  describe('deleteImages', () => {});
-
-  describe('rollBackWrites', () => {});
 });

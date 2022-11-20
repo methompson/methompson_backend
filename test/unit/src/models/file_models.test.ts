@@ -364,151 +364,127 @@ describe('file_models', () => {
         let input = { ...validFileDetails };
         expect(() => FileDetails.fromJSON(input)).not.toThrow();
 
+        const idErr = new InvalidInputError('Invalid File Details Input: id');
+
         input = { ...validFileDetails };
         delete input.id;
-        expect(() => FileDetails.fromJSON(input)).toThrow(
-          new InvalidInputError('Invalid File Details Input'),
-        );
+        expect(() => FileDetails.fromJSON(input)).toThrow(idErr);
 
         input = { ...validFileDetails };
         input.id = 0;
-        expect(() => FileDetails.fromJSON(input)).toThrow(
-          new InvalidInputError('Invalid File Details Input'),
-        );
+        expect(() => FileDetails.fromJSON(input)).toThrow(idErr);
 
         input = { ...validFileDetails };
         input.id = null;
-        expect(() => FileDetails.fromJSON(input)).toThrow(
-          new InvalidInputError('Invalid File Details Input'),
-        );
+        expect(() => FileDetails.fromJSON(input)).toThrow(idErr);
 
         input = { ...validFileDetails };
         input.id = [];
-        expect(() => FileDetails.fromJSON(input)).toThrow(
-          new InvalidInputError('Invalid File Details Input'),
-        );
+        expect(() => FileDetails.fromJSON(input)).toThrow(idErr);
       });
 
       test('Throws an error when the isPrivate input is invalid', () => {
         let input = { ...validFileDetails };
         expect(() => FileDetails.fromJSON(input)).not.toThrow();
 
-        input = { ...validFileDetails };
-        delete input.id;
-        expect(() => FileDetails.fromJSON(input)).toThrow(
-          new InvalidInputError('Invalid File Details Input'),
+        const pErr = new InvalidInputError(
+          'Invalid File Details Input: isPrivate',
         );
+
+        input = { ...validFileDetails };
+        delete input.isPrivate;
+        expect(() => FileDetails.fromJSON(input)).toThrow(pErr);
 
         input = { ...validFileDetails };
         input.isPrivate = 0;
-        expect(() => FileDetails.fromJSON(input)).toThrow(
-          new InvalidInputError('Invalid File Details Input'),
-        );
+        expect(() => FileDetails.fromJSON(input)).toThrow(pErr);
 
         input = { ...validFileDetails };
         input.isPrivate = null;
-        expect(() => FileDetails.fromJSON(input)).toThrow(
-          new InvalidInputError('Invalid File Details Input'),
-        );
+        expect(() => FileDetails.fromJSON(input)).toThrow(pErr);
 
         input = { ...validFileDetails };
         input.isPrivate = {};
-        expect(() => FileDetails.fromJSON(input)).toThrow(
-          new InvalidInputError('Invalid File Details Input'),
-        );
+        expect(() => FileDetails.fromJSON(input)).toThrow(pErr);
 
         input = { ...validFileDetails };
         input.isPrivate = 'test';
-        expect(() => FileDetails.fromJSON(input)).toThrow(
-          new InvalidInputError('Invalid File Details Input'),
-        );
+        expect(() => FileDetails.fromJSON(input)).toThrow(pErr);
       });
 
       test('Throws an error when the originalFilename input is invalid', () => {
         let input = { ...validFileDetails };
         expect(() => FileDetails.fromJSON(input)).not.toThrow();
 
+        const ofErr = new InvalidInputError(
+          'Invalid File Details Input: originalFilename',
+        );
+
         input = { ...validFileDetails };
         delete input.originalFilename;
-        expect(() => FileDetails.fromJSON(input)).toThrow(
-          new InvalidInputError('Invalid File Details Input'),
-        );
+        expect(() => FileDetails.fromJSON(input)).toThrow(ofErr);
 
         input = { ...validFileDetails };
         input.originalFilename = 0;
-        expect(() => FileDetails.fromJSON(input)).toThrow(
-          new InvalidInputError('Invalid File Details Input'),
-        );
+        expect(() => FileDetails.fromJSON(input)).toThrow(ofErr);
 
         input = { ...validFileDetails };
         input.originalFilename = null;
-        expect(() => FileDetails.fromJSON(input)).toThrow(
-          new InvalidInputError('Invalid File Details Input'),
-        );
+        expect(() => FileDetails.fromJSON(input)).toThrow(ofErr);
 
         input = { ...validFileDetails };
         input.originalFilename = [];
-        expect(() => FileDetails.fromJSON(input)).toThrow(
-          new InvalidInputError('Invalid File Details Input'),
-        );
+        expect(() => FileDetails.fromJSON(input)).toThrow(ofErr);
       });
 
       test('Throws an error when the size input is invalid', () => {
         let input = { ...validFileDetails };
         expect(() => FileDetails.fromJSON(input)).not.toThrow();
 
+        const sizeErr = new InvalidInputError(
+          'Invalid File Details Input: size',
+        );
+
         input = { ...validFileDetails };
         delete input.size;
-        expect(() => FileDetails.fromJSON(input)).toThrow(
-          new InvalidInputError('Invalid File Details Input'),
-        );
+        expect(() => FileDetails.fromJSON(input)).toThrow(sizeErr);
 
         input = { ...validFileDetails };
         input.size = false;
-        expect(() => FileDetails.fromJSON(input)).toThrow(
-          new InvalidInputError('Invalid File Details Input'),
-        );
+        expect(() => FileDetails.fromJSON(input)).toThrow(sizeErr);
 
         input = { ...validFileDetails };
         input.size = null;
-        expect(() => FileDetails.fromJSON(input)).toThrow(
-          new InvalidInputError('Invalid File Details Input'),
-        );
+        expect(() => FileDetails.fromJSON(input)).toThrow(sizeErr);
 
         input = { ...validFileDetails };
         input.size = [];
-        expect(() => FileDetails.fromJSON(input)).toThrow(
-          new InvalidInputError('Invalid File Details Input'),
-        );
+        expect(() => FileDetails.fromJSON(input)).toThrow(sizeErr);
       });
 
       test('Throws an error when the dateAdded input is invalid', () => {
         let input = { ...validFileDetails };
         expect(() => FileDetails.fromJSON(input)).not.toThrow();
 
+        const dErr = new InvalidInputError(
+          'Invalid File Details Input: dateAdded',
+        );
+
         input = { ...validFileDetails };
         delete input.dateAdded;
-        expect(() => FileDetails.fromJSON(input)).toThrow(
-          new InvalidInputError('Invalid File Details Input'),
-        );
+        expect(() => FileDetails.fromJSON(input)).toThrow(dErr);
 
         input = { ...validFileDetails };
         input.dateAdded = 0;
-        expect(() => FileDetails.fromJSON(input)).toThrow(
-          new InvalidInputError('Invalid File Details Input'),
-        );
+        expect(() => FileDetails.fromJSON(input)).toThrow(dErr);
 
         input = { ...validFileDetails };
         input.dateAdded = null;
-        expect(() => FileDetails.fromJSON(input)).toThrow(
-          new InvalidInputError('Invalid File Details Input'),
-        );
+        expect(() => FileDetails.fromJSON(input)).toThrow(dErr);
 
         input = { ...validFileDetails };
         input.dateAdded = [];
-        expect(() => FileDetails.fromJSON(input)).toThrow(
-          new InvalidInputError('Invalid File Details Input'),
-        );
+        expect(() => FileDetails.fromJSON(input)).toThrow(dErr);
       });
     });
 

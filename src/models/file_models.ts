@@ -97,31 +97,46 @@ export type ParsedImageFilesAndFields = {
 
 export type FileDetailsMetadata = Record<string, string | number | boolean>;
 
-function fileDetailsBaseTest(input: unknown): boolean {
+function fileDetailsBaseTest(input: unknown): string[] {
   if (!isRecord(input)) {
-    return false;
+    return ['root'];
   }
 
-  const metadataTest = isFileDetailsMetadata(input.metadata);
+  const output: string[] = [];
 
-  const originalFilenameTest = isString(input.originalFilename);
-  const filenameTest = isString(input.filename);
-  const dateAddedTest = isString(input.dateAdded);
-  const authorIdTest = isString(input.authorId);
-  const mimetypeTest = isString(input.mimetype);
-  const sizeTest = isNumber(input.size);
-  const isPrivateTest = isBoolean(input.isPrivate);
+  if (!isFileDetailsMetadata(input.metadata)) output.push('metadata');
 
-  return (
-    originalFilenameTest &&
-    filenameTest &&
-    dateAddedTest &&
-    authorIdTest &&
-    mimetypeTest &&
-    sizeTest &&
-    isPrivateTest &&
-    metadataTest
-  );
+  if (!isString(input.originalFilename)) output.push('originalFilename');
+  if (!isString(input.filename)) output.push('filename');
+  if (!isString(input.dateAdded)) output.push('dateAdded');
+  if (!isString(input.authorId)) output.push('authorId');
+  if (!isString(input.mimetype)) output.push('mimetype');
+  if (!isNumber(input.size)) output.push('size');
+  if (!isBoolean(input.isPrivate)) output.push('isPrivate');
+
+  return output;
+}
+
+function newFileDetailsTest(input: unknown): string[] {
+  if (!isRecord(input)) {
+    return ['root'];
+  }
+
+  const baseTest = fileDetailsBaseTest(input);
+  if (!isString(input.filepath)) baseTest.push('filepath');
+
+  return baseTest;
+}
+
+function fileDetailsTest(input: unknown): string[] {
+  if (!isRecord(input)) {
+    return ['root'];
+  }
+
+  const baseTest = fileDetailsBaseTest(input);
+  if (!isString(input.id)) baseTest.push('id');
+
+  return baseTest;
 }
 
 function isFileDetailsMetadata(input: unknown): input is FileDetailsMetadata {
@@ -211,7 +226,7 @@ class FileDetailsBase {
   }
 
   static isFileDetailsBaseJSON(input: unknown): input is FileDetailsBaseJSON {
-    return fileDetailsBaseTest(input);
+    return fileDetailsBaseTest(input).length === 0;
   }
 }
 
@@ -263,7 +278,8 @@ export class NewFileDetails extends FileDetailsBase {
 
   static fromJSON(input: unknown): NewFileDetails {
     if (!NewFileDetails.isNewFileDetailsJSON(input)) {
-      throw new InvalidInputError('Invalid File Details');
+      const errors = newFileDetailsTest(input);
+      throw new InvalidInputError(`Invalid File Details: ${errors}`);
     }
 
     const dateAdded = new Date(input.dateAdded);
@@ -282,13 +298,7 @@ export class NewFileDetails extends FileDetailsBase {
   }
 
   static isNewFileDetailsJSON(input: unknown): input is NewFileDetailsJSON {
-    if (!isRecord(input)) {
-      return false;
-    }
-
-    const filepathTest = isString(input.filepath);
-
-    return fileDetailsBaseTest(input) && filepathTest;
+    return newFileDetailsTest(input).length === 0;
   }
 }
 
@@ -350,7 +360,8 @@ export class FileDetails extends FileDetailsBase {
 
   static fromJSON(input: unknown): FileDetails {
     if (!FileDetails.isFileDetailsJSON(input)) {
-      throw new InvalidInputError('Invalid File Details Input');
+      const errors = fileDetailsTest(input);
+      throw new InvalidInputError(`Invalid File Details Input: ${errors}`);
     }
 
     const dateAdded = new Date(input.dateAdded);
@@ -381,12 +392,6 @@ export class FileDetails extends FileDetailsBase {
   }
 
   static isFileDetailsJSON(input: unknown): input is FileDetailsJSON {
-    if (!isRecord(input)) {
-      return false;
-    }
-
-    const idTest = isString(input.id);
-
-    return fileDetailsBaseTest(input) && idTest;
+    return fileDetailsTest(input).length === 0;
   }
 }

@@ -7,7 +7,7 @@ import { InvalidInputError } from '@/src/errors/invalid_input_error';
 import { BlogService, BlogPostRequestOutput } from '@/src/blog/blog.service';
 import { MongoDBClient } from '@/src/utils/mongodb_client_class';
 import { NotFoundError } from '@/src/errors';
-import { isNullOrUndefined, isRecord } from '../utils/type_guards';
+import { isNullOrUndefined, isRecord } from '@/src/utils/type_guards';
 
 const blogPostsCollectionName = 'blogPosts';
 
