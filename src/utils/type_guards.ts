@@ -52,3 +52,19 @@ export function isStringArray(value: unknown): value is string[] {
 
   return true;
 }
+
+export function isPromiseRejected(
+  input: PromiseSettledResult<unknown>,
+): input is PromiseRejectedResult {
+  return input.status === 'rejected';
+}
+
+export function isPromiseFulfilled<T>(
+  input: PromiseSettledResult<T>,
+): input is PromiseFulfilledResult<T> {
+  return input.status === 'fulfilled';
+}
+
+export function isError(input: unknown): input is Error {
+  return isRecord(input) && input instanceof Error;
+}

@@ -12,7 +12,12 @@ import {
 import { FileDataService } from '@/src/file/file_data.service';
 import { FileSystemService } from '@/src/file/file_system_service';
 import { ImageWriter } from '@/src/image/image_writer';
-import { isNullOrUndefined } from '@/src/utils/type_guards';
+import {
+  isError,
+  isNullOrUndefined,
+  isPromiseFulfilled,
+  isPromiseRejected,
+} from '@/src/utils/type_guards';
 
 export class FileOpsService {
   constructor(
@@ -39,12 +44,15 @@ export class FileOpsService {
     let newFiles: NewFileDetails[];
     try {
       newFiles = this.makeNewFileDetails(parsedData, userId);
-      const result = await this.saveFiles(newFiles);
+
+      await this.saveFilesToFileSystem(newFiles);
+
+      const result = await this.saveFilesToService(newFiles);
 
       return result;
     } catch (e) {
       if (!isNullOrUndefined(newFiles)) {
-        await this.rollBackWrites(newFiles, parsedData.files);
+        await this.rollBackFSWrites(newFiles, parsedData.files);
       }
 
       throw e;
@@ -61,7 +69,7 @@ export class FileOpsService {
     parsedData: ParsedImageFilesAndFields,
     userId: string,
     imageWriter?: ImageWriter,
-  ) {
+  ): Promise<FileDetails[]> {
     const iw = imageWriter ?? new ImageWriter(this.savedFilePath);
     let newFiles: NewFileDetails[];
 
@@ -73,7 +81,7 @@ export class FileOpsService {
       return result;
     } catch (e) {
       if (!isNullOrUndefined(newFiles)) {
-        await this.rollBackWrites(newFiles, parsedData.imageFiles);
+        await this.rollBackFSWrites(newFiles, parsedData.imageFiles);
       }
 
       throw e;
@@ -103,18 +111,6 @@ export class FileOpsService {
     return newFileDetails;
   }
 
-  /**
-   * Saves files to the file system and saves files to the database
-   */
-  async saveFiles(newFileDetails: NewFileDetails[]): Promise<FileDetails[]> {
-    const [_, fileDetails] = await Promise.all([
-      this.saveFilesToFileSystem(newFileDetails),
-      this.saveFilesToService(newFileDetails),
-    ]);
-
-    return fileDetails;
-  }
-
   async saveFilesToFileSystem(
     files: NewFileDetails[],
     service?: FileSystemService,
@@ -135,17 +131,38 @@ export class FileOpsService {
     return savedFiles;
   }
 
-  async rollBackWrites(files: NewFileDetails[], uploadedFiles: UploadedFile[]) {
-    const fss = new FileSystemService();
-    const deleteOps1 = files.map((el) => {
+  async rollBackFSWrites(
+    files: NewFileDetails[],
+    uploadedFiles: UploadedFile[],
+    service?: FileSystemService,
+  ) {
+    const fss = service ?? new FileSystemService();
+
+    const deleteOps1 = files.map(async (el) => {
       const newFilePath = path.join(this._savedFilePath, el.filename);
-      return fss.deleteFile(newFilePath);
+      try {
+        await fss.deleteFile(newFilePath);
+      } catch (e) {
+        throw new Error(`Unable to delete ${newFilePath}: ${e}`);
+      }
     });
 
-    const deleteOps2 = uploadedFiles.map((el) => {
-      fss.deleteFile(el.filepath);
+    const deleteOps2 = uploadedFiles.map(async (el) => {
+      try {
+        await fss.deleteFile(el.filepath);
+      } catch (e) {
+        throw new Error(`Unable to delete ${el.filepath}: ${e}`);
+      }
     });
 
-    await Promise.allSettled([...deleteOps1, ...deleteOps2]);
+    // TODO Get failed file names?
+    const results = await Promise.allSettled([...deleteOps1, ...deleteOps2]);
+    const errors = results
+      .filter(isPromiseRejected)
+      .map((el) => `${el.reason}`);
+
+    if (errors.length > 0) {
+      throw new Error(`Unable to delete files: ${JSON.stringify(errors)}`);
+    }
   }
 }
