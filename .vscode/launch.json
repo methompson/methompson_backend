@@ -5,7 +5,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug Jest Tests",
+      "name": "Debug Unit Tests",
       "type": "node",
       "request": "launch",
       "runtimeArgs": [
@@ -18,7 +18,7 @@
       "internalConsoleOptions": "neverOpen",
     },
     {
-      "name": "Debug Specific Jest Test",
+      "name": "Debug Specific Unit Test",
       "type": "node",
       "request": "launch",
       "runtimeArgs": [

@@ -1,3 +1,4 @@
+import { Stats } from 'fs';
 import { mkdir, copyFile, rm, stat } from 'fs/promises';
 import * as path from 'path';
 
@@ -12,8 +13,12 @@ export class FileSystemService {
     throw new Error('unimplemented');
   }
 
+  async getFileInfo(pathToFile: string): Promise<Stats> {
+    return await stat(pathToFile);
+  }
+
   async pathExists(pathToFile: string) {
-    await stat(pathToFile);
+    await this.getFileInfo(pathToFile);
   }
 
   async makeDirectory(path: string) {

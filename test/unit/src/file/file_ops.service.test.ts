@@ -1194,7 +1194,7 @@ describe('FileOpsService', () => {
       const newFile2Path = path.join(savedFilePath, newFileDetails2.filename);
 
       const delSpy = jest.spyOn(fss, 'deleteFile');
-      delSpy.mockImplementation(async (input) => {
+      delSpy.mockImplementation(async () => {
         throw new Error(testError);
       });
 

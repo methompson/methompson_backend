@@ -1,5 +1,5 @@
 import { exec } from 'child_process';
-import { rm } from 'fs/promises';
+import * as path from 'path';
 
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
@@ -11,7 +11,18 @@ import {
   ParsedImageFilesAndFields,
   UploadedFile,
 } from '@/src/models/file_models';
-import { isBoolean } from '@/src/utils/type_guards';
+import {
+  isBoolean,
+  isPromiseFulfilled,
+  isPromiseRejected,
+} from '@/src/utils/type_guards';
+import { FileSystemService } from '@/src/file/file_system_service';
+
+interface ResizeScriptOutput {
+  newFilename: string;
+  newFilepath: string;
+  script: string;
+}
 
 /**
  * The ImageWriter class represents an API to handle image files. It performs
@@ -23,7 +34,11 @@ import { isBoolean } from '@/src/utils/type_guards';
  * be compressed and resized into smaller versions.
  */
 export class ImageWriter {
-  constructor(private savedImagePath: string) {}
+  constructor(private _savedImagePath: string) {}
+
+  get savedImagePath(): string {
+    return this._savedImagePath;
+  }
 
   async convertImages(
     parsedData: ParsedImageFilesAndFields,
@@ -39,9 +54,11 @@ export class ImageWriter {
     const finalOps =
       Object.keys(ops).length === 0 ? { '': { retainImage: true } } : ops;
 
-    // the conversionPromises variable holds the end result for all of the conversions
-    // that we're executing. We map the image files themselves, and perform all image
-    // ops within the map function
+    const newFilenames: string[] = [];
+
+    // the conversionPromises variable holds the end result for all of the
+    // conversions that we're executing. We map the image files themselves,
+    // and perform all image ops within the map function
     const conversionPromises: Promise<NewFileDetailsJSON[]>[] = imageFiles.map(
       async (imageFile) => {
         const promises = Object.keys(finalOps).map((key) => {
@@ -50,7 +67,11 @@ export class ImageWriter {
 
           const isPrivate = isBoolean(op.isPrivate) ? op.isPrivate : true;
 
+          const newFilename = uuidv4();
+          newFilenames.push(newFilename);
+
           return this.makeAndRunResizeScript(
+            newFilename,
             imageFile,
             resizeOptions,
             authorId,
@@ -58,17 +79,36 @@ export class ImageWriter {
           );
         });
 
+        // TODO Rollback on error
+        // TODO convert to Promise.allSettled
         const imageDetails = await Promise.all(promises);
-
-        await rm(imageFile.filepath);
-
         return imageDetails;
       },
     );
 
-    const imageDetails = await Promise.all(conversionPromises);
+    // TODO convert this to 'allSettled' and handle errors here
+    // If the image function fails here, we exit immediately and we cannot
+    // handle the other failures.
+    const imageDetailResults = await Promise.allSettled(conversionPromises);
 
-    return imageDetails.flat().map((detail) => NewFileDetails.fromJSON(detail));
+    const imageErrors = imageDetailResults.filter(isPromiseRejected);
+
+    if (imageErrors.length > 0) {
+      const filesToDelete = newFilenames.map((el) =>
+        path.join(this.savedImagePath, el),
+      );
+
+      await this.rollBackWrites(filesToDelete);
+      throw new Error(
+        `Error converting images: ${JSON.stringify(filesToDelete)}`,
+      );
+    }
+
+    return imageDetailResults
+      .filter(isPromiseFulfilled)
+      .map((el) => el.value)
+      .flat()
+      .map((detail) => NewFileDetails.fromJSON(detail));
   }
 
   /**
@@ -79,13 +119,14 @@ export class ImageWriter {
    * @param {ImageResizeOptions} resizeOptions options used to construct a resize script
    */
   async makeAndRunResizeScript(
+    newFilename: string,
     imageFile: UploadedFile,
     resizeOptions: ImageResizeOptions,
     authorId: string,
     isPrivate: boolean,
+    fileSystemService?: FileSystemService,
   ): Promise<NewFileDetailsJSON> {
     // We make the resize script and run it here.
-    const newFilename = uuidv4();
     const result = this.buildResizeScript(
       imageFile,
       resizeOptions,
@@ -106,9 +147,15 @@ export class ImageWriter {
       });
     });
 
-    const newMimetype = resizeOptions.newMimetype ?? imageFile.mimetype;
+    const fss = fileSystemService ?? new FileSystemService();
 
+    const newSize = (
+      await fss.getFileInfo(path.join(this.savedImagePath, newFilename))
+    ).size;
+
+    const newMimetype = resizeOptions.newMimetype ?? imageFile.mimetype;
     const resolution = await this.getFileDimensions(result.newFilepath);
+
     return {
       filepath: imageFile.filepath,
       authorId,
@@ -116,7 +163,7 @@ export class ImageWriter {
       dateAdded: new Date().toISOString(),
       mimetype: newMimetype,
       filename: newFilename,
-      size: imageFile.size,
+      size: newSize,
       isPrivate,
       metadata: {
         'resolution.x': resolution.x,
@@ -127,6 +174,7 @@ export class ImageWriter {
   }
 
   async getFileDimensions(filepath: string): Promise<ImageDimensions> {
+    // const script = `identify -format "%w,%h ${filepath}`;
     const script = `identify -format "%w,%h" ${filepath}`;
 
     return await new Promise((resolve, reject) => {
@@ -162,13 +210,12 @@ export class ImageWriter {
    *
    * @param {UploadedFile} imageFile image file data that's used for path and name
    * @param {ImageResizeOptions} options the options used to construct an ImageMagick shell script
-   * @returns {string} the ImageMagick shell script meant to run in a POSIX shell
    */
   buildResizeScript(
     imageFile: UploadedFile,
     options: ImageResizeOptions,
     newFilename: string,
-  ) {
+  ): ResizeScriptOutput {
     const { filepath } = imageFile;
     const newFilepath = `${this.savedImagePath}/${newFilename}`;
 
@@ -202,5 +249,22 @@ export class ImageWriter {
     script += ` ${outputType}"${newFilepath}"`;
 
     return { newFilename, newFilepath, script };
+  }
+
+  async rollBackWrites(
+    filepaths: string[],
+    fileSystemService?: FileSystemService,
+  ) {
+    const fss = fileSystemService ?? new FileSystemService();
+
+    const promises = filepaths.map(async (path) => await fss.deleteFile(path));
+
+    const result = await Promise.allSettled(promises);
+
+    const errors = result.filter(isPromiseRejected).map((el) => `${el.reason}`);
+
+    if (errors.length > 0) {
+      throw new Error(`Unable to delete files: ${JSON.stringify(errors)}`);
+    }
   }
 }

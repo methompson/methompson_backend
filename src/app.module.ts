@@ -13,7 +13,6 @@ import { BlogModule } from '@/src/blog/blog.module';
 import { LoggerModule } from '@/src/logger/logger.module';
 
 import { authCheckMiddlewareFactory } from '@/src/middleware/auth_check.middleware';
-// import { ImageUploadModule } from '@/src/image/image.module';
 import { FileUploadModule } from '@/src/file/file.module';
 
 @Module({
@@ -30,7 +29,6 @@ import { FileUploadModule } from '@/src/file/file.module';
     }),
     LoggerModule,
     BlogModule,
-    // ImageUploadModule,
     FileUploadModule,
     ScheduleModule.forRoot(),
   ],

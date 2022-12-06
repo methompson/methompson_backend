@@ -12,12 +12,7 @@ import {
 import { FileDataService } from '@/src/file/file_data.service';
 import { FileSystemService } from '@/src/file/file_system_service';
 import { ImageWriter } from '@/src/image/image_writer';
-import {
-  isError,
-  isNullOrUndefined,
-  isPromiseFulfilled,
-  isPromiseRejected,
-} from '@/src/utils/type_guards';
+import { isNullOrUndefined, isPromiseRejected } from '@/src/utils/type_guards';
 
 export class FileOpsService {
   constructor(
@@ -80,8 +75,10 @@ export class FileOpsService {
 
       return result;
     } catch (e) {
-      if (!isNullOrUndefined(newFiles)) {
-        await this.rollBackFSWrites(newFiles, parsedData.imageFiles);
+      // console.error(e);
+      const nf = newFiles ?? [];
+      if (nf.length > 0) {
+        await this.rollBackFSWrites(nf, parsedData.imageFiles);
       }
 
       throw e;

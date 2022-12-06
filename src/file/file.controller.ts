@@ -51,15 +51,6 @@ export class FileController {
   async init() {
     this._savedFilePath =
       this.configService.get('saved_file_path') ?? './files';
-
-    // try {
-    //   new FileSystemService().makeDirectory(this._savedFilePath);
-    // } catch (e) {
-    //   const msg = `Invalid Saved File Path: ${e}`;
-    //   // console.error(msg);
-    //   this.loggerService.addErrorLog(msg);
-    //   process.exit();
-    // }
   }
 
   /**

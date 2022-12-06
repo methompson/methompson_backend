@@ -100,6 +100,7 @@ module.exports = {
       'warn',
       {
         'ignoreStrings': true,
+        'ignoreTemplateLiterals': true,
         'code': 120,
         'comments': 120,
       },

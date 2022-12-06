@@ -1,26 +1,18 @@
 import * as child_process from 'child_process';
+import { Stats } from 'fs';
 import * as uuid from 'uuid';
-import * as fsPromises from 'fs/promises';
+import * as path from 'path';
 
 import { ImageWriter } from '@/src/image/image_writer';
 import { NewFileDetailsJSON, UploadedFile } from '@/src/models/file_models';
 import { ImageResizeOptions } from '@/src/models/image_models';
+import { FileSystemService } from '@/src/file/file_system_service';
 
 type ExecCallback = (
   error: Error | null,
   sdout: string,
   stderr: string,
 ) => void;
-
-jest.mock('fs/promises', () => {
-  const mkdir = jest.fn(async () => {});
-  const rm = jest.fn(async () => {});
-
-  return {
-    mkdir,
-    rm,
-  };
-});
 
 jest.mock('child_process', () => {
   const exec = jest.fn();
@@ -36,9 +28,17 @@ jest.mock('uuid', () => {
   };
 });
 
+jest.mock('path', () => {
+  const join = jest.fn();
+
+  return {
+    join,
+  };
+});
+
 const exec = child_process.exec as unknown as jest.Mock<unknown, unknown[]>;
-const rm = fsPromises.rm as unknown as jest.Mock<unknown, unknown[]>;
 const uuidv4 = uuid.v4 as jest.Mock<unknown, unknown[]>;
+const join = path.join as jest.Mock<unknown, unknown[]>;
 
 describe('ImageWriter', () => {
   const newFilename1 = 'newFileName1';
@@ -51,11 +51,15 @@ describe('ImageWriter', () => {
 
   const authorId = 'aoishfdjn023';
 
+  const savedImagePath = 'path/to/files/';
+
   beforeEach(() => {
     uuidv4.mockReset();
     uuidv4.mockClear();
     exec.mockReset();
-    rm.mockReset();
+    exec.mockClear();
+    join.mockReset();
+    join.mockClear();
 
     exec.mockImplementation((_, a: ExecCallback) => {
       a(null, '', '');
@@ -102,6 +106,8 @@ describe('ImageWriter', () => {
     metadata: {},
   };
 
+  const newFilepath = 'newFilepath';
+
   describe('convertImages', () => {
     test('calls functions with the passed in data when no ops are passed in', async () => {
       const iw = new ImageWriter('');
@@ -114,17 +120,18 @@ describe('ImageWriter', () => {
         ops: {},
       };
 
+      uuidv4.mockImplementation(() => newFilename1);
+
       await iw.convertImages(parsedData, authorId);
 
       expect(makeResizeSpy).toHaveBeenCalledTimes(1);
       expect(makeResizeSpy).toHaveBeenCalledWith(
+        newFilename1,
         image1,
         ImageResizeOptions.fromWebFields({ retainImage: true }),
         authorId,
         true,
       );
-      expect(rm).toHaveBeenCalledTimes(1);
-      expect(rm).toHaveBeenCalledWith(image1.filepath);
     });
 
     test('calls functions with the passed in data, even if there are multiple files', async () => {
@@ -138,6 +145,9 @@ describe('ImageWriter', () => {
         ops: {},
       };
 
+      uuidv4.mockImplementationOnce(() => newFilename1);
+      uuidv4.mockImplementationOnce(() => newFilename2);
+
       const op = ImageResizeOptions.fromWebFields({ retainImage: true });
 
       await iw.convertImages(parsedData, authorId);
@@ -145,6 +155,7 @@ describe('ImageWriter', () => {
       expect(makeResizeSpy).toHaveBeenCalledTimes(2);
       expect(makeResizeSpy).toHaveBeenNthCalledWith(
         1,
+        newFilename1,
         image1,
         op,
         authorId,
@@ -152,15 +163,12 @@ describe('ImageWriter', () => {
       );
       expect(makeResizeSpy).toHaveBeenNthCalledWith(
         2,
+        newFilename2,
         image2,
         op,
         authorId,
         true,
       );
-
-      expect(rm).toHaveBeenCalledTimes(2);
-      expect(rm).toHaveBeenNthCalledWith(1, image1.filepath);
-      expect(rm).toHaveBeenNthCalledWith(2, image2.filepath);
     });
 
     test('returns NewImageDetails object for each image passed in', async () => {
@@ -175,6 +183,8 @@ describe('ImageWriter', () => {
         ops: {},
       };
 
+      uuidv4.mockImplementation(() => newFilename1);
+
       const results = await iw.convertImages(parsedData, authorId);
 
       expect(results.length).toBe(2);
@@ -187,11 +197,22 @@ describe('ImageWriter', () => {
     });
 
     test('throws an error if makeAndRunResizeScript throws an error', async () => {
-      const iw = new ImageWriter('');
+      const iw = new ImageWriter(savedImagePath);
 
       const makeResizeSpy = jest.spyOn(iw, 'makeAndRunResizeScript');
       makeResizeSpy.mockImplementation(async (_) => {
         throw new Error(testError);
+      });
+
+      const rollBackSpy = jest.spyOn(iw, 'rollBackWrites');
+      rollBackSpy.mockImplementationOnce(async () => {});
+
+      join.mockImplementationOnce((...paths) => {
+        if (paths[1] !== newFilename1 && paths[1] !== newFilename2) {
+          throw new Error('Invalid Path');
+        }
+
+        return `${paths[0]}${paths[1]}`;
       });
 
       const parsedData = {
@@ -203,10 +224,9 @@ describe('ImageWriter', () => {
 
       await expect(() =>
         iw.convertImages(parsedData, authorId),
-      ).rejects.toThrow(testError);
+      ).rejects.toThrow(new RegExp(`Error converting images.*${newFilename1}`));
 
       expect(makeResizeSpy).toHaveBeenCalledTimes(1);
-      expect(rm).toHaveBeenCalledTimes(0);
     });
   });
 
@@ -214,13 +234,11 @@ describe('ImageWriter', () => {
     test('retrieves a script and runs it based on default inputs', async () => {
       const iw = new ImageWriter('');
 
-      const newFilename = 'newFilename';
-      const newFilepath = 'newFilepath';
       const script = `${image1.filepath} - ${image1.originalFilename}`;
 
       const buildResizeScriptSpy = jest.spyOn(iw, 'buildResizeScript');
       buildResizeScriptSpy.mockImplementation((_, __) => ({
-        newFilename,
+        newFilename: newFilename1,
         newFilepath,
         script,
       }));
@@ -230,7 +248,23 @@ describe('ImageWriter', () => {
 
       const opts = new ImageResizeOptions('web', {});
 
-      await iw.makeAndRunResizeScript(image1, opts, authorId, true);
+      const fss = new FileSystemService();
+      const getInfoSpy = jest.spyOn(fss, 'getFileInfo');
+      getInfoSpy.mockImplementationOnce(
+        async () =>
+          ({
+            size: 1024,
+          } as Stats),
+      );
+
+      await iw.makeAndRunResizeScript(
+        newFilename1,
+        image1,
+        opts,
+        authorId,
+        true,
+        fss,
+      );
 
       expect(exec).toHaveBeenCalledTimes(1);
       expect(exec).toHaveBeenCalledWith(script, expect.anything());
@@ -245,10 +279,26 @@ describe('ImageWriter', () => {
       const dimensionSpy = jest.spyOn(iw, 'getFileDimensions');
       dimensionSpy.mockImplementation(async (_) => ({ x: 64, y: 32 }));
 
+      const fss = new FileSystemService();
+      const getInfoSpy = jest.spyOn(fss, 'getFileInfo');
+      getInfoSpy.mockImplementationOnce(
+        async () =>
+          ({
+            size: 1024,
+          } as Stats),
+      );
+
       uuidv4.mockImplementationOnce(() => newFilename1);
 
       const opts = new ImageResizeOptions('web', {});
-      await iw.makeAndRunResizeScript(image1, opts, authorId, true);
+      await iw.makeAndRunResizeScript(
+        newFilename1,
+        image1,
+        opts,
+        authorId,
+        true,
+        fss,
+      );
       expect(buildResizeScriptSpy).toHaveBeenCalledTimes(1);
       expect(buildResizeScriptSpy).toHaveBeenCalledWith(
         image1,
@@ -262,13 +312,11 @@ describe('ImageWriter', () => {
 
       const iw = new ImageWriter('');
 
-      const newFilename = 'newFilename';
-      const newFilepath = 'newFilepath';
       const script = `${image1.filepath} - ${image1.originalFilename}`;
 
       const buildResizeScriptSpy = jest.spyOn(iw, 'buildResizeScript');
       buildResizeScriptSpy.mockImplementation((_, __) => ({
-        newFilename,
+        newFilename: newFilename1,
         newFilepath,
         script,
       }));
@@ -280,7 +328,13 @@ describe('ImageWriter', () => {
       });
 
       try {
-        await iw.makeAndRunResizeScript(image1, opts, authorId, true);
+        await iw.makeAndRunResizeScript(
+          newFilename1,
+          image1,
+          opts,
+          authorId,
+          true,
+        );
       } catch (e) {
         expect(e.message).toBe(testError);
         expect(exec).toHaveBeenCalledTimes(1);
@@ -293,13 +347,11 @@ describe('ImageWriter', () => {
 
       const iw = new ImageWriter('');
 
-      const newFilename = 'newFilename';
-      const newFilepath = 'newFilepath';
       const script = `${image1.filepath} - ${image1.originalFilename}`;
 
       const buildResizeScriptSpy = jest.spyOn(iw, 'buildResizeScript');
       buildResizeScriptSpy.mockImplementation((_, __) => ({
-        newFilename,
+        newFilename: newFilename1,
         newFilepath,
         script,
       }));
@@ -311,7 +363,13 @@ describe('ImageWriter', () => {
       });
 
       try {
-        await iw.makeAndRunResizeScript(image1, opts, authorId, true);
+        await iw.makeAndRunResizeScript(
+          newFilename1,
+          image1,
+          opts,
+          authorId,
+          true,
+        );
       } catch (e) {
         expect(e.message).toBe(testError);
         expect(exec).toHaveBeenCalledTimes(1);
@@ -417,8 +475,9 @@ describe('ImageWriter', () => {
   });
 
   describe('buildResizeScript', () => {
+    const newPath = 'new/path';
+
     test('Constructs a script with defaults', () => {
-      const newPath = 'new/path';
       const opt = new ImageResizeOptions('identifier', {});
 
       const iw = new ImageWriter(newPath);
@@ -442,7 +501,6 @@ describe('ImageWriter', () => {
     });
 
     test('constructs a specific script when doNotConvert is set to true', () => {
-      const newPath = 'new/path';
       const opt = new ImageResizeOptions('identifier', {
         retainImage: true,
       });
@@ -469,7 +527,6 @@ describe('ImageWriter', () => {
     });
 
     test('Adds resize when resize is set to true', () => {
-      const newPath = 'new/path';
       const maxSize = 6969;
       const opt = new ImageResizeOptions('identifier', {
         resize: true,
@@ -498,7 +555,6 @@ describe('ImageWriter', () => {
     });
 
     test('Adds strip when stripMeta is set to true', () => {
-      const newPath = 'new/path';
       const opt = new ImageResizeOptions('identifier', {
         stripMeta: true,
       });
@@ -522,6 +578,44 @@ describe('ImageWriter', () => {
       expect(script).not.toContain('-resize');
       expect(script).toContain('-strip');
       expect(script).not.toContain('cp ');
+    });
+  });
+
+  describe('rollBackWrites', () => {
+    const filepath1 = 'path/to/file1';
+    const filepath2 = 'path/to/file2';
+    const filepath3 = 'path/to/file3';
+    const filepath4 = 'path/to/file4';
+
+    test('runs deleteFile for all files provided', async () => {
+      const fss = new FileSystemService();
+      const deleteSpy = jest.spyOn(fss, 'deleteFile');
+      deleteSpy.mockImplementation(async () => {});
+
+      const iw = new ImageWriter('');
+      await iw.rollBackWrites(
+        [filepath1, filepath2, filepath3, filepath4],
+        fss,
+      );
+
+      expect(deleteSpy).toHaveBeenCalledTimes(4);
+    });
+
+    test('throws an error if any deletions fail', async () => {
+      const fss = new FileSystemService();
+      const deleteSpy = jest.spyOn(fss, 'deleteFile');
+      deleteSpy.mockImplementation(async (i) => {
+        if (i === filepath3) {
+          throw new Error(testError);
+        }
+      });
+
+      const iw = new ImageWriter('');
+      await expect(() =>
+        iw.rollBackWrites([filepath1, filepath2, filepath3, filepath4], fss),
+      ).rejects.toThrow(new RegExp(`Unable to delete files:.*${testError}`));
+
+      expect(deleteSpy).toHaveBeenCalledTimes(4);
     });
   });
 });

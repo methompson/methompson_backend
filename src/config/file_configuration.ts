@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 
 export function fileConfiguration() {
   let fileServerType = 'memory';
