@@ -196,7 +196,7 @@ describe('ImageWriter', () => {
       expect(second.originalFilename).toBe(image2.originalFilename);
     });
 
-    test('throws an error if makeAndRunResizeScript throws an error', async () => {
+    test('throws an error if makeAndRunResizeScript throws an error and runs rollBackWrites', async () => {
       const iw = new ImageWriter(savedImagePath);
 
       const makeResizeSpy = jest.spyOn(iw, 'makeAndRunResizeScript');
@@ -227,6 +227,7 @@ describe('ImageWriter', () => {
       ).rejects.toThrow(new RegExp(`Error converting images.*${newFilename1}`));
 
       expect(makeResizeSpy).toHaveBeenCalledTimes(1);
+      expect(rollBackSpy).toHaveBeenCalledTimes(1);
     });
   });
 

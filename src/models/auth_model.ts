@@ -13,6 +13,7 @@ export class AuthModel {
   }
 
   // TODO implement this based on token input
+  // What does this mean again?
   get authorized(): boolean {
     return (
       Object.keys(this.decodedToken).length > 0 &&

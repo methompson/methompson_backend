@@ -54,6 +54,7 @@ export class ImageWriter {
     const finalOps =
       Object.keys(ops).length === 0 ? { '': { retainImage: true } } : ops;
 
+    // We save all new files here so that if the process fails, we can roll all writes back
     const newFilenames: string[] = [];
 
     // the conversionPromises variable holds the end result for all of the
@@ -79,16 +80,16 @@ export class ImageWriter {
           );
         });
 
-        // TODO Rollback on error
-        // TODO convert to Promise.allSettled
+        // We let the function fail hard here.
         const imageDetails = await Promise.all(promises);
         return imageDetails;
       },
     );
 
-    // TODO convert this to 'allSettled' and handle errors here
-    // If the image function fails here, we exit immediately and we cannot
-    // handle the other failures.
+    // We let all image operations finish. If there are any failures, we roll
+    // back all failures, one-by-one. We maintain a list of all file names so
+    // that if the image write was successful, but another op, like getting
+    // resolution or file size fails, we can delete that file as well.
     const imageDetailResults = await Promise.allSettled(conversionPromises);
 
     const imageErrors = imageDetailResults.filter(isPromiseRejected);
