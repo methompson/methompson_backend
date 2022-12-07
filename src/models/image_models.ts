@@ -16,6 +16,7 @@ interface ImageResizeOptionsJSON {
   resize?: boolean;
   stripMeta?: boolean;
   maxSize?: number | null;
+  isPrivate?: boolean;
 }
 
 /**
@@ -47,12 +48,16 @@ export class ImageResizeOptions {
   // whatever value it wants.
   protected _maxSize: number | null;
 
+  // Determines if a file is private
+  protected _isPrivate: boolean;
+
   constructor(protected _identifier: string, options: ImageResizeOptionsJSON) {
     this._newFormat = options.newFormat ?? null;
     this._retainImage = options.retainImage ?? false;
     this._stripMeta = options.stripMeta ?? false;
     this._resize = options.resize ?? false;
     this._maxSize = options.maxSize ?? null;
+    this._isPrivate = options.isPrivate ?? true;
   }
 
   get doNotConvert(): boolean {
@@ -72,6 +77,9 @@ export class ImageResizeOptions {
   }
   get identifier(): string {
     return this._identifier;
+  }
+  get isPrivate(): boolean {
+    return this._isPrivate;
   }
 
   get newMimetype(): string | null {
@@ -117,11 +125,16 @@ export class ImageResizeOptions {
 
     const identifier = isString(op?.identifier) ? op.identifier : '';
 
-    // We set the doNotConvert first.
+    // First, we set privacy. isPrivate should default to true, so we check if
+    // it's false. If it's explicitly false or 'false', we get true, then we get
+    // the opposite, to set isPrivate to false. Otherwise, it's true.
+    options.isPrivate = !(op?.isPrivate === 'false' || op?.isPrivate === false);
+
+    // Next, we set doNotConvert.
     options.retainImage =
       op?.retainImage === 'true' || op?.retainImage === true;
 
-    // If it's true, we can short circuit the entire process.
+    // If doNotConvert is true, we can short circuit the rest of the process.
     if (options.retainImage) {
       return new ImageResizeOptions(identifier, options);
     }

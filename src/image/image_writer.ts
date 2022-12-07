@@ -11,11 +11,7 @@ import {
   ParsedImageFilesAndFields,
   UploadedFile,
 } from '@/src/models/file_models';
-import {
-  isBoolean,
-  isPromiseFulfilled,
-  isPromiseRejected,
-} from '@/src/utils/type_guards';
+import { isPromiseFulfilled, isPromiseRejected } from '@/src/utils/type_guards';
 import { FileSystemService } from '@/src/file/file_system_service';
 
 interface ResizeScriptOutput {
@@ -69,8 +65,6 @@ export class ImageWriter {
         const op = finalOps[key];
         const resizeOptions = ImageResizeOptions.fromWebFields(op);
 
-        const isPrivate = isBoolean(op.isPrivate) ? op.isPrivate : true;
-
         const newFilename = uuidv4();
         newFilenames.push(newFilename);
 
@@ -80,7 +74,7 @@ export class ImageWriter {
             imageFile,
             resizeOptions,
             authorId,
-            isPrivate,
+            resizeOptions.isPrivate,
           );
 
           return result;

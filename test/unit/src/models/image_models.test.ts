@@ -87,6 +87,39 @@ describe('Image Models', () => {
         expect(iro.stripMeta).toBe(false);
         expect(iro.maxSize).toBe(null);
         expect(iro.identifier).toBe('');
+        expect(iro.isPrivate).toBe(true);
+      });
+
+      test('Returns an ImageResizeOptions object with isPrivate set with a bool', () => {
+        let iro: ImageResizeOptions;
+
+        iro = ImageResizeOptions.fromWebFields({
+          isPrivate: true,
+        });
+
+        expect(iro.isPrivate).toBe(true);
+
+        iro = ImageResizeOptions.fromWebFields({
+          isPrivate: false,
+        });
+
+        expect(iro.isPrivate).toBe(false);
+      });
+
+      test('Returns an ImageResizeOptions object with isPrivate set with a string', () => {
+        let iro: ImageResizeOptions;
+
+        iro = ImageResizeOptions.fromWebFields({
+          isPrivate: 'true',
+        });
+
+        expect(iro.isPrivate).toBe(true);
+
+        iro = ImageResizeOptions.fromWebFields({
+          isPrivate: 'false',
+        });
+
+        expect(iro.isPrivate).toBe(false);
       });
 
       test('Returns an ImageResizeOptions object with identifier set', () => {

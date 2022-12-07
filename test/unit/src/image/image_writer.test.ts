@@ -109,7 +109,7 @@ describe('ImageWriter', () => {
   const newFilepath = 'newFilepath';
 
   describe('convertImages', () => {
-    test('calls functions with the passed in data when no ops are passed in', async () => {
+    test('calls functions with the passed in data and default ops when no ops are passed in', async () => {
       const iw = new ImageWriter('');
 
       const makeResizeSpy = jest.spyOn(iw, 'makeAndRunResizeScript');
@@ -134,7 +134,7 @@ describe('ImageWriter', () => {
       );
     });
 
-    test('calls functions with the passed in data, even if there are multiple files', async () => {
+    test('calls functions with the passed in data, and default ops even if there are multiple files', async () => {
       const iw = new ImageWriter('');
 
       const makeResizeSpy = jest.spyOn(iw, 'makeAndRunResizeScript');
@@ -166,6 +166,55 @@ describe('ImageWriter', () => {
         newFilename2,
         image2,
         op,
+        authorId,
+        true,
+      );
+    });
+
+    test('calls functions with passed in ops', async () => {
+      const iw = new ImageWriter('');
+
+      const makeResizeSpy = jest.spyOn(iw, 'makeAndRunResizeScript');
+      makeResizeSpy.mockImplementation(async (_) => newFileDetailsJSON1);
+
+      const ops = {
+        web: {
+          isPrivate: false,
+          maxSize: 1280,
+        },
+        original: {
+          isPrivate: true,
+          retainImage: true,
+        },
+      };
+
+      const parsedData = {
+        imageFiles: [image1],
+        ops,
+      };
+
+      uuidv4.mockImplementationOnce(() => newFilename1);
+      uuidv4.mockImplementationOnce(() => newFilename2);
+
+      const op1 = ImageResizeOptions.fromWebFields(ops['web']);
+      const op2 = ImageResizeOptions.fromWebFields(ops['original']);
+
+      await iw.convertImages(parsedData, authorId);
+
+      expect(makeResizeSpy).toHaveBeenCalledTimes(2);
+      expect(makeResizeSpy).toHaveBeenNthCalledWith(
+        1,
+        newFilename1,
+        image1,
+        op1,
+        authorId,
+        false,
+      );
+      expect(makeResizeSpy).toHaveBeenNthCalledWith(
+        2,
+        newFilename2,
+        image1,
+        op2,
         authorId,
         true,
       );
