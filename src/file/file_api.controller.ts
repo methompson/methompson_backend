@@ -17,33 +17,28 @@ import { AuthRequiredIncerceptor } from '@/src/middleware/auth_interceptor';
 import { UserId } from '@/src/middleware/auth_model_decorator';
 import { RequestLogInterceptor } from '@/src/middleware/request_log.interceptor';
 
+import { LoggerService } from '@/src/logger/logger.service';
 import {
   DeleteResultJSON,
   FileDataService,
 } from '@/src/file/file_data.service';
-import { LoggerService } from '@/src/logger/logger.service';
 import {
   FileDetailsJSON,
   ParsedFilesAndFields,
   ParsedImageFilesAndFields,
   UploadedFile,
 } from '@/src/models/file_models';
+import { FileSystemService } from '@/src/file/file_system_service';
+import { FileOpsService } from '@/src/file/file_ops.service';
 
 import {
   isNullOrUndefined,
+  isPromiseRejected,
   isRecord,
   isString,
   isStringArray,
 } from '@/src/utils/type_guards';
 import { getIntFromString } from '@/src/utils/get_number_from_string';
-import { FileSystemService } from '@/src/file/file_system_service';
-import { FileOpsService } from './file_ops.service';
-
-function isRejected(
-  input: PromiseSettledResult<unknown>,
-): input is PromiseRejectedResult {
-  return input.status === 'rejected';
-}
 
 interface FileListResponse {
   files: FileDetailsJSON[];
@@ -255,7 +250,7 @@ export class FileAPIController {
     ]);
 
     // If there's an error from the DB
-    if (isRejected(deleteFilesDBResult)) {
+    if (isPromiseRejected(deleteFilesDBResult)) {
       this.loggerService.addErrorLog(
         `Error Deleting File: ${deleteFilesDBResult.reason}`,
       );
@@ -264,7 +259,7 @@ export class FileAPIController {
     }
 
     // If there's an error from the file system
-    if (isRejected(deleteFilesResult)) {
+    if (isPromiseRejected(deleteFilesResult)) {
       this.loggerService.addErrorLog(
         `Error Deleting File: ${deleteFilesResult.reason}`,
       );
@@ -396,6 +391,7 @@ export class FileAPIController {
             console.error(err);
             reject(err);
           }
+
           try {
             // Parse the operations passed
             const opsRaw = isString(fields?.ops) ? fields.ops : '[]';

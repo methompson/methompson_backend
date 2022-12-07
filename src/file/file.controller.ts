@@ -13,23 +13,16 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
 
-import { RequestLogInterceptor } from '@/src/middleware/request_log.interceptor';
-
-import { FileDataService } from '@/src/file/file_data.service';
-import { LoggerService } from '@/src/logger/logger.service';
-
 import { NotFoundError } from '@/src/errors';
+import { LoggerService } from '@/src/logger/logger.service';
+import { RequestLogInterceptor } from '@/src/middleware/request_log.interceptor';
 import { AuthModel } from '@/src/models/auth_model';
+import { FileDataService } from '@/src/file/file_data.service';
 import { FileSystemService } from '@/src/file/file_system_service';
-
-function isRejected(
-  input: PromiseSettledResult<unknown>,
-): input is PromiseRejectedResult {
-  return input.status === 'rejected';
-}
+import { isPromiseRejected } from '@/src/utils/type_guards';
 
 @UseInterceptors(RequestLogInterceptor)
-@Controller()
+@Controller({ path: 'files' })
 export class FileController {
   private _savedFilePath = './files';
 
@@ -75,7 +68,7 @@ export class FileController {
       this.fileService.getFileByName(filename),
     ]);
 
-    if (isRejected(fileDetailsResult)) {
+    if (isPromiseRejected(fileDetailsResult)) {
       this.loggerService.addErrorLog(
         `Error Getting File: ${fileDetailsResult.reason}`,
       );
@@ -91,7 +84,7 @@ export class FileController {
       }
     }
 
-    if (isRejected(statResult)) {
+    if (isPromiseRejected(statResult)) {
       this.loggerService.addErrorLog(
         `Error Getting File: ${statResult.reason}`,
       );

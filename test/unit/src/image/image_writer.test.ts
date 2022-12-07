@@ -207,6 +207,8 @@ describe('ImageWriter', () => {
       const rollBackSpy = jest.spyOn(iw, 'rollBackWrites');
       rollBackSpy.mockImplementationOnce(async () => {});
 
+      expect(rollBackSpy).toHaveBeenCalledTimes(0);
+
       join.mockImplementationOnce((...paths) => {
         if (paths[1] !== newFilename1 && paths[1] !== newFilename2) {
           throw new Error('Invalid Path');
@@ -227,7 +229,12 @@ describe('ImageWriter', () => {
       ).rejects.toThrow(new RegExp(`Error converting images.*${newFilename1}`));
 
       expect(makeResizeSpy).toHaveBeenCalledTimes(1);
-      expect(rollBackSpy).toHaveBeenCalledTimes(1);
+      expect(rollBackSpy).toHaveBeenCalledTimes(2);
+
+      expect(rollBackSpy).toHaveBeenNthCalledWith(1, [
+        `${savedImagePath}${newFilename1}`,
+      ]);
+      expect(rollBackSpy).toHaveBeenNthCalledWith(2, []);
     });
   });
 

@@ -60,31 +60,40 @@ export class ImageWriter {
     // the conversionPromises variable holds the end result for all of the
     // conversions that we're executing. We map the image files themselves,
     // and perform all image ops within the map function
-    const conversionPromises: Promise<NewFileDetailsJSON[]>[] = imageFiles.map(
-      async (imageFile) => {
-        const promises = Object.keys(finalOps).map((key) => {
-          const op = finalOps[key];
-          const resizeOptions = ImageResizeOptions.fromWebFields(op);
+    // TODO - this array of arrays is bad, we need to flatten this.
+    // TODO - Each resize op should be self-contained and roll back its own problems
+    // TODO - Once a resize op needs to roll back, we should roll back remaining ops
+    const conversionPromises: Promise<NewFileDetailsJSON>[] = [];
+    imageFiles.forEach(async (imageFile) => {
+      const promises = Object.keys(finalOps).map(async (key) => {
+        const op = finalOps[key];
+        const resizeOptions = ImageResizeOptions.fromWebFields(op);
 
-          const isPrivate = isBoolean(op.isPrivate) ? op.isPrivate : true;
+        const isPrivate = isBoolean(op.isPrivate) ? op.isPrivate : true;
 
-          const newFilename = uuidv4();
-          newFilenames.push(newFilename);
+        const newFilename = uuidv4();
+        newFilenames.push(newFilename);
 
-          return this.makeAndRunResizeScript(
+        try {
+          const result = await this.makeAndRunResizeScript(
             newFilename,
             imageFile,
             resizeOptions,
             authorId,
             isPrivate,
           );
-        });
 
-        // We let the function fail hard here.
-        const imageDetails = await Promise.all(promises);
-        return imageDetails;
-      },
-    );
+          return result;
+        } catch (e) {
+          await this.rollBackWrites([
+            path.join(this.savedImagePath, newFilename),
+          ]);
+          throw new Error(`Error converting image - ${newFilename} - ${e}`);
+        }
+      });
+
+      conversionPromises.push(...promises);
+    });
 
     // We let all image operations finish. If there are any failures, we roll
     // back all failures, one-by-one. We maintain a list of all file names so
@@ -92,24 +101,28 @@ export class ImageWriter {
     // resolution or file size fails, we can delete that file as well.
     const imageDetailResults = await Promise.allSettled(conversionPromises);
 
-    const imageErrors = imageDetailResults.filter(isPromiseRejected);
-
-    if (imageErrors.length > 0) {
-      const filesToDelete = newFilenames.map((el) =>
-        path.join(this.savedImagePath, el),
-      );
-
-      await this.rollBackWrites(filesToDelete);
-      throw new Error(
-        `Error converting images: ${JSON.stringify(filesToDelete)}`,
-      );
-    }
-
-    return imageDetailResults
+    const imageErrors = imageDetailResults
+      .filter(isPromiseRejected)
+      .map((el) => el.reason.toString());
+    const imageSuccess = imageDetailResults
       .filter(isPromiseFulfilled)
       .map((el) => el.value)
       .flat()
       .map((detail) => NewFileDetails.fromJSON(detail));
+
+    if (imageErrors.length > 0) {
+      const filesToDelete = imageSuccess.map((el) =>
+        path.join(this.savedImagePath, el.filename),
+      );
+
+      await this.rollBackWrites(filesToDelete);
+
+      throw new Error(
+        `Error converting images: ${JSON.stringify(imageErrors)}`,
+      );
+    }
+
+    return imageSuccess;
   }
 
   /**
