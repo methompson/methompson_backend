@@ -1,1 +1,1 @@
-docker stop methompson-blog
+docker stop methompson-blog-backend

@@ -14,6 +14,6 @@
   -e SAVED_IMAGE_PATH='/srv/blog/images' \
   -e GOOGLE_APPLICATION_CREDENTIALS='/srv/blog/firebase.json' \
   -v /path/to/local/images:/srv/blog/images \
-  --name methompson-blog \
-  methompson-blog
+  --name methompson-blog-backend \
+  methompson-blog-backend
 )

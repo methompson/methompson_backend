@@ -15,5 +15,5 @@ cp ./package.json ./docker/artifacts/package.json
 
 (
   cd docker && \
-  docker build -t methompson-blog .
+  docker build -t methompson-blog-backend .
 )
