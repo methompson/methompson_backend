@@ -11,9 +11,9 @@
   -e FILE_LOGGING='false' \
   -e BLOG_SERVER_TYPE='mongo_db' \
   -e IMAGE_SERVER_TYPE='mongo_db' \
-  -e SAVED_IMAGE_PATH='/srv/blog/images' \
+  -e SAVED_FILE_PATH='/srv/blog/files' \
   -e GOOGLE_APPLICATION_CREDENTIALS='/srv/blog/firebase.json' \
-  -v /path/to/local/images:/srv/blog/images \
+  -v /path/to/local/files:/srv/blog/files \
   --name methompson-blog-backend \
   methompson-blog-backend
 )
