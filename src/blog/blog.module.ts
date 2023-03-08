@@ -30,7 +30,7 @@ async function tryToInitFromConfig(configService: ConfigService) {
   const service = MongoBlogService.makeFromConfig(configService);
 
   while (true) {
-    console.log('');
+    console.log('Initializing Blog Service');
     try {
       await service.initialize();
       return service;

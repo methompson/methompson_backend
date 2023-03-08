@@ -27,7 +27,7 @@ async function tryToInitFromConfig(configService: ConfigService) {
   const service = MongoFileDataService.makeFromConfig(configService);
 
   while (true) {
-    console.log('');
+    console.log('Initializing File Service');
     try {
       await service.initialize();
       return service;

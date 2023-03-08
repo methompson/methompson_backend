@@ -40,7 +40,7 @@ async function tryToInitFromConfig(
 ): Promise<MongoLoggerInstanceService> {
   const service = MongoLoggerInstanceService.makeFromConfig(configService);
   while (true) {
-    console.log('');
+    console.log('Initializing Log Service');
     try {
       await service.initialize();
       return service;
