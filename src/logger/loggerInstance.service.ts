@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 
-export abstract class LoggerController {
+export abstract class LoggerInstanceService {
   abstract addRequestLog(req: Request, res: Response): Promise<void>;
 
   abstract addLog(msg: unknown): Promise<void>;

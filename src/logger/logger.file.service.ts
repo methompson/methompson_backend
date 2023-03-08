@@ -4,7 +4,7 @@ import { Stats } from 'fs';
 
 import { Request, Response } from 'express';
 
-import { LoggerController } from '@/src/logger/logger.controller';
+import { LoggerInstanceService } from '@/src/logger/loggerInstance.service';
 
 const FILE_PATH = 'logs';
 const FILE_NAME = 'blog.log';
@@ -13,7 +13,7 @@ const MAX_LOG_SIZE_IN_BYTES = 512 * 1024;
 
 // TODO look into a writestream and queue for writing logs
 
-export class FileLoggerController implements LoggerController {
+export class FileLoggerInstanceService implements LoggerInstanceService {
   constructor(protected fileHandle: FileHandle) {}
 
   get isoTime() {
@@ -45,13 +45,13 @@ export class FileLoggerController implements LoggerController {
 
   async cycleLogs() {
     const basePath = `${FILE_PATH}/${FILE_NAME}`;
-    const fileStat = await FileLoggerController.getFileStat(basePath);
+    const fileStat = await FileLoggerInstanceService.getFileStat(basePath);
 
     // If fileStat is null, we close the old fileHandle (what's it pointing to?)
     // then we create a new one and go from there.
     if (fileStat === null) {
       this.fileHandle.close();
-      this.fileHandle = await FileLoggerController.makeFileHandle();
+      this.fileHandle = await FileLoggerInstanceService.makeFileHandle();
       return;
     }
 
@@ -69,7 +69,7 @@ export class FileLoggerController implements LoggerController {
     for (let i = TOTAL_OLD_LOGS - 1; i > 0; i--) {
       const filepath = `${basePath}.${i}`;
 
-      if (await FileLoggerController.fileExists(filepath)) {
+      if (await FileLoggerInstanceService.fileExists(filepath)) {
         const newFilePath = `${basePath}.${i + 1}`;
         await fsPromises.rename(filepath, newFilePath);
       }
@@ -77,7 +77,7 @@ export class FileLoggerController implements LoggerController {
 
     await fsPromises.rename(basePath, `${basePath}.1`);
 
-    this.fileHandle = await FileLoggerController.makeFileHandle();
+    this.fileHandle = await FileLoggerInstanceService.makeFileHandle();
   }
 
   static async getFileStat(filepath: string): Promise<Stats | null> {
@@ -89,7 +89,7 @@ export class FileLoggerController implements LoggerController {
   }
 
   static async fileExists(filepath: string): Promise<boolean> {
-    const stats = await FileLoggerController.getFileStat(filepath);
+    const stats = await FileLoggerInstanceService.getFileStat(filepath);
 
     return stats !== null;
   }
@@ -108,9 +108,9 @@ export class FileLoggerController implements LoggerController {
     return fileHandle;
   }
 
-  static async init(): Promise<FileLoggerController> {
-    const fileHandle = await FileLoggerController.makeFileHandle();
+  static async init(): Promise<FileLoggerInstanceService> {
+    const fileHandle = await FileLoggerInstanceService.makeFileHandle();
 
-    return new FileLoggerController(fileHandle);
+    return new FileLoggerInstanceService(fileHandle);
   }
 }

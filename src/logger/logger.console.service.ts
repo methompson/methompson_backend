@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Request } from 'express';
 
-import { LoggerController } from '@/src/logger/logger.controller';
+import { LoggerInstanceService } from '@/src/logger/loggerInstance.service';
 
 @Injectable()
-export class LoggerConsoleController implements LoggerController {
+export class ConsoleLoggerInstanceService implements LoggerInstanceService {
   get isoTime() {
     return new Date().toISOString();
   }

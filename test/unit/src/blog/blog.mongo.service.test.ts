@@ -758,7 +758,7 @@ describe('MongoBlogService', () => {
       const createSpy = jest.spyOn(mockDb, 'createCollection');
       createSpy.mockImplementationOnce(async () => mockCollection);
 
-      await MongoBlogService.initFromConfig(
+      await MongoBlogService.makeFromConfig(
         new ConfigService(),
         mockMongoDBClient,
       );
@@ -788,7 +788,7 @@ describe('MongoBlogService', () => {
       const createSpy = jest.spyOn(mockDb, 'createCollection');
       createSpy.mockImplementationOnce(async () => mockCollection);
 
-      await MongoBlogService.initFromConfig(
+      await MongoBlogService.makeFromConfig(
         new ConfigService(),
         mockMongoDBClient,
       );
@@ -820,7 +820,7 @@ describe('MongoBlogService', () => {
       });
 
       await expect(() =>
-        MongoBlogService.initFromConfig(new ConfigService(), mockMongoDBClient),
+        MongoBlogService.makeFromConfig(new ConfigService(), mockMongoDBClient),
       ).rejects.toThrow(testError);
 
       expect(clientDbSpy).toHaveBeenCalledTimes(2);
@@ -853,7 +853,7 @@ describe('MongoBlogService', () => {
       });
 
       await expect(() =>
-        MongoBlogService.initFromConfig(new ConfigService(), mockMongoDBClient),
+        MongoBlogService.makeFromConfig(new ConfigService(), mockMongoDBClient),
       ).rejects.toThrow(testError);
 
       expect(clientDbSpy).toHaveBeenCalledTimes(2);
@@ -884,7 +884,7 @@ describe('MongoBlogService', () => {
       const collectionsSpy = jest.spyOn(mockDb, 'collections');
 
       await expect(() =>
-        MongoBlogService.initFromConfig(new ConfigService(), mockMongoDBClient),
+        MongoBlogService.makeFromConfig(new ConfigService(), mockMongoDBClient),
       ).rejects.toThrow();
 
       expect(clientDbSpy).toHaveBeenCalledTimes(1);
@@ -913,7 +913,7 @@ describe('MongoBlogService', () => {
       });
 
       await expect(() =>
-        MongoBlogService.initFromConfig(new ConfigService(), mockMongoDBClient),
+        MongoBlogService.makeFromConfig(new ConfigService(), mockMongoDBClient),
       ).rejects.toThrow();
 
       expect(clientDbSpy).toHaveBeenCalledTimes(1);

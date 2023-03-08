@@ -25,6 +25,13 @@ export class MongoBlogService implements BlogService {
     return this._mongoDBClient;
   }
 
+  async initialize() {
+    if (!(await this.containsBlogCollection())) {
+      console.log('Does not contain a blog Collection');
+      await this.makeBlogCollection();
+    }
+  }
+
   protected async containsBlogCollection(): Promise<boolean> {
     const db = await this.mongoDBClient.db;
     const collections = await db.collections();
@@ -174,7 +181,7 @@ export class MongoBlogService implements BlogService {
     return blogPost;
   }
 
-  static async initFromConfig(
+  static makeFromConfig(
     configService: ConfigService,
     testClient?: MongoDBClient,
   ) {
@@ -184,13 +191,6 @@ export class MongoBlogService implements BlogService {
         ? testClient ?? MongoDBClient.fromConfiguration(configService)
         : MongoDBClient.fromConfiguration(configService);
 
-    const service = new MongoBlogService(client);
-
-    if (!(await service.containsBlogCollection())) {
-      console.log('Does not contain a blog Collection');
-      await service.makeBlogCollection();
-    }
-
-    return service;
+    return new MongoBlogService(client);
   }
 }

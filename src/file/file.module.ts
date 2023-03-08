@@ -6,6 +6,7 @@ import { FileController } from '@/src/file/file.controller';
 import { FileAPIController } from '@/src/file/file_api.controller';
 import { InMemoryFileDataService } from '@/src/file/file_data.memory.service';
 import { MongoFileDataService } from './file_data.mongo.service';
+import { delay } from '@/src/utils/delay';
 
 const fileServiceFactory = {
   provide: 'FILE_SERVICE',
@@ -13,13 +14,30 @@ const fileServiceFactory = {
     const type = configService.get('fileServerType');
 
     if (type === 'mongo_db') {
-      return await MongoFileDataService.initFromConfig(configService);
+      // return await MongoFileDataService.initFromConfig(configService);
+      return await tryToInitFromConfig(configService);
     }
 
     return new InMemoryFileDataService();
   },
   inject: [ConfigService],
 };
+
+async function tryToInitFromConfig(configService: ConfigService) {
+  const service = MongoFileDataService.makeFromConfig(configService);
+
+  while (true) {
+    console.log('');
+    try {
+      await service.initialize();
+      return service;
+    } catch (e) {
+      console.error('Error Connecting to MongoDB.');
+      await delay();
+      console.log('Trying again');
+    }
+  }
+}
 
 @Module({
   imports: [LoggerModule, ConfigModule],

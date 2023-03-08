@@ -14,9 +14,13 @@ export class MongoDBClient {
     }
 
     const client = new MongoClient(this.mongoDBUri, {});
-    this._mongoClient = client;
 
-    return client.connect();
+    return client.connect().then((connectedClient) => {
+      this._mongoClient = connectedClient;
+      return connectedClient;
+    });
+
+    // return client.connect();
   }
 
   get db(): Promise<Db> {

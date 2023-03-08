@@ -2,12 +2,12 @@ import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
 import { Collection, Document } from 'mongodb';
 
-import { LoggerController } from '@/src/logger/logger.controller';
+import { LoggerInstanceService } from '@/src/logger/loggerInstance.service';
 import { MongoDBClient } from '@/src/utils/mongodb_client_class';
 
 const loggingCollectionName = 'logging';
 
-export class MongoLoggerController implements LoggerController {
+export class MongoLoggerInstanceService implements LoggerInstanceService {
   constructor(protected mongoDBClient: MongoDBClient) {}
 
   protected async containsLoggerCollection(): Promise<boolean> {
@@ -67,6 +67,13 @@ export class MongoLoggerController implements LoggerController {
     });
   }
 
+  async initialize(): Promise<void> {
+    if (!(await this.containsLoggerCollection())) {
+      console.log('Does not contain a logger Collection');
+      await this.makeLoggerCollection();
+    }
+  }
+
   async addRequestLog(req: Request, res: Response) {
     const method = req.method;
     const path = req.path;
@@ -112,17 +119,24 @@ export class MongoLoggerController implements LoggerController {
     return this.addLogToDB(`${msg}`, 'warning');
   }
 
-  static async initFromConfig(
+  // static async initFromConfig(
+  //   configService: ConfigService,
+  // ): Promise<MongoLoggerServiceInstance> {
+  //   const client = MongoDBClient.fromConfiguration(configService);
+  //   const service = new MongoLoggerServiceInstance(client);
+
+  //   if (!(await service.containsLoggerCollection())) {
+  //     console.log('Does not contain a logger Collection');
+  //     await service.makeLoggerCollection();
+  //   }
+
+  //   return service;
+  // }
+
+  static makeFromConfig(
     configService: ConfigService,
-  ): Promise<MongoLoggerController> {
+  ): MongoLoggerInstanceService {
     const client = MongoDBClient.fromConfiguration(configService);
-    const service = new MongoLoggerController(client);
-
-    if (!(await service.containsLoggerCollection())) {
-      console.log('Does not contain a logger Collection');
-      await service.makeLoggerCollection();
-    }
-
-    return service;
+    return new MongoLoggerInstanceService(client);
   }
 }

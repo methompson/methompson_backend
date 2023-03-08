@@ -30,6 +30,12 @@ export class MongoFileDataService implements FileDataService {
     return this._mongoDBClient;
   }
 
+  async initialize() {
+    if (!(await this.containsFileCollection())) {
+      await this.makeFileCollection();
+    }
+  }
+
   protected async containsFileCollection(): Promise<boolean> {
     const db = await this._mongoDBClient.db;
     const collections = await db.collections();
@@ -218,22 +224,35 @@ export class MongoFileDataService implements FileDataService {
     return output;
   }
 
-  static async initFromConfig(
+  // static async initFromConfig(
+  //   configService: ConfigService,
+  //   testClient?: MongoDBClient,
+  // ): Promise<MongoFileDataService> {
+  //   // We only use the testClient if NODE_ENV is test
+  //   const client =
+  //     process.env.NODE_ENV === 'test'
+  //       ? testClient ?? MongoDBClient.fromConfiguration(configService)
+  //       : MongoDBClient.fromConfiguration(configService);
+
+  //   const service = new MongoFileDataService(client);
+
+  //   if (!(await service.containsFileCollection())) {
+  //     await service.makeFileCollection();
+  //   }
+
+  //   return service;
+  // }
+
+  static makeFromConfig(
     configService: ConfigService,
     testClient?: MongoDBClient,
-  ): Promise<MongoFileDataService> {
+  ) {
     // We only use the testClient if NODE_ENV is test
     const client =
       process.env.NODE_ENV === 'test'
         ? testClient ?? MongoDBClient.fromConfiguration(configService)
         : MongoDBClient.fromConfiguration(configService);
 
-    const service = new MongoFileDataService(client);
-
-    if (!(await service.containsFileCollection())) {
-      await service.makeFileCollection();
-    }
-
-    return service;
+    return new MongoFileDataService(client);
   }
 }

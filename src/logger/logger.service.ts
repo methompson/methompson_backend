@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { Request, Response } from 'express';
 
-import { LoggerController } from './logger.controller';
+import { LoggerInstanceService } from './loggerInstance.service';
 
 @Injectable()
 export class LoggerService {
-  constructor(protected loggerControllers: LoggerController[]) {}
+  constructor(protected loggerServices: LoggerInstanceService[]) {}
 
   async addRequestLog(req: Request, res: Response): Promise<void> {
     const promises: Promise<void>[] = [];
 
-    for (const logger of this.loggerControllers) {
+    for (const logger of this.loggerServices) {
       promises.push(logger.addRequestLog(req, res));
     }
 
@@ -24,7 +24,7 @@ export class LoggerService {
   async addLog(msg: unknown): Promise<void> {
     const promises: Promise<void>[] = [];
 
-    for (const logger of this.loggerControllers) {
+    for (const logger of this.loggerServices) {
       promises.push(logger.addLog(msg));
     }
 
@@ -34,7 +34,7 @@ export class LoggerService {
   async addErrorLog(msg: unknown): Promise<void> {
     const promises: Promise<void>[] = [];
 
-    for (const logger of this.loggerControllers) {
+    for (const logger of this.loggerServices) {
       promises.push(logger.addLog(msg));
     }
 
@@ -44,7 +44,7 @@ export class LoggerService {
   async addWarningLog(msg: unknown): Promise<void> {
     const promises: Promise<void>[] = [];
 
-    for (const logger of this.loggerControllers) {
+    for (const logger of this.loggerServices) {
       promises.push(logger.addWarningLog(msg));
     }
 
@@ -54,7 +54,7 @@ export class LoggerService {
   async cycleLogs() {
     const promises: Promise<void>[] = [];
 
-    for (const logger of this.loggerControllers) {
+    for (const logger of this.loggerServices) {
       promises.push(logger.cycleLogs());
     }
 
