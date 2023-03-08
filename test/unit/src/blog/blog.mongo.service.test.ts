@@ -736,7 +736,7 @@ describe('MongoBlogService', () => {
     });
   });
 
-  describe('initFromConfig', () => {
+  describe('initialize', () => {
     test('creates a service with a client. Does not run makeBlogCollection if blogPosts exists in the collections', async () => {
       const blogDataCol = new Collection<Document>();
       const blogNameSpy = jest.spyOn(blogDataCol, 'collectionName', 'get');
@@ -761,7 +761,7 @@ describe('MongoBlogService', () => {
       await MongoBlogService.makeFromConfig(
         new ConfigService(),
         mockMongoDBClient,
-      );
+      ).initialize();
 
       expect(clientDbSpy).toHaveBeenCalledTimes(1);
       expect(collectionsSpy).toHaveBeenCalledTimes(1);
@@ -791,7 +791,7 @@ describe('MongoBlogService', () => {
       await MongoBlogService.makeFromConfig(
         new ConfigService(),
         mockMongoDBClient,
-      );
+      ).initialize();
 
       expect(clientDbSpy).toHaveBeenCalledTimes(2);
       expect(collectionsSpy).toHaveBeenCalledTimes(1);
@@ -820,7 +820,10 @@ describe('MongoBlogService', () => {
       });
 
       await expect(() =>
-        MongoBlogService.makeFromConfig(new ConfigService(), mockMongoDBClient),
+        MongoBlogService.makeFromConfig(
+          new ConfigService(),
+          mockMongoDBClient,
+        ).initialize(),
       ).rejects.toThrow(testError);
 
       expect(clientDbSpy).toHaveBeenCalledTimes(2);
@@ -853,7 +856,10 @@ describe('MongoBlogService', () => {
       });
 
       await expect(() =>
-        MongoBlogService.makeFromConfig(new ConfigService(), mockMongoDBClient),
+        MongoBlogService.makeFromConfig(
+          new ConfigService(),
+          mockMongoDBClient,
+        ).initialize(),
       ).rejects.toThrow(testError);
 
       expect(clientDbSpy).toHaveBeenCalledTimes(2);
@@ -884,7 +890,10 @@ describe('MongoBlogService', () => {
       const collectionsSpy = jest.spyOn(mockDb, 'collections');
 
       await expect(() =>
-        MongoBlogService.makeFromConfig(new ConfigService(), mockMongoDBClient),
+        MongoBlogService.makeFromConfig(
+          new ConfigService(),
+          mockMongoDBClient,
+        ).initialize(),
       ).rejects.toThrow();
 
       expect(clientDbSpy).toHaveBeenCalledTimes(1);
@@ -913,7 +922,10 @@ describe('MongoBlogService', () => {
       });
 
       await expect(() =>
-        MongoBlogService.makeFromConfig(new ConfigService(), mockMongoDBClient),
+        MongoBlogService.makeFromConfig(
+          new ConfigService(),
+          mockMongoDBClient,
+        ).initialize(),
       ).rejects.toThrow();
 
       expect(clientDbSpy).toHaveBeenCalledTimes(1);

@@ -931,7 +931,7 @@ describe('MongoFileDataService', () => {
     });
   });
 
-  describe('initFromConfig', () => {
+  describe('initialize', () => {
     test('creates a service with a client. Does not run makeFileCollection if files exists in the collections', async () => {
       const fileDataCol = new Collection<Document>();
       const fileNameSpy = jest.spyOn(fileDataCol, 'collectionName', 'get');
@@ -953,10 +953,10 @@ describe('MongoFileDataService', () => {
       const createSpy = jest.spyOn(mockDb, 'createCollection');
       createSpy.mockImplementationOnce(async () => mockCollection);
 
-      await MongoFileDataService.initFromConfig(
+      await MongoFileDataService.makeFromConfig(
         new ConfigService(),
         mockMongoDBClient,
-      );
+      ).initialize();
 
       expect(clientDbSpy).toHaveBeenCalledTimes(1);
       expect(collectionsSpy).toHaveBeenCalledTimes(1);
@@ -983,10 +983,10 @@ describe('MongoFileDataService', () => {
       const createSpy = jest.spyOn(mockDb, 'createCollection');
       createSpy.mockImplementationOnce(async () => mockCollection);
 
-      await MongoFileDataService.initFromConfig(
+      await MongoFileDataService.makeFromConfig(
         new ConfigService(),
         mockMongoDBClient,
-      );
+      ).initialize();
 
       expect(clientDbSpy).toHaveBeenCalledTimes(2);
       expect(collectionsSpy).toHaveBeenCalledTimes(1);
@@ -1015,10 +1015,10 @@ describe('MongoFileDataService', () => {
       });
 
       await expect(() =>
-        MongoFileDataService.initFromConfig(
+        MongoFileDataService.makeFromConfig(
           new ConfigService(),
           mockMongoDBClient,
-        ),
+        ).initialize(),
       ).rejects.toThrow(testError);
 
       expect(clientDbSpy).toHaveBeenCalledTimes(2);
@@ -1051,10 +1051,10 @@ describe('MongoFileDataService', () => {
       });
 
       await expect(() =>
-        MongoFileDataService.initFromConfig(
+        MongoFileDataService.makeFromConfig(
           new ConfigService(),
           mockMongoDBClient,
-        ),
+        ).initialize(),
       ).rejects.toThrow(testError);
 
       expect(clientDbSpy).toHaveBeenCalledTimes(2);
@@ -1085,10 +1085,10 @@ describe('MongoFileDataService', () => {
       const collectionsSpy = jest.spyOn(mockDb, 'collections');
 
       await expect(() =>
-        MongoFileDataService.initFromConfig(
+        MongoFileDataService.makeFromConfig(
           new ConfigService(),
           mockMongoDBClient,
-        ),
+        ).initialize(),
       ).rejects.toThrow();
 
       expect(clientDbSpy).toHaveBeenCalledTimes(1);
@@ -1117,10 +1117,10 @@ describe('MongoFileDataService', () => {
       });
 
       await expect(() =>
-        MongoFileDataService.initFromConfig(
+        MongoFileDataService.makeFromConfig(
           new ConfigService(),
           mockMongoDBClient,
-        ),
+        ).initialize(),
       ).rejects.toThrow();
 
       expect(clientDbSpy).toHaveBeenCalledTimes(1);

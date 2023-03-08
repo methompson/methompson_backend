@@ -119,20 +119,6 @@ export class MongoLoggerInstanceService implements LoggerInstanceService {
     return this.addLogToDB(`${msg}`, 'warning');
   }
 
-  // static async initFromConfig(
-  //   configService: ConfigService,
-  // ): Promise<MongoLoggerServiceInstance> {
-  //   const client = MongoDBClient.fromConfiguration(configService);
-  //   const service = new MongoLoggerServiceInstance(client);
-
-  //   if (!(await service.containsLoggerCollection())) {
-  //     console.log('Does not contain a logger Collection');
-  //     await service.makeLoggerCollection();
-  //   }
-
-  //   return service;
-  // }
-
   static makeFromConfig(
     configService: ConfigService,
   ): MongoLoggerInstanceService {
