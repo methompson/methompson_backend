@@ -1,4 +1,4 @@
-./docker_build_amd64.sh
+./scripts/docker_build_amd64.sh
 
 (
   cd docker && \

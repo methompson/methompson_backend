@@ -7,4 +7,7 @@ export default defineConfig({
   clean: true,
   noExternal: [/(.*)/],
   target: ['node16'],
+  minifyWhitespace: true,
+  // minifyIdentifiers: true, // Does not work. Result throws an error
+  minifySyntax: true,
 });

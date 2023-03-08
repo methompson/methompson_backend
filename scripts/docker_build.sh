@@ -1,6 +1,6 @@
-./scripts/docker_prep.sh
+./scripts/docker_build_common.sh
 
 (
   cd docker && \
-  docker build -t methompson_blog .
+  docker build -t methompson-blog-backend .
 )

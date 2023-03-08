@@ -1,4 +1,4 @@
-./docker_build_common.sh
+./scripts/docker_build_common.sh
 
 (
   cd docker && \
