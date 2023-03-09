@@ -12,7 +12,7 @@
     "test:cov": "jest --coverage",
     "compile": "tsup-node ./src/main.ts",
     "compile_bundle": "tsup ./src/main.ts",
-    "dev": "tsup-node ./src/main.ts --watch --onSuccess \"node dist/main.js\"",
+    "dev": "tsup-node ./src/main.ts --watch --env.NODE_ENV development --onSuccess \"node dist/main.js\"",
     "dev_noauth": "tsup-node ./src/main.ts --watch --onSuccess \"node dist/main.js noauth\""
   },
   "dependencies": {
@@ -25,7 +25,7 @@
     "dotenv": "^16.0.0",
     "ejs": "^3.1.7",
     "firebase-admin": "^10.0.2",
-    "formidable": "^2.0.1",
+    "formidable": "^2.1.1",
     "jsonwebtoken": "^8.5.1",
     "mongodb": "^4.4.1",
     "reflect-metadata": "^0.1.13",
