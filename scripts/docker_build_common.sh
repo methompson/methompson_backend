@@ -10,5 +10,7 @@ cp $GOOGLE_APPLICATION_CREDENTIALS ./docker/artifacts/firebase.json
 
 ./scripts/bundle_compile.sh
 
+rm ./dist/main.js.map
+
 mv ./dist ./docker/artifacts/dist
 cp ./package.json ./docker/artifacts/package.json
