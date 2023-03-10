@@ -1,4 +1,4 @@
-FROM node:slim
+FROM node:18-slim
 # FROM alpine:3.15
 
 RUN apt update && \

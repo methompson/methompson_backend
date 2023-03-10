@@ -8,7 +8,7 @@ echo $GOOGLE_APPLICATION_CREDENTIALS
 
 cp $GOOGLE_APPLICATION_CREDENTIALS ./docker/artifacts/firebase.json
 
-./scripts/bundle_compile.sh
+npm run compile_bundle
 
 rm ./dist/main.js.map
 

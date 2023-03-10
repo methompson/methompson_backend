@@ -9,7 +9,7 @@ export default defineConfig((options) => {
     sourcemap: true,
     clean: true,
     noExternal: [/(.*)/],
-    target: ['node16'],
+    target: ['node18'],
     minifyWhitespace: prod,
     minifySyntax: prod,
     treeshake: prod,
