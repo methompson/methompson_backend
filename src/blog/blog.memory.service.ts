@@ -4,10 +4,9 @@ import { Injectable } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 
 import { NewBlogPost, BlogPost } from '@/src/models/blog_post_model';
-import { InvalidInputError } from '@/src/errors/invalid_input_error';
+import { InvalidInputError, NotFoundError } from '@/src/errors';
 import { BlogService, BlogPostRequestOutput } from '@/src/blog/blog.service';
 import { isNullOrUndefined, isUndefined } from '@/src/utils/type_guards';
-import { NotFoundError } from '@/src/errors';
 
 @Injectable()
 export class InMemoryBlogService implements BlogService {

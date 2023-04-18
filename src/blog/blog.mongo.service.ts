@@ -3,16 +3,22 @@ import { ConfigService } from '@nestjs/config';
 import { Collection, Document, MongoServerError } from 'mongodb';
 
 import { NewBlogPost, BlogPost } from '@/src/models/blog_post_model';
-import { InvalidInputError } from '@/src/errors/invalid_input_error';
+import {
+  DatabaseNotAvailableException,
+  InvalidInputError,
+  NotFoundError,
+} from '@/src/errors';
 import { BlogService, BlogPostRequestOutput } from '@/src/blog/blog.service';
 import { MongoDBClient } from '@/src/utils/mongodb_client_class';
-import { NotFoundError } from '@/src/errors';
 import { isNullOrUndefined, isRecord } from '@/src/utils/type_guards';
+import { delay } from '@/src/utils/delay';
 
 const blogPostsCollectionName = 'blogPosts';
 
 @Injectable()
 export class MongoBlogService implements BlogService {
+  protected _initialized = false;
+
   constructor(protected _mongoDBClient: MongoDBClient) {}
 
   protected get blogCollection(): Promise<Collection<Document>> {
@@ -26,9 +32,24 @@ export class MongoBlogService implements BlogService {
   }
 
   async initialize() {
-    if (!(await this.containsBlogCollection())) {
-      console.log('Does not contain a blog Collection');
-      await this.makeBlogCollection();
+    console.log('Initializing Blog Service');
+
+    try {
+      if (!(await this.containsBlogCollection())) {
+        console.log('Does not contain a blog Collection');
+        await this.makeBlogCollection();
+      }
+
+      console.log('Initialized Blog Service');
+      this._initialized = true;
+    } catch (e) {
+      // console.error('Error Connecting to MongoDB.', e);
+      console.error('Error Connecting to MongoDB.');
+
+      await delay();
+
+      console.log('Trying again');
+      this.initialize();
     }
   }
 
@@ -87,6 +108,11 @@ export class MongoBlogService implements BlogService {
   }
 
   async getPosts(page = 1, pagination = 10): Promise<BlogPostRequestOutput> {
+    console.log('getting posts');
+    if (!this._initialized) {
+      throw new DatabaseNotAvailableException('Database Not Available');
+    }
+
     const skip = pagination * (page - 1);
 
     const blogCollection = await this.blogCollection;
@@ -122,6 +148,10 @@ export class MongoBlogService implements BlogService {
   }
 
   async findBySlug(slug: string): Promise<BlogPost> {
+    if (!this._initialized) {
+      throw new DatabaseNotAvailableException('Database Not Available');
+    }
+
     const blogCollection = await this.blogCollection;
     const result = await blogCollection.findOne({ slug });
 
@@ -133,6 +163,10 @@ export class MongoBlogService implements BlogService {
   }
 
   async addBlogPost(requestBody: unknown): Promise<BlogPost> {
+    if (!this._initialized) {
+      throw new DatabaseNotAvailableException('Database Not Available');
+    }
+
     if (!NewBlogPost.isNewBlogPostInterface(requestBody)) {
       throw new InvalidInputError('Invalid request body');
     }
@@ -168,6 +202,10 @@ export class MongoBlogService implements BlogService {
   }
 
   async deleteBlogPost(slug: string): Promise<BlogPost> {
+    if (!this._initialized) {
+      throw new DatabaseNotAvailableException('Database Not Available');
+    }
+
     const blogCollection = await this.blogCollection;
 
     const result = await blogCollection.findOneAndDelete({ slug });

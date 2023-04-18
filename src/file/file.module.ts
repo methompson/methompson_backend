@@ -15,7 +15,11 @@ const fileServiceFactory = {
 
     if (type === 'mongo_db') {
       // return await MongoFileDataService.initFromConfig(configService);
-      return await tryToInitFromConfig(configService);
+      // return await tryToInitFromConfig(configService);
+      const service = MongoFileDataService.makeFromConfig(configService);
+      service.initialize();
+
+      return service;
     }
 
     return new InMemoryFileDataService();
@@ -23,22 +27,22 @@ const fileServiceFactory = {
   inject: [ConfigService],
 };
 
-async function tryToInitFromConfig(configService: ConfigService) {
-  const service = MongoFileDataService.makeFromConfig(configService);
+// async function tryToInitFromConfig(configService: ConfigService) {
+//   const service = MongoFileDataService.makeFromConfig(configService);
 
-  while (true) {
-    console.log('Initializing File Service');
-    try {
-      await service.initialize();
-      console.log('Initialized File Service');
-      return service;
-    } catch (e) {
-      console.error('Error Connecting to MongoDB.', e);
-      await delay();
-      console.log('Trying again');
-    }
-  }
-}
+//   while (true) {
+//     console.log('Initializing File Service');
+//     try {
+//       await service.initialize();
+//       console.log('Initialized File Service');
+//       return service;
+//     } catch (e) {
+//       console.error('Error Connecting to MongoDB.', e);
+//       await delay();
+//       console.log('Trying again');
+//     }
+//   }
+// }
 
 @Module({
   imports: [LoggerModule, ConfigModule],

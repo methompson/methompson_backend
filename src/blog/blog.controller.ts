@@ -11,7 +11,7 @@ import {
 import { Request } from 'express';
 
 import { BlogPost } from '@/src/models/blog_post_model';
-import { InvalidInputError } from '@/src/errors/invalid_input_error';
+import { DatabaseNotAvailableException, InvalidInputError } from '@/src/errors';
 import { isString } from '@/src/utils/type_guards';
 
 import { BlogService, BlogPostRequestOutput } from '@/src/blog/blog.service';
@@ -32,6 +32,7 @@ export class BlogController {
 
   @Get()
   async getPosts(@Req() request: Request): Promise<BlogPostRequestOutput> {
+    console.log('getting posts controller');
     const pageQP = request.query?.page;
     const paginationQP = request.query?.pagination;
 
@@ -43,6 +44,12 @@ export class BlogController {
     try {
       return await this.blogService.getPosts(page, pagination);
     } catch (e) {
+      if (e instanceof DatabaseNotAvailableException) {
+        throw new HttpException(
+          'Database Not Available',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
       await this.loggerService.addErrorLog(e);
       throw e;
     }
@@ -61,6 +68,11 @@ export class BlogController {
     } catch (e) {
       if (e instanceof InvalidInputError) {
         throw new HttpException('No Blog Post', HttpStatus.NOT_FOUND);
+      } else if (e instanceof DatabaseNotAvailableException) {
+        throw new HttpException(
+          'Database Not Available',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
       }
 
       console.error(e);
@@ -79,6 +91,11 @@ export class BlogController {
         throw new HttpException(
           'Invalid New Blog Post Input',
           HttpStatus.BAD_REQUEST,
+        );
+      } else if (e instanceof DatabaseNotAvailableException) {
+        throw new HttpException(
+          'Database Not Available',
+          HttpStatus.INTERNAL_SERVER_ERROR,
         );
       }
 
@@ -102,6 +119,11 @@ export class BlogController {
     } catch (e) {
       if (e instanceof InvalidInputError) {
         throw new HttpException('No Blog Post', HttpStatus.NOT_FOUND);
+      } else if (e instanceof DatabaseNotAvailableException) {
+        throw new HttpException(
+          'Database Not Available',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
       }
 
       console.error(e);

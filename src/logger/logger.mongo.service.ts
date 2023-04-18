@@ -4,10 +4,14 @@ import { Collection, Document } from 'mongodb';
 
 import { LoggerInstanceService } from '@/src/logger/loggerInstance.service';
 import { MongoDBClient } from '@/src/utils/mongodb_client_class';
+import { delay } from '@/src/utils/delay';
+import { DatabaseNotAvailableException } from '../errors';
 
 const loggingCollectionName = 'logging';
 
 export class MongoLoggerInstanceService implements LoggerInstanceService {
+  protected _initialized = false;
+
   constructor(protected mongoDBClient: MongoDBClient) {}
 
   protected async containsLoggerCollection(): Promise<boolean> {
@@ -57,7 +61,33 @@ export class MongoLoggerInstanceService implements LoggerInstanceService {
     );
   }
 
+  async initialize(): Promise<void> {
+    console.log('Initializing Log Service');
+
+    try {
+      if (!(await this.containsLoggerCollection())) {
+        console.log('Does not contain a logger Collection');
+        await this.makeLoggerCollection();
+      }
+
+      console.log('Initialized Log Service');
+      this._initialized = true;
+    } catch (e) {
+      console.error('Error Connecting to MongoDB.');
+      // console.error('Error Connecting to MongoDB.', e);
+
+      await delay();
+
+      console.log('Trying again');
+      this.initialize();
+    }
+  }
+
   protected async addLogToDB(msg: string, logType: string, date?: Date) {
+    if (!this._initialized) {
+      throw new DatabaseNotAvailableException('Database Not Available');
+    }
+
     const _date = date ?? new Date();
     const loggerCollection = await this.loggerCollection;
     await loggerCollection.insertOne({
@@ -67,14 +97,35 @@ export class MongoLoggerInstanceService implements LoggerInstanceService {
     });
   }
 
-  async initialize(): Promise<void> {
-    if (!(await this.containsLoggerCollection())) {
-      console.log('Does not contain a logger Collection');
-      await this.makeLoggerCollection();
+  async addLog(msg: unknown) {
+    if (!this._initialized) {
+      throw new DatabaseNotAvailableException('Database Not Available');
     }
+
+    return this.addLogToDB(`${msg}`, 'info');
+  }
+
+  async addWarningLog(msg: unknown) {
+    if (!this._initialized) {
+      throw new DatabaseNotAvailableException('Database Not Available');
+    }
+
+    return this.addLogToDB(`${msg}`, 'warning');
+  }
+
+  async addErrorLog(msg: unknown) {
+    if (!this._initialized) {
+      throw new DatabaseNotAvailableException('Database Not Available');
+    }
+
+    return this.addLogToDB(`${msg}`, 'error');
   }
 
   async addRequestLog(req: Request, res: Response) {
+    if (!this._initialized) {
+      throw new DatabaseNotAvailableException('Database Not Available');
+    }
+
     const method = req.method;
     const path = req.path;
     const remoteAddress =
@@ -96,15 +147,11 @@ export class MongoLoggerInstanceService implements LoggerInstanceService {
     // await this.addLogToDB(`${remoteAddress} - ${method} - ${path}`, 'request');
   }
 
-  async addLog(msg: unknown) {
-    return this.addLogToDB(`${msg}`, 'info');
-  }
-
-  async addErrorLog(msg: unknown) {
-    return this.addLogToDB(`${msg}`, 'error');
-  }
-
   async cycleLogs() {
+    if (!this._initialized) {
+      throw new DatabaseNotAvailableException('Database Not Available');
+    }
+
     const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
 
     const col = await this.loggerCollection;
@@ -113,10 +160,6 @@ export class MongoLoggerInstanceService implements LoggerInstanceService {
         $lte: twoWeeksAgo,
       },
     });
-  }
-
-  async addWarningLog(msg: unknown) {
-    return this.addLogToDB(`${msg}`, 'warning');
   }
 
   static makeFromConfig(

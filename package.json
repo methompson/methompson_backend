@@ -12,8 +12,8 @@
     "test:cov": "jest --coverage",
     "compile": "tsup-node ./src/main.ts",
     "compile_bundle": "tsup ./src/main.ts",
-    "dev": "tsup-node ./src/main.ts --watch --env.NODE_ENV development --onSuccess \"node dist/main.js\"",
-    "dev_noauth": "tsup-node ./src/main.ts --watch --env.NODE_ENV development  --onSuccess \"node dist/main.js noauth\""
+    "dev": "tsup ./src/main.ts --watch --env.NODE_ENV development --onSuccess \"node dist/main.js\"",
+    "dev_noauth": "tsup ./src/main.ts --watch --env.NODE_ENV development  --onSuccess \"node dist/main.js noauth\""
   },
   "dependencies": {
     "@nestjs/common": "^8.0.0",

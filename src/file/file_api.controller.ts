@@ -39,6 +39,7 @@ import {
   isStringArray,
 } from '@/src/utils/type_guards';
 import { getIntFromString } from '@/src/utils/get_number_from_string';
+import { DatabaseNotAvailableException } from '@/src/errors';
 
 interface FileListResponse {
   files: FileDetailsJSON[];
@@ -125,7 +126,15 @@ export class FileAPIController {
         pagination,
       };
     } catch (e) {
+      if (e instanceof DatabaseNotAvailableException) {
+        throw new HttpException(
+          'Database Not Available',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+
       await this.loggerService.addErrorLog(`Error Getting File List: ${e}`);
+
       throw new HttpException(
         'Error Getting File List',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -143,6 +152,13 @@ export class FileAPIController {
         totalFiles,
       };
     } catch (e) {
+      if (e instanceof DatabaseNotAvailableException) {
+        throw new HttpException(
+          'Database Not Available',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+
       throw new HttpException(
         'Error getting total files',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -165,6 +181,13 @@ export class FileAPIController {
         this._uploadFilePath,
       );
     } catch (e) {
+      if (e instanceof DatabaseNotAvailableException) {
+        throw new HttpException(
+          'Database Not Available',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+
       const msg = isString(e?.message) ? e.message : `${e}`;
       throw new HttpException(msg, HttpStatus.BAD_REQUEST);
     }
@@ -182,6 +205,13 @@ export class FileAPIController {
       );
       return savedFiles.map((f) => f.toJSON());
     } catch (e) {
+      if (e instanceof DatabaseNotAvailableException) {
+        throw new HttpException(
+          'Database Not Available',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+
       this.loggerService.addErrorLog(`Error uploading files: ${e}`);
       throw new HttpException(
         'Error Uploading Files',
@@ -202,6 +232,13 @@ export class FileAPIController {
         this._uploadFilePath,
       );
     } catch (e) {
+      if (e instanceof DatabaseNotAvailableException) {
+        throw new HttpException(
+          'Database Not Available',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+
       const msg = isString(e?.message) ? e.message : `${e}`;
 
       this.loggerService.addErrorLog(`${msg}: ${e}`);
@@ -251,6 +288,12 @@ export class FileAPIController {
 
     // If there's an error from the DB
     if (isPromiseRejected(deleteFilesDBResult)) {
+      if (deleteFilesDBResult.reason instanceof DatabaseNotAvailableException) {
+        throw new HttpException(
+          'Database Not Available',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
       this.loggerService.addErrorLog(
         `Error Deleting File: ${deleteFilesDBResult.reason}`,
       );
@@ -260,6 +303,13 @@ export class FileAPIController {
 
     // If there's an error from the file system
     if (isPromiseRejected(deleteFilesResult)) {
+      if (deleteFilesResult.reason instanceof DatabaseNotAvailableException) {
+        throw new HttpException(
+          'Database Not Available',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+
       this.loggerService.addErrorLog(
         `Error Deleting File: ${deleteFilesResult.reason}`,
       );

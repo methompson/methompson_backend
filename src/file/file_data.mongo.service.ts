@@ -10,14 +10,21 @@ import {
 } from '@/src/file/file_data.service';
 import { FileDetails, NewFileDetails } from '@/src/models/file_models';
 
-import { InvalidInputError, NotFoundError } from '@/src/errors';
+import {
+  DatabaseNotAvailableException,
+  InvalidInputError,
+  NotFoundError,
+} from '@/src/errors';
 import { MongoDBClient } from '@/src/utils/mongodb_client_class';
 import { isNullOrUndefined } from '@/src/utils/type_guards';
+import { delay } from '@/src/utils/delay';
 
 export const fileCollectionName = 'files';
 
 @Injectable()
 export class MongoFileDataService implements FileDataService {
+  protected _initialized = false;
+
   constructor(protected _mongoDBClient: MongoDBClient) {}
 
   protected get fileCollection(): Promise<Collection<Document>> {
@@ -31,8 +38,20 @@ export class MongoFileDataService implements FileDataService {
   }
 
   async initialize() {
-    if (!(await this.containsFileCollection())) {
-      await this.makeFileCollection();
+    console.log('Initializing File Service');
+    try {
+      if (!(await this.containsFileCollection())) {
+        await this.makeFileCollection();
+      }
+
+      this._initialized = true;
+    } catch (e) {
+      // console.error('Error Connecting to MongoDB.', e);
+      console.error('Error Connecting to MongoDB.');
+      await delay();
+
+      console.log('Trying again');
+      this.initialize();
     }
   }
 
@@ -107,6 +126,10 @@ export class MongoFileDataService implements FileDataService {
   }
 
   async addFiles(fileDetails: NewFileDetails[]): Promise<FileDetails[]> {
+    if (!this._initialized) {
+      throw new DatabaseNotAvailableException('Database Not Available');
+    }
+
     if (fileDetails.length === 0) {
       throw new InvalidInputError('fileDetails must contain a value');
     }
@@ -131,6 +154,10 @@ export class MongoFileDataService implements FileDataService {
   }
 
   async getFileList(options?: GetFileListOptions): Promise<FileDetails[]> {
+    if (!this._initialized) {
+      throw new DatabaseNotAvailableException('Database Not Available');
+    }
+
     const page = options?.page ?? 1;
     const pagination = options?.pagination ?? 20;
 
@@ -165,11 +192,19 @@ export class MongoFileDataService implements FileDataService {
   }
 
   async getTotalFiles(): Promise<number> {
+    if (!this._initialized) {
+      throw new DatabaseNotAvailableException('Database Not Available');
+    }
+
     const fileCollection = await this.fileCollection;
     return fileCollection.countDocuments();
   }
 
   async getFileByName(name: string): Promise<FileDetails> {
+    if (!this._initialized) {
+      throw new DatabaseNotAvailableException('Database Not Available');
+    }
+
     const fileCollection = await this.fileCollection;
     const result = await fileCollection.findOne({ filename: name });
 
@@ -181,6 +216,10 @@ export class MongoFileDataService implements FileDataService {
   }
 
   async deleteFiles(names: string[]): Promise<Record<string, DeleteDetails>> {
+    if (!this._initialized) {
+      throw new DatabaseNotAvailableException('Database Not Available');
+    }
+
     const output: Record<string, DeleteDetails> = {};
 
     const collection = await this.fileCollection;
