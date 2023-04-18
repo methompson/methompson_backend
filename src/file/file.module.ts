@@ -33,7 +33,7 @@ async function tryToInitFromConfig(configService: ConfigService) {
       console.log('Initialized File Service');
       return service;
     } catch (e) {
-      console.error('Error Connecting to MongoDB.');
+      console.error('Error Connecting to MongoDB.', e);
       await delay();
       console.log('Trying again');
     }

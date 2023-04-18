@@ -10,9 +10,13 @@ export default defineConfig((options) => {
     clean: true,
     noExternal: [/(.*)/],
     target: ['node18'],
-    minifyWhitespace: prod,
-    minifySyntax: prod,
-    treeshake: prod,
-    minifyIdentifiers: prod,
+    minifyWhitespace: false,
+    minifySyntax: false,
+    treeshake: true,
+    minifyIdentifiers: false,
+    // minifyWhitespace: prod,
+    // minifySyntax: prod,
+    // treeshake: prod,
+    // minifyIdentifiers: prod,
   };
 });

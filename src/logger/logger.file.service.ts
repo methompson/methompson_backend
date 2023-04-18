@@ -1,5 +1,4 @@
-import * as fsPromises from 'fs/promises';
-import { FileHandle } from 'fs/promises';
+import { FileHandle, rename, stat, mkdir, open } from 'fs/promises';
 import { Stats } from 'fs';
 
 import { Request, Response } from 'express';
@@ -71,18 +70,18 @@ export class FileLoggerInstanceService implements LoggerInstanceService {
 
       if (await FileLoggerInstanceService.fileExists(filepath)) {
         const newFilePath = `${basePath}.${i + 1}`;
-        await fsPromises.rename(filepath, newFilePath);
+        await rename(filepath, newFilePath);
       }
     }
 
-    await fsPromises.rename(basePath, `${basePath}.1`);
+    await rename(basePath, `${basePath}.1`);
 
     this.fileHandle = await FileLoggerInstanceService.makeFileHandle();
   }
 
   static async getFileStat(filepath: string): Promise<Stats | null> {
     try {
-      return await fsPromises.stat(filepath);
+      return await stat(filepath);
     } catch (e) {
       return null;
     }
@@ -95,7 +94,7 @@ export class FileLoggerInstanceService implements LoggerInstanceService {
   }
 
   static async makeFileHandle(): Promise<FileHandle> {
-    await fsPromises.mkdir(FILE_PATH, {
+    await mkdir(FILE_PATH, {
       recursive: true,
     });
 
@@ -103,7 +102,7 @@ export class FileLoggerInstanceService implements LoggerInstanceService {
 
     // await FileLoggerController.fileExists(filepath);
 
-    const fileHandle = await fsPromises.open(filepath, 'a');
+    const fileHandle = await open(filepath, 'a');
 
     return fileHandle;
   }
