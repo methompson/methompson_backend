@@ -10,7 +10,7 @@ import {
 import {
   MongoFileDataService,
   fileCollectionName,
-} from '@/src/file/file_data.mongo.service';
+} from '@/src/file/file_data.service.mongo';
 import { MongoDBClient } from '@/src/utils/mongodb_client_class';
 import { FileDetailsMetadata, NewFileDetails } from '@/src/models/file_models';
 import { FileSortOption } from '@/src/file/file_data.service';

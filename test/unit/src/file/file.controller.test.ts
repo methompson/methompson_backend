@@ -7,7 +7,7 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 import { sign } from 'jsonwebtoken';
 
 import { FileController } from '@/src/file/file.controller';
-import { InMemoryFileDataService } from '@/src/file/file_data.memory.service';
+import { InMemoryFileDataService } from '@/src/file/file_data.service.memory';
 import { FileSystemService } from '@/src/file/file_system_service';
 import { AuthModel } from '@/src/models/auth_model';
 import {

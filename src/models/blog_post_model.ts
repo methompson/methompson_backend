@@ -33,7 +33,7 @@ interface BlogPostInputOptions {
   dateUpdated?: ValidDate;
 }
 
-class NewBlogPost {
+export class NewBlogPost {
   protected _updateAuthorId: string | null;
   protected _dateUpdated: ValidDate | null;
 
@@ -156,7 +156,7 @@ class NewBlogPost {
   }
 }
 
-class BlogPost extends NewBlogPost {
+export class BlogPost extends NewBlogPost {
   constructor(
     protected _id: string,
     title: string,
@@ -222,5 +222,3 @@ class BlogPost extends NewBlogPost {
     );
   }
 }
-
-export { NewBlogPost, BlogPost };

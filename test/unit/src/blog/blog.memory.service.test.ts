@@ -1,4 +1,4 @@
-import { InMemoryBlogService } from '@/src/blog/blog.memory.service';
+import { InMemoryBlogService } from '@/src/blog/blog.service.memory';
 import { BlogPost } from '@/src/models/blog_post_model';
 
 const post1 = new BlogPost(

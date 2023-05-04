@@ -5,7 +5,7 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 
 import { FileAPIController } from '@/src/file/file_api.controller';
 import { DeleteFilesJSON } from '@/src/file/file_data.service';
-import { InMemoryFileDataService } from '@/src/file/file_data.memory.service';
+import { InMemoryFileDataService } from '@/src/file/file_data.service.memory';
 import { FileSystemService } from '@/src/file/file_system_service';
 import { FileOpsService } from '@/src/file/file_ops.service';
 

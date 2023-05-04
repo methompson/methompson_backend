@@ -8,7 +8,7 @@ import {
   AggregationCursor,
 } from 'mongodb';
 
-import { MongoBlogService } from '@/src/blog/blog.mongo.service';
+import { MongoBlogService } from '@/src/blog/blog.service.mongo';
 import { MongoDBClient } from '@/src/utils/mongodb_client_class';
 import { BlogPost } from '@/src/models/blog_post_model';
 import { InvalidInputError, NotFoundError } from '@/src/errors';

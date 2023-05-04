@@ -2,10 +2,10 @@ import { Request } from 'express';
 import { HttpException, HttpStatus } from '@nestjs/common';
 
 import { BlogController } from '@/src/blog/blog.controller';
-import { InMemoryBlogService } from '@/src/blog/blog.memory.service';
+import { InMemoryBlogService } from '@/src/blog/blog.service.memory';
 import { LoggerService } from '@/src/logger/logger.service';
 import { BlogPost } from '@/src/models/blog_post_model';
-import { InvalidInputError } from '@/src/errors/invalid_input_error';
+import { InvalidInputError } from '@/src/errors';
 import { UserAuthRequest } from '@/src/middleware/auth_model_decorator';
 
 const post1 = new BlogPost(

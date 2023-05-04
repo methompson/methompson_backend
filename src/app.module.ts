@@ -13,6 +13,7 @@ import { LoggerModule } from '@/src/logger/logger.module';
 
 import { authCheckMiddlewareFactory } from '@/src/middleware/auth_check.middleware';
 import { FileUploadModule } from '@/src/file/file.module';
+import { NotesModule } from '@/src/notes/notes.module';
 
 @Module({
   imports: [
@@ -21,7 +22,6 @@ import { FileUploadModule } from '@/src/file/file.module';
         fileConfiguration,
         mongodbConfiguration,
         blogConfiguration,
-        // imageConfiguration,
         logConfiguration,
         authConfiguration,
       ],
@@ -29,6 +29,7 @@ import { FileUploadModule } from '@/src/file/file.module';
     LoggerModule,
     BlogModule,
     FileUploadModule,
+    NotesModule,
     ScheduleModule.forRoot(),
   ],
 })

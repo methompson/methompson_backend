@@ -7,7 +7,6 @@ import { MongoLoggerInstanceService } from './logger.mongo.service';
 import { LoggerInstanceService } from '@/src/logger/loggerInstance.service';
 import { LoggerMongoClearTaskService } from './logger.mongo_clear.task';
 import { FileLoggerInstanceService } from './logger.file.service';
-// import { delay } from '@/src/utils/delay';
 
 const loggerServiceFactory = {
   provide: 'LOGGER_SERVICE',
@@ -22,11 +21,7 @@ const loggerServiceFactory = {
       const service = MongoLoggerInstanceService.makeFromConfig(configService);
       service.initialize();
 
-      loggerServices.push(
-        // await MongoLoggerServiceInstance.initFromConfig(configService),
-        // await tryToInitFromConfig(configService),
-        service,
-      );
+      loggerServices.push(service);
     }
 
     if (configService.get('file_logging')) {
@@ -38,24 +33,6 @@ const loggerServiceFactory = {
   },
   inject: [ConfigService],
 };
-
-// async function tryToInitFromConfig(
-//   configService: ConfigService,
-// ): Promise<MongoLoggerInstanceService> {
-//   const service = MongoLoggerInstanceService.makeFromConfig(configService);
-//   while (true) {
-//     console.log('Initializing Log Service');
-//     try {
-//       await service.initialize();
-//       console.log('Initialized Log Service');
-//       return service;
-//     } catch (e) {
-//       console.error('Error Connecting to MongoDB.', e);
-//       await delay();
-//       console.log('Trying again');
-//     }
-//   }
-// }
 
 @Module({
   imports: [ConfigModule],

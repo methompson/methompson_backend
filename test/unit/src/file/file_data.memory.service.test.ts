@@ -1,4 +1,4 @@
-import { InMemoryFileDataService } from '@/src/file/file_data.memory.service';
+import { InMemoryFileDataService } from '@/src/file/file_data.service.memory';
 import { FileSortOption } from '@/src/file/file_data.service';
 import {
   FileDetails,

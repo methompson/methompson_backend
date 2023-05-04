@@ -11,7 +11,7 @@ import {
   UploadedFile,
 } from '@/src/models/file_models';
 import { FileOpsService } from '@/src/file/file_ops.service';
-import { InMemoryFileDataService } from '@/src/file/file_data.memory.service';
+import { InMemoryFileDataService } from '@/src/file/file_data.service.memory';
 import { FileSystemService } from '@/src/file/file_system_service';
 import { ImageWriter } from '@/src/image/image_writer';
 

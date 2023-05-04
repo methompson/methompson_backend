@@ -3,9 +3,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import { LoggerModule } from '@/src/logger/logger.module';
 import { BlogController } from './blog.controller';
-import { MongoBlogService } from './blog.mongo.service';
-import { InMemoryBlogService } from './blog.memory.service';
-// import { delay } from '@/src/utils/delay';
+import { MongoBlogService } from './blog.service.mongo';
+import { InMemoryBlogService } from './blog.service.memory';
 
 const blogServiceFactory = {
   provide: 'BLOG_SERVICE',
