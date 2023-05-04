@@ -5,7 +5,7 @@ import { Collection, Document } from 'mongodb';
 import { LoggerInstanceService } from '@/src/logger/loggerInstance.service';
 import { MongoDBClient } from '@/src/utils/mongodb_client_class';
 import { delay } from '@/src/utils/delay';
-import { DatabaseNotAvailableException } from '../errors';
+import { DatabaseNotAvailableException } from '@/src/errors';
 
 const loggingCollectionName = 'logging';
 

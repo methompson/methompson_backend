@@ -3,10 +3,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import { LoggerService } from '@/src/logger/logger.service';
 import { ConsoleLoggerInstanceService } from '@/src/logger/logger.console.service';
-import { MongoLoggerInstanceService } from './logger.mongo.service';
+import { MongoLoggerInstanceService } from './loggerInstance.service.mongo';
 import { LoggerInstanceService } from '@/src/logger/loggerInstance.service';
 import { LoggerMongoClearTaskService } from './logger.mongo_clear.task';
-import { FileLoggerInstanceService } from './logger.file.service';
+import { FileLoggerInstanceService } from './loggerInstance.service.file';
 
 const loggerServiceFactory = {
   provide: 'LOGGER_SERVICE',

@@ -60,11 +60,11 @@ export class InMemoryBlogService implements BlogService {
     const newPost = NewBlogPost.fromJSON(requestBody);
 
     const id = uuidv4();
-    const blog = BlogPost.fromNewBlogPost(id, newPost);
+    const post = BlogPost.fromNewBlogPost(id, newPost);
 
-    this.blogPosts[blog.slug] = blog;
+    this.blogPosts[post.slug] = post;
 
-    return blog;
+    return post;
   }
 
   async deleteBlogPost(slug: string): Promise<BlogPost> {

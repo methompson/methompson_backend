@@ -74,7 +74,7 @@ export class FileAPIController {
    * Configures the temp and saved file paths.
    */
   async init() {
-    this._uploadFilePath = this.configService.get('temp_file_path') ?? '';
+    this._uploadFilePath = this.configService.get('tempFilePath') ?? '';
 
     if (this._uploadFilePath.length > 0) {
       try {
@@ -87,8 +87,7 @@ export class FileAPIController {
       }
     }
 
-    this._savedFilePath =
-      this.configService.get('saved_file_path') ?? './files';
+    this._savedFilePath = this.configService.get('savedFilePath') ?? './files';
 
     try {
       new FileSystemService().makeDirectory(this._savedFilePath);

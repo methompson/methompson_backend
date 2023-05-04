@@ -42,8 +42,7 @@ export class FileController {
    * Configures the temp and saved file paths.
    */
   async init() {
-    this._savedFilePath =
-      this.configService.get('saved_file_path') ?? './files';
+    this._savedFilePath = this.configService.get('savedFilePath') ?? './files';
   }
 
   /**

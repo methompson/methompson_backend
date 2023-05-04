@@ -13,6 +13,8 @@ import { NotFoundError } from '@/src/errors';
 
 @Injectable()
 export class InMemoryFileDataService implements FileDataService {
+  protected _files: Record<string, FileDetails> = {};
+
   constructor(files?: FileDetails[]) {
     if (isNullOrUndefined(files)) {
       return;
@@ -22,8 +24,6 @@ export class InMemoryFileDataService implements FileDataService {
       this._files[file.filename] = file;
     }
   }
-
-  protected _files: Record<string, FileDetails> = {};
 
   get files() {
     return this._files;

@@ -15,7 +15,7 @@ interface NewBlogPostInterface {
   dateUpdated?: string;
 }
 
-interface BlogPostInterface {
+export interface BlogPostInterface {
   [key: string]: unknown;
   id: string;
   title: string;
