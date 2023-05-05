@@ -1,4 +1,4 @@
-import { InvalidInputError } from '@/src/errors/invalid_input_error';
+import { InvalidInputError } from '@/src/errors';
 import {
   UploadedFile,
   NewFileDetails,

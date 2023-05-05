@@ -114,6 +114,7 @@ describe('MongoBlogService', () => {
   let mockCollection: Collection;
 
   let mockCollectionSpy: jest.SpyInstance;
+  let mockCollectionsSpy: jest.SpyInstance;
   let clientDbSpy: jest.SpyInstance;
 
   beforeEach(() => {
@@ -139,6 +140,16 @@ describe('MongoBlogService', () => {
     mockCollection = new Collection();
     mockCollectionSpy = jest.spyOn(mockDb, 'collection');
     mockCollectionSpy.mockReturnValue(mockCollection);
+
+    const blogCollection = new Collection();
+    const blogCollectionNameSpy = jest.spyOn(
+      blogCollection,
+      'collectionName',
+      'get',
+    );
+    blogCollectionNameSpy.mockReturnValue('blogPosts');
+    mockCollectionsSpy = jest.spyOn(mockDb, 'collections');
+    mockCollectionsSpy.mockImplementation(async () => [blogCollection]);
 
     mockMongoDBClient = new MongoDBClient(uri, dbName);
     clientDbSpy = jest.spyOn(mockMongoDBClient, 'db', 'get');
@@ -207,10 +218,11 @@ describe('MongoBlogService', () => {
       const col2NameSpy = jest.spyOn(collection2, 'collectionName', 'get');
       col2NameSpy.mockReturnValue('collection2');
 
-      const collectionsSpy = jest.spyOn(mockDb, 'collections');
-      collectionsSpy.mockImplementationOnce(() =>
-        Promise.resolve([blogDataCol, collection1, collection2]),
-      );
+      mockCollectionsSpy.mockImplementation(async () => [
+        blogDataCol,
+        collection1,
+        collection2,
+      ]);
 
       const svc = new MongoBlogService(mockMongoDBClient);
       const result = await svc['containsBlogCollection']();
@@ -218,7 +230,7 @@ describe('MongoBlogService', () => {
       expect(result).toBe(true);
 
       expect(clientDbSpy).toHaveBeenCalledTimes(1);
-      expect(collectionsSpy).toHaveBeenCalledTimes(1);
+      expect(mockCollectionsSpy).toHaveBeenCalledTimes(1);
       expect(blogNameSpy).toHaveBeenCalledTimes(1);
       expect(col1NameSpy).toHaveBeenCalledTimes(1);
       expect(col2NameSpy).toHaveBeenCalledTimes(1);
@@ -233,10 +245,10 @@ describe('MongoBlogService', () => {
       const col2NameSpy = jest.spyOn(collection2, 'collectionName', 'get');
       col2NameSpy.mockReturnValue('collection2');
 
-      const collectionsSpy = jest.spyOn(mockDb, 'collections');
-      collectionsSpy.mockImplementationOnce(() =>
-        Promise.resolve([collection1, collection2]),
-      );
+      mockCollectionsSpy.mockImplementationOnce(async () => [
+        collection1,
+        collection2,
+      ]);
 
       const svc = new MongoBlogService(mockMongoDBClient);
       const result = await svc['containsBlogCollection']();
@@ -244,7 +256,7 @@ describe('MongoBlogService', () => {
       expect(result).toBe(false);
 
       expect(clientDbSpy).toHaveBeenCalledTimes(1);
-      expect(collectionsSpy).toHaveBeenCalledTimes(1);
+      expect(mockCollectionsSpy).toHaveBeenCalledTimes(1);
       expect(col1NameSpy).toHaveBeenCalledTimes(1);
       expect(col2NameSpy).toHaveBeenCalledTimes(1);
     });
@@ -266,15 +278,13 @@ describe('MongoBlogService', () => {
         throw new Error(testError);
       });
 
-      const collectionsSpy = jest.spyOn(mockDb, 'collections');
-
       const svc = new MongoBlogService(mockMongoDBClient);
       await expect(() => svc['containsBlogCollection']()).rejects.toThrow(
         testError,
       );
 
       expect(clientDbSpy).toHaveBeenCalledTimes(1);
-      expect(collectionsSpy).toHaveBeenCalledTimes(0);
+      expect(mockCollectionsSpy).toHaveBeenCalledTimes(0);
       expect(blogNameSpy).toHaveBeenCalledTimes(0);
       expect(col1NameSpy).toHaveBeenCalledTimes(0);
       expect(col2NameSpy).toHaveBeenCalledTimes(0);
@@ -293,8 +303,7 @@ describe('MongoBlogService', () => {
       const col2NameSpy = jest.spyOn(collection2, 'collectionName', 'get');
       col2NameSpy.mockReturnValue('collection2');
 
-      const collectionsSpy = jest.spyOn(mockDb, 'collections');
-      collectionsSpy.mockImplementation(() => {
+      mockCollectionsSpy.mockImplementation(() => {
         throw new Error(testError);
       });
 
@@ -304,7 +313,7 @@ describe('MongoBlogService', () => {
       );
 
       expect(clientDbSpy).toHaveBeenCalledTimes(1);
-      expect(collectionsSpy).toHaveBeenCalledTimes(1);
+      expect(mockCollectionsSpy).toHaveBeenCalledTimes(1);
       expect(blogNameSpy).toHaveBeenCalledTimes(0);
       expect(col1NameSpy).toHaveBeenCalledTimes(0);
       expect(col2NameSpy).toHaveBeenCalledTimes(0);
@@ -404,7 +413,7 @@ describe('MongoBlogService', () => {
       const aggregateSpy = jest.spyOn(mockCollection, 'aggregate');
       aggregateSpy.mockImplementationOnce(() => cursor);
 
-      const svc = new MongoBlogService(mockMongoDBClient);
+      const svc = await new MongoBlogService(mockMongoDBClient).initialize();
       const result = await svc.getPosts();
 
       expect(aggregateSpy).toHaveBeenCalledTimes(1);
@@ -436,7 +445,7 @@ describe('MongoBlogService', () => {
       const aggregateSpy = jest.spyOn(mockCollection, 'aggregate');
       aggregateSpy.mockImplementationOnce(() => cursor);
 
-      const svc = new MongoBlogService(mockMongoDBClient);
+      const svc = await new MongoBlogService(mockMongoDBClient).initialize();
       await svc.getPosts(4, 7);
 
       expect(aggregateSpy).toHaveBeenCalledTimes(1);
@@ -461,7 +470,7 @@ describe('MongoBlogService', () => {
       const aggregateSpy = jest.spyOn(mockCollection, 'aggregate');
       aggregateSpy.mockImplementationOnce(() => cursor);
 
-      const svc = new MongoBlogService(mockMongoDBClient);
+      const svc = await new MongoBlogService(mockMongoDBClient).initialize();
       const result = await svc.getPosts(1, 4);
 
       expect(result.morePages).toBe(false);
@@ -480,7 +489,7 @@ describe('MongoBlogService', () => {
       const aggregateSpy = jest.spyOn(mockCollection, 'aggregate');
       aggregateSpy.mockImplementationOnce(() => cursor);
 
-      const svc = new MongoBlogService(mockMongoDBClient);
+      const svc = await new MongoBlogService(mockMongoDBClient).initialize();
       const result = await svc.getPosts(1, 3);
 
       expect(result.morePages).toBe(true);
@@ -494,7 +503,7 @@ describe('MongoBlogService', () => {
       const aggregateSpy = jest.spyOn(mockCollection, 'aggregate');
       aggregateSpy.mockImplementationOnce(() => cursor);
 
-      const svc = new MongoBlogService(mockMongoDBClient);
+      const svc = await new MongoBlogService(mockMongoDBClient).initialize();
       const result = await svc.getPosts();
 
       expect(aggregateSpy).toHaveBeenCalledTimes(1);
@@ -509,7 +518,7 @@ describe('MongoBlogService', () => {
         throw new Error(testError);
       });
 
-      const svc = new MongoBlogService(mockMongoDBClient);
+      const svc = await new MongoBlogService(mockMongoDBClient).initialize();
       await expect(() => svc.getPosts()).rejects.toThrow(testError);
 
       expect(aggregateSpy).toHaveBeenCalledTimes(1);
@@ -525,7 +534,7 @@ describe('MongoBlogService', () => {
       const aggregateSpy = jest.spyOn(mockCollection, 'aggregate');
       aggregateSpy.mockImplementationOnce(() => cursor);
 
-      const svc = new MongoBlogService(mockMongoDBClient);
+      const svc = await new MongoBlogService(mockMongoDBClient).initialize();
       await expect(() => svc.getPosts()).rejects.toThrow(testError);
 
       expect(aggregateSpy).toHaveBeenCalledTimes(1);
@@ -545,7 +554,7 @@ describe('MongoBlogService', () => {
       const aggregateSpy = jest.spyOn(mockCollection, 'aggregate');
       aggregateSpy.mockImplementationOnce(() => cursor);
 
-      const svc = new MongoBlogService(mockMongoDBClient);
+      const svc = await new MongoBlogService(mockMongoDBClient).initialize();
       const result = await svc.getPosts();
 
       expect(result.posts.length).toBe(1);
@@ -560,7 +569,7 @@ describe('MongoBlogService', () => {
         _id: post1.id,
       }));
 
-      const svc = new MongoBlogService(mockMongoDBClient);
+      const svc = await new MongoBlogService(mockMongoDBClient).initialize();
       const result = await svc.findBySlug('test');
 
       expect(result.title).toBe(post1.title);
@@ -578,7 +587,7 @@ describe('MongoBlogService', () => {
         throw new Error(testError);
       });
 
-      const svc = new MongoBlogService(mockMongoDBClient);
+      const svc = await new MongoBlogService(mockMongoDBClient).initialize();
       await expect(() => svc.findBySlug('test')).rejects.toThrow(testError);
     });
 
@@ -586,7 +595,7 @@ describe('MongoBlogService', () => {
       const findOneSpy = jest.spyOn(mockCollection, 'findOne');
       findOneSpy.mockImplementationOnce(async () => null);
 
-      const svc = new MongoBlogService(mockMongoDBClient);
+      const svc = await new MongoBlogService(mockMongoDBClient).initialize();
       await expect(() => svc.findBySlug('test')).rejects.toThrow(
         new NotFoundError('Result is null'),
       );
@@ -596,7 +605,7 @@ describe('MongoBlogService', () => {
       const findOneSpy = jest.spyOn(mockCollection, 'findOne');
       findOneSpy.mockImplementationOnce(async () => ({}));
 
-      const svc = new MongoBlogService(mockMongoDBClient);
+      const svc = await new MongoBlogService(mockMongoDBClient).initialize();
       await expect(() => svc.findBySlug('test')).rejects.toThrow();
     });
   });
@@ -608,7 +617,7 @@ describe('MongoBlogService', () => {
         insertedId: new ObjectId(objectId1),
       }));
 
-      const svc = new MongoBlogService(mockMongoDBClient);
+      const svc = await new MongoBlogService(mockMongoDBClient).initialize();
       const result = await svc.addBlogPost(post1.toJSON());
 
       expect(insertOneSpy).toHaveBeenCalledTimes(1);
@@ -618,7 +627,7 @@ describe('MongoBlogService', () => {
     test('Throws an error when the input is not a valid blogPost', async () => {
       const insertOne = jest.spyOn(mockCollection, 'insertOne');
 
-      const svc = new MongoBlogService(mockMongoDBClient);
+      const svc = await new MongoBlogService(mockMongoDBClient).initialize();
       await expect(() => svc.addBlogPost({})).rejects.toThrow(
         new InvalidInputError('Invalid request body'),
       );
@@ -632,7 +641,7 @@ describe('MongoBlogService', () => {
         throw new Error(testError);
       });
 
-      const svc = new MongoBlogService(mockMongoDBClient);
+      const svc = await new MongoBlogService(mockMongoDBClient).initialize();
       await expect(() => svc.addBlogPost(post1.toJSON())).rejects.toThrow(
         'Add blog error',
       );
@@ -650,7 +659,7 @@ describe('MongoBlogService', () => {
         throw er;
       });
 
-      const svc = new MongoBlogService(mockMongoDBClient);
+      const svc = await new MongoBlogService(mockMongoDBClient).initialize();
       await expect(() => svc.addBlogPost(post1.toJSON())).rejects.toThrow(
         'Duplicate Key Error. The following keys must be unique:',
       );
@@ -662,7 +671,7 @@ describe('MongoBlogService', () => {
       const insertOneSpy = jest.spyOn(mockCollection, 'insertOne');
       insertOneSpy.mockImplementationOnce(async () => ({}));
 
-      const svc = new MongoBlogService(mockMongoDBClient);
+      const svc = await new MongoBlogService(mockMongoDBClient).initialize();
       await expect(() => svc.addBlogPost(post1.toJSON())).rejects.toThrow();
 
       expect(insertOneSpy).toHaveBeenCalledTimes(1);
@@ -671,7 +680,7 @@ describe('MongoBlogService', () => {
 
   describe('deleteBlogPost', () => {
     test('calls findOneAndDelete and returns the value that was deleted', async () => {
-      const svc = new MongoBlogService(mockMongoDBClient);
+      const svc = await new MongoBlogService(mockMongoDBClient).initialize();
 
       const deleteOneSpy = jest.spyOn(mockCollection, 'findOneAndDelete');
       deleteOneSpy.mockImplementationOnce(async () => ({
@@ -690,7 +699,7 @@ describe('MongoBlogService', () => {
     });
 
     test('throws an error if findOneAndDelete throws an error', async () => {
-      const svc = new MongoBlogService(mockMongoDBClient);
+      const svc = await new MongoBlogService(mockMongoDBClient).initialize();
 
       const deleteOneSpy = jest.spyOn(mockCollection, 'findOneAndDelete');
       deleteOneSpy.mockImplementationOnce(async () => {
@@ -706,7 +715,7 @@ describe('MongoBlogService', () => {
     });
 
     test('throws an error if findOneAndDelete returns a null value', async () => {
-      const svc = new MongoBlogService(mockMongoDBClient);
+      const svc = await new MongoBlogService(mockMongoDBClient).initialize();
 
       const deleteOneSpy = jest.spyOn(mockCollection, 'findOneAndDelete');
       deleteOneSpy.mockImplementationOnce(async () => ({
@@ -722,7 +731,7 @@ describe('MongoBlogService', () => {
     });
 
     test('throws an error if findOneAndDelete returns an invalid input', async () => {
-      const svc = new MongoBlogService(mockMongoDBClient);
+      const svc = await new MongoBlogService(mockMongoDBClient).initialize();
 
       const deleteOneSpy = jest.spyOn(mockCollection, 'findOneAndDelete');
       deleteOneSpy.mockImplementation(async () => ({}));
@@ -750,10 +759,11 @@ describe('MongoBlogService', () => {
       const col2NameSpy = jest.spyOn(collection2, 'collectionName', 'get');
       col2NameSpy.mockReturnValue('collection2');
 
-      const collectionsSpy = jest.spyOn(mockDb, 'collections');
-      collectionsSpy.mockImplementationOnce(() =>
-        Promise.resolve([blogDataCol, collection1, collection2]),
-      );
+      mockCollectionsSpy.mockImplementationOnce(async () => [
+        blogDataCol,
+        collection1,
+        collection2,
+      ]);
 
       const createSpy = jest.spyOn(mockDb, 'createCollection');
       createSpy.mockImplementationOnce(async () => mockCollection);
@@ -764,7 +774,7 @@ describe('MongoBlogService', () => {
       ).initialize();
 
       expect(clientDbSpy).toHaveBeenCalledTimes(1);
-      expect(collectionsSpy).toHaveBeenCalledTimes(1);
+      expect(mockCollectionsSpy).toHaveBeenCalledTimes(1);
       expect(blogNameSpy).toHaveBeenCalledTimes(1);
       expect(col1NameSpy).toHaveBeenCalledTimes(1);
       expect(col2NameSpy).toHaveBeenCalledTimes(1);
@@ -780,10 +790,10 @@ describe('MongoBlogService', () => {
       const col2NameSpy = jest.spyOn(collection2, 'collectionName', 'get');
       col2NameSpy.mockReturnValue('collection2');
 
-      const collectionsSpy = jest.spyOn(mockDb, 'collections');
-      collectionsSpy.mockImplementationOnce(() =>
-        Promise.resolve([collection1, collection2]),
-      );
+      mockCollectionsSpy.mockImplementationOnce(async () => [
+        collection1,
+        collection2,
+      ]);
 
       const createSpy = jest.spyOn(mockDb, 'createCollection');
       createSpy.mockImplementationOnce(async () => mockCollection);
@@ -794,7 +804,7 @@ describe('MongoBlogService', () => {
       ).initialize();
 
       expect(clientDbSpy).toHaveBeenCalledTimes(2);
-      expect(collectionsSpy).toHaveBeenCalledTimes(1);
+      expect(mockCollectionsSpy).toHaveBeenCalledTimes(1);
       expect(col1NameSpy).toHaveBeenCalledTimes(1);
       expect(col2NameSpy).toHaveBeenCalledTimes(1);
       expect(createSpy).toHaveBeenCalledTimes(1);
@@ -809,10 +819,10 @@ describe('MongoBlogService', () => {
       const col2NameSpy = jest.spyOn(collection2, 'collectionName', 'get');
       col2NameSpy.mockReturnValue('collection2');
 
-      const collectionsSpy = jest.spyOn(mockDb, 'collections');
-      collectionsSpy.mockImplementationOnce(() =>
-        Promise.resolve([collection1, collection2]),
-      );
+      mockCollectionsSpy.mockImplementationOnce(async () => [
+        collection1,
+        collection2,
+      ]);
 
       const createSpy = jest.spyOn(mockDb, 'createCollection');
       createSpy.mockImplementationOnce(async () => {
@@ -823,11 +833,11 @@ describe('MongoBlogService', () => {
         MongoBlogService.makeFromConfig(
           new ConfigService(),
           mockMongoDBClient,
-        ).initialize(),
+        ).initialize(1, 0),
       ).rejects.toThrow(testError);
 
       expect(clientDbSpy).toHaveBeenCalledTimes(2);
-      expect(collectionsSpy).toHaveBeenCalledTimes(1);
+      expect(mockCollectionsSpy).toHaveBeenCalledTimes(1);
       expect(col1NameSpy).toHaveBeenCalledTimes(1);
       expect(col2NameSpy).toHaveBeenCalledTimes(1);
       expect(createSpy).toHaveBeenCalledTimes(1);
@@ -842,10 +852,10 @@ describe('MongoBlogService', () => {
       const col2NameSpy = jest.spyOn(collection2, 'collectionName', 'get');
       col2NameSpy.mockReturnValue('collection2');
 
-      const collectionsSpy = jest.spyOn(mockDb, 'collections');
-      collectionsSpy.mockImplementationOnce(() =>
-        Promise.resolve([collection1, collection2]),
-      );
+      mockCollectionsSpy.mockImplementationOnce(async () => [
+        collection1,
+        collection2,
+      ]);
 
       const createSpy = jest.spyOn(mockDb, 'createCollection');
       createSpy.mockImplementationOnce(async () => mockCollection);
@@ -859,11 +869,11 @@ describe('MongoBlogService', () => {
         MongoBlogService.makeFromConfig(
           new ConfigService(),
           mockMongoDBClient,
-        ).initialize(),
+        ).initialize(1, 0),
       ).rejects.toThrow(testError);
 
       expect(clientDbSpy).toHaveBeenCalledTimes(2);
-      expect(collectionsSpy).toHaveBeenCalledTimes(1);
+      expect(mockCollectionsSpy).toHaveBeenCalledTimes(1);
       expect(col1NameSpy).toHaveBeenCalledTimes(1);
       expect(col2NameSpy).toHaveBeenCalledTimes(1);
       expect(createSpy).toHaveBeenCalledTimes(1);
@@ -887,17 +897,15 @@ describe('MongoBlogService', () => {
         throw new Error(testError);
       });
 
-      const collectionsSpy = jest.spyOn(mockDb, 'collections');
-
       await expect(() =>
         MongoBlogService.makeFromConfig(
           new ConfigService(),
           mockMongoDBClient,
-        ).initialize(),
+        ).initialize(1, 0),
       ).rejects.toThrow();
 
       expect(clientDbSpy).toHaveBeenCalledTimes(1);
-      expect(collectionsSpy).toHaveBeenCalledTimes(0);
+      expect(mockCollectionsSpy).toHaveBeenCalledTimes(0);
       expect(blogNameSpy).toHaveBeenCalledTimes(0);
       expect(col1NameSpy).toHaveBeenCalledTimes(0);
       expect(col2NameSpy).toHaveBeenCalledTimes(0);
@@ -916,8 +924,7 @@ describe('MongoBlogService', () => {
       const col2NameSpy = jest.spyOn(collection2, 'collectionName', 'get');
       col2NameSpy.mockReturnValue('collection2');
 
-      const collectionsSpy = jest.spyOn(mockDb, 'collections');
-      collectionsSpy.mockImplementation(() => {
+      mockCollectionsSpy.mockImplementation(async () => {
         throw new Error(testError);
       });
 
@@ -925,11 +932,11 @@ describe('MongoBlogService', () => {
         MongoBlogService.makeFromConfig(
           new ConfigService(),
           mockMongoDBClient,
-        ).initialize(),
+        ).initialize(1, 0),
       ).rejects.toThrow();
 
       expect(clientDbSpy).toHaveBeenCalledTimes(1);
-      expect(collectionsSpy).toHaveBeenCalledTimes(1);
+      expect(mockCollectionsSpy).toHaveBeenCalledTimes(1);
       expect(blogNameSpy).toHaveBeenCalledTimes(0);
       expect(col1NameSpy).toHaveBeenCalledTimes(0);
       expect(col2NameSpy).toHaveBeenCalledTimes(0);

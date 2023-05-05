@@ -53,10 +53,6 @@ export class InMemoryBlogService implements BlogService {
   }
 
   async addBlogPost(requestBody: unknown): Promise<BlogPost> {
-    if (!NewBlogPost.isNewBlogPostInterface(requestBody)) {
-      throw new InvalidInputError('Invalid request body');
-    }
-
     const newPost = NewBlogPost.fromJSON(requestBody);
 
     const id = uuidv4();
@@ -78,4 +74,6 @@ export class InMemoryBlogService implements BlogService {
 
     return post;
   }
+
+  async backup() {}
 }

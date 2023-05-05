@@ -8,12 +8,21 @@ import { BlogPost } from '@/src/models/blog_post_model';
 import { InMemoryBlogService } from '@/src/blog/blog.service.memory';
 
 const BASE_NAME = 'blog_data';
-const FILE_NAME = `${BASE_NAME}.json`;
+const FILE_EXTENSION = 'json';
+const FILE_NAME = `${BASE_NAME}.${FILE_EXTENSION}`;
 
 @Injectable()
 export class FileBlogService extends InMemoryBlogService {
-  constructor(protected fileHandle: FileHandle, inputPosts: BlogPost[] = []) {
+  constructor(
+    protected readonly fileHandle: FileHandle,
+    protected readonly blogPath: string,
+    inputPosts: BlogPost[] = [],
+  ) {
     super(inputPosts);
+  }
+
+  get blogString(): string {
+    return JSON.stringify(Object.values(this.blogPosts));
   }
 
   async addBlogPost(requestBody: unknown): Promise<BlogPost> {
@@ -33,10 +42,14 @@ export class FileBlogService extends InMemoryBlogService {
   }
 
   async writeToFile(): Promise<void> {
-    const postsJson = JSON.stringify(Object.values(this.blogPosts));
+    const postsJson = this.blogString;
 
     await this.fileHandle.truncate(0);
     await this.fileHandle.write(postsJson, 0);
+  }
+
+  async backup() {
+    await FileBlogService.writeBackup(this.blogPath, this.blogString);
   }
 
   static async makeFileHandle(
@@ -56,13 +69,15 @@ export class FileBlogService extends InMemoryBlogService {
     return fileHandle;
   }
 
-  static async moveOldDataToNewFile(blogPath: string, rawData: string) {
-    const fileHandle = await FileBlogService.makeFileHandle(
-      blogPath,
-      `${BASE_NAME}_${new Date().toISOString()}.json`,
-    );
+  static async writeBackup(blogPath: string, rawData: string, name?: string) {
+    const filename =
+      name ??
+      `${BASE_NAME}_backup_${new Date().toISOString()}.${FILE_EXTENSION}`;
+    const fileHandle = await FileBlogService.makeFileHandle(blogPath, filename);
 
+    await fileHandle.truncate(0);
     await fileHandle.write(rawData, 0);
+    await fileHandle.close();
   }
 
   static async init(blogPath: string): Promise<FileBlogService> {
@@ -90,13 +105,13 @@ export class FileBlogService extends InMemoryBlogService {
       console.error('Invalid or no data when reading file data file', e);
 
       if (rawData.length > 0) {
-        await FileBlogService.moveOldDataToNewFile(blogPath, rawData);
+        await FileBlogService.writeBackup(blogPath, rawData);
       }
 
       await fileHandle.truncate(0);
       await fileHandle.write('[]', 0);
     }
 
-    return new FileBlogService(fileHandle, blogPosts);
+    return new FileBlogService(fileHandle, blogPath, blogPosts);
   }
 }

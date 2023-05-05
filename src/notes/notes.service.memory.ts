@@ -3,8 +3,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { NotesRequestOutput, NotesService } from '@/src/notes/notes.service';
 import { NewNote, Note } from '@/src/models/notes_model';
-import { isUndefined } from '../utils/type_guards';
-import { InvalidInputError, NotFoundError } from '../errors';
+import { isUndefined } from '@/src/utils/type_guards';
+import { InvalidInputError, NotFoundError } from '@/src/errors';
 
 @Injectable()
 export class InMemoryNotesService implements NotesService {
@@ -51,10 +51,6 @@ export class InMemoryNotesService implements NotesService {
   }
 
   async addNote(requestBody: unknown): Promise<Note> {
-    if (!NewNote.isNewNoteInterface(requestBody)) {
-      throw new InvalidInputError('Invalid request body');
-    }
-
     const newNote = NewNote.fromJSON(requestBody);
 
     const id = uuidv4();
@@ -72,4 +68,6 @@ export class InMemoryNotesService implements NotesService {
   async deleteNote(id: string): Promise<Note> {
     throw new Error('unimplemented');
   }
+
+  async backup(): Promise<void> {}
 }

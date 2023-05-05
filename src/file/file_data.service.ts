@@ -4,6 +4,7 @@ import {
   FileDetailsJSON,
   NewFileDetails,
 } from '@/src/models/file_models';
+import { Backupable } from '@/src/utils/backuppable';
 
 export enum FileSortOption {
   Filename = 'Filename',
@@ -41,7 +42,7 @@ export interface DeleteResultJSON {
 }
 
 @Injectable()
-export abstract class FileDataService {
+export abstract class FileDataService implements Backupable {
   abstract addFiles(fileDetails: NewFileDetails[]): Promise<FileDetails[]>;
 
   abstract getFileList(options?: GetFileListOptions): Promise<FileDetails[]>;
@@ -51,4 +52,6 @@ export abstract class FileDataService {
   abstract getFileByName(name: string): Promise<FileDetails>;
 
   abstract deleteFiles(names: string[]): Promise<Record<string, DeleteDetails>>;
+
+  abstract backup(): Promise<void>;
 }

@@ -5,7 +5,7 @@ import { LoggerService } from '@/src/logger/logger.service';
 import { ConsoleLoggerInstanceService } from '@/src/logger/logger.console.service';
 import { MongoLoggerInstanceService } from './loggerInstance.service.mongo';
 import { LoggerInstanceService } from '@/src/logger/loggerInstance.service';
-import { LoggerMongoClearTaskService } from './logger.mongo_clear.task';
+import { LoggerCycleService } from './logger.cycle.service';
 import { FileLoggerInstanceService } from './loggerInstance.service.file';
 
 const loggerServiceFactory = {
@@ -36,7 +36,7 @@ const loggerServiceFactory = {
 
 @Module({
   imports: [ConfigModule],
-  providers: [loggerServiceFactory, LoggerMongoClearTaskService],
+  providers: [loggerServiceFactory, LoggerCycleService],
   exports: [loggerServiceFactory],
 })
 export class LoggerModule {}

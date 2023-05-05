@@ -125,6 +125,7 @@ describe('MongoFileDataService', () => {
   let mockDb: Db;
 
   let mockCollectionSpy: jest.SpyInstance;
+  let mockCollectionsSpy: jest.SpyInstance;
   let clientDbSpy: jest.SpyInstance;
 
   beforeEach(() => {
@@ -146,6 +147,16 @@ describe('MongoFileDataService', () => {
     mockCollection = new Collection();
     mockCollectionSpy = jest.spyOn(mockDb, 'collection');
     mockCollectionSpy.mockReturnValue(mockCollection);
+
+    const filesCollection = new Collection();
+    const filesCollectionNameSpy = jest.spyOn(
+      filesCollection,
+      'collectionName',
+      'get',
+    );
+    filesCollectionNameSpy.mockReturnValue('files');
+    mockCollectionsSpy = jest.spyOn(mockDb, 'collections');
+    mockCollectionsSpy.mockImplementation(async () => [filesCollection]);
 
     mockMongoDBClient = new MongoDBClient(uri, dbName);
     clientDbSpy = jest.spyOn(mockMongoDBClient, 'db', 'get');
@@ -410,7 +421,9 @@ describe('MongoFileDataService', () => {
         };
       });
 
-      const svc = new MongoFileDataService(mockMongoDBClient);
+      const svc = await new MongoFileDataService(
+        mockMongoDBClient,
+      ).initialize();
       const result = await svc.addFiles([nfd1, nfd2]);
 
       const result1 = result.find(
@@ -434,14 +447,18 @@ describe('MongoFileDataService', () => {
     });
 
     test('throws an error if an empty array is sent', async () => {
-      const svc = new MongoFileDataService(mockMongoDBClient);
+      const svc = await new MongoFileDataService(
+        mockMongoDBClient,
+      ).initialize();
       await expect(() => svc.addFiles([])).rejects.toThrow();
 
       expect(insertMany).toHaveBeenCalledTimes(0);
     });
 
     test('throws an error if fileCollection throws an error', async () => {
-      const svc = new MongoFileDataService(mockMongoDBClient);
+      const svc = await new MongoFileDataService(
+        mockMongoDBClient,
+      ).initialize();
       clientDbSpy.mockImplementationOnce(() => {
         throw new Error(testError);
       });
@@ -451,7 +468,9 @@ describe('MongoFileDataService', () => {
     });
 
     test('throws an error if insertMany throws an error', async () => {
-      const svc = new MongoFileDataService(mockMongoDBClient);
+      const svc = await new MongoFileDataService(
+        mockMongoDBClient,
+      ).initialize();
       insertMany.mockImplementationOnce(() => {
         throw new Error(testError);
       });
@@ -475,7 +494,9 @@ describe('MongoFileDataService', () => {
         insertedCount: input.length,
       }));
 
-      const svc = new MongoFileDataService(mockMongoDBClient);
+      const svc = await new MongoFileDataService(
+        mockMongoDBClient,
+      ).initialize();
 
       await expect(() => svc.addFiles([nfd1, nfd2])).rejects.toThrow(
         'Upload error',
@@ -498,7 +519,9 @@ describe('MongoFileDataService', () => {
         insertedCount: input.length - 1,
       }));
 
-      const svc = new MongoFileDataService(mockMongoDBClient);
+      const svc = await new MongoFileDataService(
+        mockMongoDBClient,
+      ).initialize();
 
       await expect(() => svc.addFiles([nfd1, nfd2])).rejects.toThrow(
         'Upload error',
@@ -521,7 +544,9 @@ describe('MongoFileDataService', () => {
         insertedCount: input.length,
       }));
 
-      const svc = new MongoFileDataService(mockMongoDBClient);
+      const svc = await new MongoFileDataService(
+        mockMongoDBClient,
+      ).initialize();
 
       await expect(() => svc.addFiles([nfd1, nfd2])).rejects.toThrow();
 
@@ -549,7 +574,9 @@ describe('MongoFileDataService', () => {
       const aggregateSpy = jest.spyOn(mockCollection, 'aggregate');
       aggregateSpy.mockImplementationOnce(() => cursor);
 
-      const svc = new MongoFileDataService(mockMongoDBClient);
+      const svc = await new MongoFileDataService(
+        mockMongoDBClient,
+      ).initialize();
       const result = await svc.getFileList();
 
       expect(result.length).toBe(2);
@@ -581,7 +608,9 @@ describe('MongoFileDataService', () => {
       const aggregateSpy = jest.spyOn(mockCollection, 'aggregate');
       aggregateSpy.mockImplementationOnce(() => cursor);
 
-      const svc = new MongoFileDataService(mockMongoDBClient);
+      const svc = await new MongoFileDataService(
+        mockMongoDBClient,
+      ).initialize();
       const pagination = 96;
       const page = 69;
       const result = await svc.getFileList({ page, pagination });
@@ -616,7 +645,9 @@ describe('MongoFileDataService', () => {
       const aggregateSpy = jest.spyOn(mockCollection, 'aggregate');
       aggregateSpy.mockImplementation(() => cursor);
 
-      const svc = new MongoFileDataService(mockMongoDBClient);
+      const svc = await new MongoFileDataService(
+        mockMongoDBClient,
+      ).initialize();
 
       await svc.getFileList({ sortBy: FileSortOption.Filename });
 
@@ -652,7 +683,9 @@ describe('MongoFileDataService', () => {
       const aggregateSpy = jest.spyOn(mockCollection, 'aggregate');
       aggregateSpy.mockImplementationOnce(() => cursor);
 
-      const svc = new MongoFileDataService(mockMongoDBClient);
+      const svc = await new MongoFileDataService(
+        mockMongoDBClient,
+      ).initialize();
       const result = await svc.getFileList();
 
       expect(result.length).toBe(0);
@@ -669,7 +702,9 @@ describe('MongoFileDataService', () => {
       const aggregateSpy = jest.spyOn(mockCollection, 'aggregate');
       aggregateSpy.mockImplementationOnce(() => cursor);
 
-      const svc = new MongoFileDataService(mockMongoDBClient);
+      const svc = await new MongoFileDataService(
+        mockMongoDBClient,
+      ).initialize();
       const result = await svc.getFileList({
         page: 1,
         pagination: 4,
@@ -697,7 +732,9 @@ describe('MongoFileDataService', () => {
       const aggregateSpy = jest.spyOn(mockCollection, 'aggregate');
       aggregateSpy.mockImplementationOnce(() => cursor);
 
-      const svc = new MongoFileDataService(mockMongoDBClient);
+      const svc = await new MongoFileDataService(
+        mockMongoDBClient,
+      ).initialize();
       await expect(() => svc.getFileList()).rejects.toThrow();
 
       expect(aggregate).toHaveBeenCalledTimes(1);
@@ -718,7 +755,9 @@ describe('MongoFileDataService', () => {
         _id: new ObjectId(objectId1),
       }));
 
-      const svc = new MongoFileDataService(mockMongoDBClient);
+      const svc = await new MongoFileDataService(
+        mockMongoDBClient,
+      ).initialize();
       const result = await svc.getFileByName(nfd1.filename);
 
       expect(result.baseDetails()).toMatchObject(nfd1.baseDetails());
@@ -728,7 +767,9 @@ describe('MongoFileDataService', () => {
     });
 
     test('Throws an error if fileCollection throws an error', async () => {
-      const svc = new MongoFileDataService(mockMongoDBClient);
+      const svc = await new MongoFileDataService(
+        mockMongoDBClient,
+      ).initialize();
       clientDbSpy.mockImplementationOnce(() => {
         throw new Error(testError);
       });
@@ -745,7 +786,9 @@ describe('MongoFileDataService', () => {
         throw new Error(testError);
       });
 
-      const svc = new MongoFileDataService(mockMongoDBClient);
+      const svc = await new MongoFileDataService(
+        mockMongoDBClient,
+      ).initialize();
       await expect(() => svc.getFileByName(nfd1.filename)).rejects.toThrow(
         testError,
       );
@@ -758,7 +801,9 @@ describe('MongoFileDataService', () => {
       const findOneSpy = jest.spyOn(mockCollection, 'findOne');
       findOneSpy.mockImplementationOnce(() => null);
 
-      const svc = new MongoFileDataService(mockMongoDBClient);
+      const svc = await new MongoFileDataService(
+        mockMongoDBClient,
+      ).initialize();
 
       await expect(() => svc.getFileByName(nfd1.filename)).rejects.toThrow(
         'Result is null',
@@ -781,7 +826,9 @@ describe('MongoFileDataService', () => {
 
       const filename = nfd1.filename;
 
-      const svc = new MongoFileDataService(mockMongoDBClient);
+      const svc = await new MongoFileDataService(
+        mockMongoDBClient,
+      ).initialize();
       const result = await svc.deleteFiles([filename]);
 
       expect(Object.keys(result).length).toBe(1);
@@ -821,7 +868,9 @@ describe('MongoFileDataService', () => {
         return { value };
       });
 
-      const svc = new MongoFileDataService(mockMongoDBClient);
+      const svc = await new MongoFileDataService(
+        mockMongoDBClient,
+      ).initialize();
       const result = await svc.deleteFiles([filename1, filename2]);
 
       expect(Object.keys(result).length).toBe(2);
@@ -848,7 +897,9 @@ describe('MongoFileDataService', () => {
     });
 
     test('throws an error if fileCollection throws an error', async () => {
-      const svc = new MongoFileDataService(mockMongoDBClient);
+      const svc = await new MongoFileDataService(
+        mockMongoDBClient,
+      ).initialize();
       clientDbSpy.mockImplementationOnce(() => {
         throw new Error(testError);
       });
@@ -867,7 +918,9 @@ describe('MongoFileDataService', () => {
 
       const filename = nfd1.filename;
 
-      const svc = new MongoFileDataService(mockMongoDBClient);
+      const svc = await new MongoFileDataService(
+        mockMongoDBClient,
+      ).initialize();
       const result = await svc.deleteFiles([filename]);
 
       expect(Object.keys(result).length).toBe(1);
@@ -890,7 +943,9 @@ describe('MongoFileDataService', () => {
 
       const filename = nfd1.filename;
 
-      const svc = new MongoFileDataService(mockMongoDBClient);
+      const svc = await new MongoFileDataService(
+        mockMongoDBClient,
+      ).initialize();
       const result = await svc.deleteFiles([filename]);
 
       expect(Object.keys(result).length).toBe(1);
@@ -915,7 +970,9 @@ describe('MongoFileDataService', () => {
 
       const filename = nfd1.filename;
 
-      const svc = new MongoFileDataService(mockMongoDBClient);
+      const svc = await new MongoFileDataService(
+        mockMongoDBClient,
+      ).initialize();
       const result = await svc.deleteFiles([filename]);
 
       expect(Object.keys(result).length).toBe(1);
@@ -945,10 +1002,11 @@ describe('MongoFileDataService', () => {
       const col2NameSpy = jest.spyOn(collection2, 'collectionName', 'get');
       col2NameSpy.mockReturnValue('collection2');
 
-      const collectionsSpy = jest.spyOn(mockDb, 'collections');
-      collectionsSpy.mockImplementationOnce(() =>
-        Promise.resolve([fileDataCol, collection1, collection2]),
-      );
+      mockCollectionsSpy.mockImplementationOnce(async () => [
+        fileDataCol,
+        collection1,
+        collection2,
+      ]);
 
       const createSpy = jest.spyOn(mockDb, 'createCollection');
       createSpy.mockImplementationOnce(async () => mockCollection);
@@ -959,7 +1017,7 @@ describe('MongoFileDataService', () => {
       ).initialize();
 
       expect(clientDbSpy).toHaveBeenCalledTimes(1);
-      expect(collectionsSpy).toHaveBeenCalledTimes(1);
+      expect(mockCollectionsSpy).toHaveBeenCalledTimes(1);
       expect(fileNameSpy).toHaveBeenCalledTimes(1);
       expect(col1NameSpy).toHaveBeenCalledTimes(1);
       expect(col2NameSpy).toHaveBeenCalledTimes(1);
@@ -975,8 +1033,7 @@ describe('MongoFileDataService', () => {
       const col2NameSpy = jest.spyOn(collection2, 'collectionName', 'get');
       col2NameSpy.mockReturnValue('collection2');
 
-      const collectionsSpy = jest.spyOn(mockDb, 'collections');
-      collectionsSpy.mockImplementationOnce(() =>
+      mockCollectionsSpy.mockImplementationOnce(() =>
         Promise.resolve([collection1, collection2]),
       );
 
@@ -989,7 +1046,7 @@ describe('MongoFileDataService', () => {
       ).initialize();
 
       expect(clientDbSpy).toHaveBeenCalledTimes(2);
-      expect(collectionsSpy).toHaveBeenCalledTimes(1);
+      expect(mockCollectionsSpy).toHaveBeenCalledTimes(1);
       expect(col1NameSpy).toHaveBeenCalledTimes(1);
       expect(col2NameSpy).toHaveBeenCalledTimes(1);
       expect(createSpy).toHaveBeenCalledTimes(1);
@@ -1004,8 +1061,7 @@ describe('MongoFileDataService', () => {
       const col2NameSpy = jest.spyOn(collection2, 'collectionName', 'get');
       col2NameSpy.mockReturnValue('collection2');
 
-      const collectionsSpy = jest.spyOn(mockDb, 'collections');
-      collectionsSpy.mockImplementationOnce(() =>
+      mockCollectionsSpy.mockImplementationOnce(() =>
         Promise.resolve([collection1, collection2]),
       );
 
@@ -1018,11 +1074,11 @@ describe('MongoFileDataService', () => {
         MongoFileDataService.makeFromConfig(
           new ConfigService(),
           mockMongoDBClient,
-        ).initialize(),
+        ).initialize(1, 0),
       ).rejects.toThrow(testError);
 
       expect(clientDbSpy).toHaveBeenCalledTimes(2);
-      expect(collectionsSpy).toHaveBeenCalledTimes(1);
+      expect(mockCollectionsSpy).toHaveBeenCalledTimes(1);
       expect(col1NameSpy).toHaveBeenCalledTimes(1);
       expect(col2NameSpy).toHaveBeenCalledTimes(1);
       expect(createSpy).toHaveBeenCalledTimes(1);
@@ -1037,8 +1093,7 @@ describe('MongoFileDataService', () => {
       const col2NameSpy = jest.spyOn(collection2, 'collectionName', 'get');
       col2NameSpy.mockReturnValue('collection2');
 
-      const collectionsSpy = jest.spyOn(mockDb, 'collections');
-      collectionsSpy.mockImplementationOnce(() =>
+      mockCollectionsSpy.mockImplementationOnce(() =>
         Promise.resolve([collection1, collection2]),
       );
 
@@ -1054,11 +1109,11 @@ describe('MongoFileDataService', () => {
         MongoFileDataService.makeFromConfig(
           new ConfigService(),
           mockMongoDBClient,
-        ).initialize(),
+        ).initialize(1, 0),
       ).rejects.toThrow(testError);
 
       expect(clientDbSpy).toHaveBeenCalledTimes(2);
-      expect(collectionsSpy).toHaveBeenCalledTimes(1);
+      expect(mockCollectionsSpy).toHaveBeenCalledTimes(1);
       expect(col1NameSpy).toHaveBeenCalledTimes(1);
       expect(col2NameSpy).toHaveBeenCalledTimes(1);
       expect(createSpy).toHaveBeenCalledTimes(1);
@@ -1082,17 +1137,15 @@ describe('MongoFileDataService', () => {
         throw new Error(testError);
       });
 
-      const collectionsSpy = jest.spyOn(mockDb, 'collections');
-
       await expect(() =>
         MongoFileDataService.makeFromConfig(
           new ConfigService(),
           mockMongoDBClient,
-        ).initialize(),
+        ).initialize(1, 0),
       ).rejects.toThrow();
 
       expect(clientDbSpy).toHaveBeenCalledTimes(1);
-      expect(collectionsSpy).toHaveBeenCalledTimes(0);
+      expect(mockCollectionsSpy).toHaveBeenCalledTimes(0);
       expect(fileNameSpy).toHaveBeenCalledTimes(0);
       expect(col1NameSpy).toHaveBeenCalledTimes(0);
       expect(col2NameSpy).toHaveBeenCalledTimes(0);
@@ -1111,8 +1164,7 @@ describe('MongoFileDataService', () => {
       const col2NameSpy = jest.spyOn(collection2, 'collectionName', 'get');
       col2NameSpy.mockReturnValue('collection2');
 
-      const collectionsSpy = jest.spyOn(mockDb, 'collections');
-      collectionsSpy.mockImplementation(() => {
+      mockCollectionsSpy.mockImplementation(() => {
         throw new Error(testError);
       });
 
@@ -1120,11 +1172,11 @@ describe('MongoFileDataService', () => {
         MongoFileDataService.makeFromConfig(
           new ConfigService(),
           mockMongoDBClient,
-        ).initialize(),
+        ).initialize(1, 0),
       ).rejects.toThrow();
 
       expect(clientDbSpy).toHaveBeenCalledTimes(1);
-      expect(collectionsSpy).toHaveBeenCalledTimes(1);
+      expect(mockCollectionsSpy).toHaveBeenCalledTimes(1);
       expect(fileNameSpy).toHaveBeenCalledTimes(0);
       expect(col1NameSpy).toHaveBeenCalledTimes(0);
       expect(col2NameSpy).toHaveBeenCalledTimes(0);

@@ -5,6 +5,7 @@ import { LoggerModule } from '@/src/logger/logger.module';
 
 import { FileController } from '@/src/file/file.controller';
 import { FileAPIController } from '@/src/file/file_api.controller';
+import { FileBackupService } from '@/src/file/file_backup_service';
 import { InMemoryFileDataService } from '@/src/file/file_data.service.memory';
 import { MongoFileDataService } from '@/src/file/file_data.service.mongo';
 import { FileFileDataService } from '@/src/file/file_data.service.file';
@@ -38,6 +39,6 @@ const fileServiceFactory = {
 @Module({
   imports: [LoggerModule, ConfigModule],
   controllers: [FileController, FileAPIController],
-  providers: [fileServiceFactory],
+  providers: [fileServiceFactory, FileBackupService],
 })
 export class FileUploadModule {}

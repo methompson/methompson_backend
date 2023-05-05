@@ -16,7 +16,7 @@ import {
   NotFoundError,
 } from '@/src/errors';
 import { MongoDBClient } from '@/src/utils/mongodb_client_class';
-import { isNullOrUndefined } from '@/src/utils/type_guards';
+import { isNullOrUndefined, isNumber } from '@/src/utils/type_guards';
 import { delay } from '@/src/utils/delay';
 
 export const fileCollectionName = 'files';
@@ -37,7 +37,10 @@ export class MongoFileDataService implements FileDataService {
     return this._mongoDBClient;
   }
 
-  async initialize() {
+  async initialize(
+    attempt = 1,
+    maxAttempts?: number,
+  ): Promise<MongoFileDataService> {
     console.log('Initializing File Service');
     try {
       if (!(await this.containsFileCollection())) {
@@ -48,11 +51,18 @@ export class MongoFileDataService implements FileDataService {
     } catch (e) {
       // console.error('Error Connecting to MongoDB.', e);
       console.error('Error Connecting to MongoDB.');
+
+      if (isNumber(maxAttempts) && attempt > maxAttempts) {
+        throw e;
+      }
+
       await delay();
 
       console.log('Trying again');
       this.initialize();
     }
+
+    return this;
   }
 
   protected async containsFileCollection(): Promise<boolean> {
@@ -275,4 +285,6 @@ export class MongoFileDataService implements FileDataService {
 
     return new MongoFileDataService(client);
   }
+
+  async backup() {}
 }

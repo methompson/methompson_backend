@@ -107,4 +107,6 @@ export class InMemoryFileDataService implements FileDataService {
 
     return output;
   }
+
+  async backup() {}
 }

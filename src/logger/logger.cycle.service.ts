@@ -1,9 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { LoggerService } from './logger.service';
+
+import { LoggerService } from '@/src/logger/logger.service';
 
 @Injectable()
-export class LoggerMongoClearTaskService {
+export class LoggerCycleService {
   constructor(
     @Inject('LOGGER_SERVICE') protected readonly loggerService: LoggerService,
   ) {}

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { Note } from '@/src/models/notes_model';
+import { Backupable } from '@/src/utils/backuppable';
 
 export interface NotesRequestOutput {
   posts: Note[];
@@ -8,7 +9,7 @@ export interface NotesRequestOutput {
 }
 
 @Injectable()
-export abstract class NotesService {
+export abstract class NotesService implements Backupable {
   abstract getNotes(
     page: number,
     pagination: number,
@@ -21,4 +22,6 @@ export abstract class NotesService {
   abstract updateNote(requestBody: unknown): Promise<Note>;
 
   abstract deleteNote(id: string): Promise<Note>;
+
+  abstract backup(): Promise<void>;
 }

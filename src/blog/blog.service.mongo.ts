@@ -10,10 +10,10 @@ import {
 } from '@/src/errors';
 import { BlogService, BlogPostRequestOutput } from '@/src/blog/blog.service';
 import { MongoDBClient } from '@/src/utils/mongodb_client_class';
-import { isNullOrUndefined, isRecord } from '@/src/utils/type_guards';
+import { isNullOrUndefined, isNumber, isRecord } from '@/src/utils/type_guards';
 import { delay } from '@/src/utils/delay';
 
-const blogPostsCollectionName = 'blogPosts';
+export const blogPostsCollectionName = 'blogPosts';
 
 @Injectable()
 export class MongoBlogService implements BlogService {
@@ -31,7 +31,10 @@ export class MongoBlogService implements BlogService {
     return this._mongoDBClient;
   }
 
-  async initialize() {
+  async initialize(
+    attempt = 1,
+    maxAttempts?: number,
+  ): Promise<MongoBlogService> {
     console.log('Initializing Blog Service');
 
     try {
@@ -46,11 +49,17 @@ export class MongoBlogService implements BlogService {
       // console.error('Error Connecting to MongoDB.', e);
       console.error('Error Connecting to MongoDB.');
 
+      if (isNumber(maxAttempts) && attempt > maxAttempts) {
+        throw e;
+      }
+
       await delay();
 
       console.log('Trying again');
-      this.initialize();
+      this.initialize(attempt + 1, maxAttempts);
     }
+
+    return this;
   }
 
   protected async containsBlogCollection(): Promise<boolean> {
@@ -108,7 +117,6 @@ export class MongoBlogService implements BlogService {
   }
 
   async getPosts(page = 1, pagination = 10): Promise<BlogPostRequestOutput> {
-    console.log('getting posts');
     if (!this._initialized) {
       throw new DatabaseNotAvailableException('Database Not Available');
     }
@@ -231,4 +239,6 @@ export class MongoBlogService implements BlogService {
 
     return new MongoBlogService(client);
   }
+
+  async backup() {}
 }

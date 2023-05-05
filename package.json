@@ -7,13 +7,14 @@
   "license": "UNLICENSED",
   "scripts": {
     "lint:fix": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
+    "lint": "eslint --fix-dry-run \"{src,apps,libs,test}/**/*.ts\"",
     "test": "jest ./test/unit",
     "test:cov": "jest --coverage",
     "compile": "tsup-node ./src/main.ts",
     "compile_bundle": "tsup ./src/main.ts",
     "dev": "tsup ./src/main.ts --watch --env.NODE_ENV development --onSuccess \"node dist/main.js\"",
-    "dev_noauth": "tsup ./src/main.ts --watch --env.NODE_ENV development  --onSuccess \"node dist/main.js noauth\""
+    "dev_noauth": "tsup ./src/main.ts --watch --env.NODE_ENV development  --onSuccess \"node dist/main.js noauth\"",
+    "typescript_errors": "tsc --noEmit"
   },
   "dependencies": {
     "@nestjs/common": "^8.0.0",

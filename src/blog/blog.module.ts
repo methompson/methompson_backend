@@ -7,6 +7,7 @@ import { BlogController } from '@/src/blog/blog.controller';
 import { MongoBlogService } from '@/src/blog/blog.service.mongo';
 import { InMemoryBlogService } from '@/src/blog/blog.service.memory';
 import { FileBlogService } from '@/src/blog/blog.service.file';
+import { BlogBackupService } from '@/src/blog/blog_backup_service';
 
 import { isString } from '@/src/utils/type_guards';
 
@@ -43,6 +44,6 @@ const blogServiceFactory = {
 @Module({
   imports: [LoggerModule, ConfigModule],
   controllers: [BlogController],
-  providers: [blogServiceFactory],
+  providers: [blogServiceFactory, BlogBackupService],
 })
 export class BlogModule {}

@@ -7,12 +7,21 @@ import { FileDetails, NewFileDetails } from '@/src/models/file_models';
 import { InMemoryFileDataService } from './file_data.service.memory';
 
 const BASE_NAME = 'files_data';
-const FILE_NAME = `${BASE_NAME}.json`;
+const FILE_EXTENSION = 'json';
+const FILE_NAME = `${BASE_NAME}.${FILE_EXTENSION}`;
 
 @Injectable()
 export class FileFileDataService extends InMemoryFileDataService {
-  constructor(protected fileHandle: FileHandle, files?: FileDetails[]) {
+  constructor(
+    protected readonly fileHandle: FileHandle,
+    protected readonly filesPath: string,
+    files?: FileDetails[],
+  ) {
     super(files);
+  }
+
+  get fileString(): string {
+    return JSON.stringify(Object.values(this._files));
   }
 
   async addFiles(newFileDetails: NewFileDetails[]): Promise<FileDetails[]> {
@@ -32,21 +41,23 @@ export class FileFileDataService extends InMemoryFileDataService {
   }
 
   async writeToFile(): Promise<void> {
-    const filesJson = JSON.stringify(Object.values(this._files));
+    const filesJson = this.fileString;
 
     await this.fileHandle.truncate(0);
     await this.fileHandle.write(filesJson, 0);
   }
 
+  async backup() {
+    await FileFileDataService.writeBackup(this.filesPath, this.fileString);
+  }
+
   static async makeFileHandle(
     filesPath: string,
-    name?: string,
+    filename: string,
   ): Promise<FileHandle> {
     await mkdir(filesPath, {
       recursive: true,
     });
-
-    const filename = name ?? FILE_NAME;
 
     const filepath = path.join(filesPath, filename);
 
@@ -55,17 +66,25 @@ export class FileFileDataService extends InMemoryFileDataService {
     return fileHandle;
   }
 
-  static async moveOldDataToNewFile(filesPath: string, rawData: string) {
+  static async writeBackup(filesPath: string, rawData: string, name?: string) {
+    const filename =
+      name ??
+      `${BASE_NAME}_backup_${new Date().toISOString()}.${FILE_EXTENSION}`;
     const fileHandle = await FileFileDataService.makeFileHandle(
       filesPath,
-      `${BASE_NAME}_${new Date().toISOString()}.json`,
+      filename,
     );
 
+    await fileHandle.truncate(0);
     await fileHandle.write(rawData, 0);
+    await fileHandle.close();
   }
 
   static async init(filesPath: string): Promise<FileFileDataService> {
-    const fileHandle = await FileFileDataService.makeFileHandle(filesPath);
+    const fileHandle = await FileFileDataService.makeFileHandle(
+      filesPath,
+      FILE_NAME,
+    );
     const buffer = await fileHandle.readFile();
 
     const files: FileDetails[] = [];
@@ -89,13 +108,13 @@ export class FileFileDataService extends InMemoryFileDataService {
       console.error('Invalid or no data when reading file data file', e);
 
       if (rawData.length > 0) {
-        await FileFileDataService.moveOldDataToNewFile(filesPath, rawData);
+        await FileFileDataService.writeBackup(filesPath, rawData);
       }
 
       await fileHandle.truncate(0);
       await fileHandle.write('[]', 0);
     }
 
-    return new FileFileDataService(fileHandle, files);
+    return new FileFileDataService(fileHandle, filesPath, files);
   }
 }
