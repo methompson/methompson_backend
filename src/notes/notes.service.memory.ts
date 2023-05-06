@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { NotesRequestOutput, NotesService } from '@/src/notes/notes.service';
 import { NewNote, Note } from '@/src/models/notes_model';
 import { isUndefined } from '@/src/utils/type_guards';
-import { InvalidInputError, NotFoundError } from '@/src/errors';
+import { NotFoundError, MutateDataException } from '@/src/errors';
 
 @Injectable()
 export class InMemoryNotesService implements NotesService {
@@ -62,11 +62,27 @@ export class InMemoryNotesService implements NotesService {
   }
 
   async updateNote(requestBody: unknown): Promise<Note> {
-    throw new Error('unimplemented');
+    const note = Note.fromJSON(requestBody);
+    const oldNote = this.notes[note.id];
+
+    if (isUndefined(oldNote)) {
+      throw new MutateDataException('Note does not exist. Cannot update');
+    }
+
+    this.notes[note.id] = note;
+
+    return note;
   }
 
   async deleteNote(id: string): Promise<Note> {
-    throw new Error('unimplemented');
+    const oldNote = this.notes[id];
+    if (isUndefined(oldNote)) {
+      throw new NotFoundError(`No note for id ${id}`);
+    }
+
+    delete this.notes[id];
+
+    return oldNote;
   }
 
   async backup(): Promise<void> {}

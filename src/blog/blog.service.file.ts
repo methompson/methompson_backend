@@ -1,7 +1,7 @@
 /* eslint-disable brace-style */
 
 import { FileHandle, mkdir, open } from 'fs/promises';
-import path from 'path';
+import { join } from 'path';
 import { Injectable } from '@nestjs/common';
 
 import { BlogPost } from '@/src/models/blog_post_model';
@@ -9,7 +9,7 @@ import { InMemoryBlogService } from '@/src/blog/blog.service.memory';
 
 const BASE_NAME = 'blog_data';
 const FILE_EXTENSION = 'json';
-const FILE_NAME = `${BASE_NAME}.${FILE_EXTENSION}`;
+export const FILE_NAME = `${BASE_NAME}.${FILE_EXTENSION}`;
 
 @Injectable()
 export class FileBlogService extends InMemoryBlogService {
@@ -49,7 +49,8 @@ export class FileBlogService extends InMemoryBlogService {
   }
 
   async backup() {
-    await FileBlogService.writeBackup(this.blogPath, this.blogString);
+    const backupPath = join(this.blogPath, 'backup');
+    await FileBlogService.writeBackup(backupPath, this.blogString);
   }
 
   static async makeFileHandle(
@@ -62,7 +63,7 @@ export class FileBlogService extends InMemoryBlogService {
 
     const filename = name ?? FILE_NAME;
 
-    const filepath = path.join(blogPath, filename);
+    const filepath = join(blogPath, filename);
 
     const fileHandle = await open(filepath, 'a+');
 
