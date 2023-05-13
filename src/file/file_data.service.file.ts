@@ -1,9 +1,9 @@
 import { FileHandle, mkdir, open } from 'fs/promises';
-import path from 'path';
+import { join } from 'path';
 import { Injectable } from '@nestjs/common';
 
 import { DeleteDetails } from '@/src/file/file_data.service';
-import { FileDetails, NewFileDetails } from '@/src/models/file_models';
+import { FileDetails, NewFileDetailsJSON } from '@/src/models/file_models';
 import { InMemoryFileDataService } from './file_data.service.memory';
 
 const BASE_NAME = 'files_data';
@@ -24,7 +24,7 @@ export class FileFileDataService extends InMemoryFileDataService {
     return JSON.stringify(Object.values(this._files));
   }
 
-  async addFiles(newFileDetails: NewFileDetails[]): Promise<FileDetails[]> {
+  async addFiles(newFileDetails: NewFileDetailsJSON[]): Promise<FileDetails[]> {
     const details = await super.addFiles(newFileDetails);
 
     await this.writeToFile();
@@ -48,7 +48,8 @@ export class FileFileDataService extends InMemoryFileDataService {
   }
 
   async backup() {
-    await FileFileDataService.writeBackup(this.filesPath, this.fileString);
+    const backupPath = join(this.filesPath, 'backup');
+    await FileFileDataService.writeBackup(backupPath, this.fileString);
   }
 
   static async makeFileHandle(
@@ -61,7 +62,7 @@ export class FileFileDataService extends InMemoryFileDataService {
 
     const filename = name ?? FILE_NAME;
 
-    const filepath = path.join(filesPath, filename);
+    const filepath = join(filesPath, filename);
 
     const fileHandle = await open(filepath, 'a+');
 

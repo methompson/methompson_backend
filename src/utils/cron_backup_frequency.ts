@@ -4,5 +4,7 @@ export function getBackupFrequency(): string {
 
   const hours: number = Number.isNaN(num) ? 24 : num;
 
-  return `0 */${hours} * * * *`;
+  console.log('hours', hours);
+
+  return `0 0 */${hours} * * *`;
 }

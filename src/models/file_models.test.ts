@@ -1,11 +1,11 @@
 import { InvalidInputError } from '@/src/errors';
 import {
   UploadedFile,
-  NewFileDetails,
   FileDetails,
   FileDetailsBaseJSON,
   NewFileDetailsJSON,
   FileDetailsMetadata,
+  FileDetailsBase,
 } from '@/src/models/file_models';
 
 const originalFilename = 'originalFilename';
@@ -148,139 +148,6 @@ describe('file_models', () => {
     });
   });
 
-  describe('NewFileDetails', () => {
-    let validNewFileDetails: NewFileDetailsJSON;
-
-    beforeEach(() => {
-      validNewFileDetails = {
-        ...validBaseFileDetails,
-        filepath,
-      };
-    });
-
-    describe('toJSON', () => {
-      test('returns an object of specific structure', () => {
-        const details = NewFileDetails.fromJSON(validNewFileDetails);
-
-        expect(details.toJSON()).toStrictEqual({
-          filepath,
-          originalFilename,
-          filename,
-          dateAdded,
-          authorId,
-          mimetype,
-          size,
-          isPrivate,
-          metadata,
-        });
-      });
-    });
-
-    describe('fromJSON', () => {
-      test('returns a NewFileDetails object with inputs', () => {
-        const details = NewFileDetails.fromJSON(validNewFileDetails);
-
-        expect(details.originalFilename).toBe(originalFilename);
-        expect(details.dateAdded.toISOString()).toBe(dateAdded);
-      });
-
-      test('Throws an error if the inputs are invalid', () => {
-        let input: Record<string, unknown> = { ...validNewFileDetails };
-
-        expect(() => NewFileDetails.fromJSON(input)).not.toThrow();
-
-        input = { ...validNewFileDetails };
-        delete input.authorId;
-        expect(() => NewFileDetails.fromJSON(input)).toThrow();
-
-        input = { ...validNewFileDetails };
-        input.authorId = 0;
-        expect(() => NewFileDetails.fromJSON(input)).toThrow();
-
-        input = { ...validNewFileDetails };
-        delete input.originalFilename;
-        expect(() => NewFileDetails.fromJSON(input)).toThrow();
-
-        input = { ...validNewFileDetails };
-        input.originalFilename = 0;
-        expect(() => NewFileDetails.fromJSON(input)).toThrow();
-
-        input = { ...validNewFileDetails };
-        delete input.dateAdded;
-        expect(() => NewFileDetails.fromJSON(input)).toThrow();
-
-        input = { ...validNewFileDetails };
-        input.dateAdded = 0;
-        expect(() => NewFileDetails.fromJSON(input)).toThrow();
-
-        input = { ...validNewFileDetails };
-        delete input.size;
-        expect(() => NewFileDetails.fromJSON(input)).toThrow();
-
-        input = { ...validNewFileDetails };
-        input.size = '0';
-        expect(() => NewFileDetails.fromJSON(input)).toThrow();
-
-        input = { ...validNewFileDetails };
-        delete input.isPrivate;
-        expect(() => NewFileDetails.fromJSON(input)).toThrow();
-
-        input = { ...validNewFileDetails };
-        input.isPrivate = 0;
-        expect(() => NewFileDetails.fromJSON(input)).toThrow();
-      });
-    });
-
-    describe('isNewFileDetailsJSON', () => {
-      test('returns true if valid NewFileDetailsInterface is passed as an argument', () => {
-        expect(NewFileDetails.isNewFileDetailsJSON(validNewFileDetails)).toBe(
-          true,
-        );
-      });
-
-      test('returns true if valid NewFileDetailsInterface is passed with extras as an argument', () => {
-        const input = {
-          ...validNewFileDetails,
-          test: 'test',
-        };
-
-        expect(NewFileDetails.isNewFileDetailsJSON(input)).toBe(true);
-      });
-
-      test('returns false if the input is invalid', () => {
-        let input = { ...validNewFileDetails };
-        expect(NewFileDetails.isNewFileDetailsJSON(input)).toBe(true);
-
-        input = { ...validNewFileDetails };
-        delete input.originalFilename;
-        expect(NewFileDetails.isNewFileDetailsJSON(input)).toBe(false);
-
-        input = { ...validNewFileDetails };
-        delete input.dateAdded;
-        expect(NewFileDetails.isNewFileDetailsJSON(input)).toBe(false);
-
-        input = { ...validNewFileDetails };
-        delete input.authorId;
-        expect(NewFileDetails.isNewFileDetailsJSON(input)).toBe(false);
-
-        input = { ...validNewFileDetails };
-        delete input.size;
-        expect(NewFileDetails.isNewFileDetailsJSON(input)).toBe(false);
-
-        input = { ...validNewFileDetails };
-        delete input.isPrivate;
-        expect(NewFileDetails.isNewFileDetailsJSON(input)).toBe(false);
-
-        expect(NewFileDetails.isNewFileDetailsJSON(1)).toBe(false);
-        expect(NewFileDetails.isNewFileDetailsJSON('1')).toBe(false);
-        expect(NewFileDetails.isNewFileDetailsJSON(true)).toBe(false);
-        expect(NewFileDetails.isNewFileDetailsJSON([])).toBe(false);
-        expect(NewFileDetails.isNewFileDetailsJSON({})).toBe(false);
-        expect(NewFileDetails.isNewFileDetailsJSON(null)).toBe(false);
-      });
-    });
-  });
-
   describe('FileDetails', () => {
     let validFileDetails: Record<string, unknown> = {};
 
@@ -311,10 +178,10 @@ describe('file_models', () => {
 
     describe('fromNewFileDetails', () => {
       test('returns a FileDetails object when passed valid inputs', () => {
-        const input = NewFileDetails.fromJSON({
-          ...validBaseFileDetails,
+        const input: NewFileDetailsJSON = {
           filepath,
-        });
+          fileDetails: FileDetailsBase.fromJSON(validBaseFileDetails),
+        };
         const details = FileDetails.fromNewFileDetails(id, input);
 
         expect(details.toJSON()).toStrictEqual({

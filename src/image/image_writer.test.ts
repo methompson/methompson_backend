@@ -4,7 +4,11 @@ import * as uuid from 'uuid';
 import * as path from 'path';
 
 import { ImageWriter } from '@/src/image/image_writer';
-import { NewFileDetailsJSON, UploadedFile } from '@/src/models/file_models';
+import {
+  FileDetailsBase,
+  NewFileDetailsJSON,
+  UploadedFile,
+} from '@/src/models/file_models';
 import { ImageResizeOptions } from '@/src/models/image_models';
 import { FileSystemService } from '@/src/file/file_system_service';
 
@@ -83,27 +87,31 @@ describe('ImageWriter', () => {
   const now = new Date();
 
   const newFileDetailsJSON1: NewFileDetailsJSON = {
-    originalFilename: originalFilename1,
-    filename: newFilename1,
-    dateAdded: now.toISOString(),
-    authorId,
-    mimetype: image1.mimetype,
-    size: image1.size,
-    isPrivate: false,
     filepath: image1.filepath,
-    metadata: {},
+    fileDetails: FileDetailsBase.fromJSON({
+      originalFilename: originalFilename1,
+      filename: newFilename1,
+      dateAdded: now.toISOString(),
+      authorId,
+      mimetype: image1.mimetype,
+      size: image1.size,
+      isPrivate: false,
+      metadata: {},
+    }),
   };
 
   const newFileDetailsJSON2: NewFileDetailsJSON = {
-    originalFilename: originalFilename2,
-    filename: newFilename2,
-    dateAdded: now.toISOString(),
-    authorId,
-    mimetype: image2.mimetype,
-    size: image2.size,
-    isPrivate: false,
     filepath: image2.filepath,
-    metadata: {},
+    fileDetails: FileDetailsBase.fromJSON({
+      originalFilename: originalFilename2,
+      filename: newFilename2,
+      dateAdded: now.toISOString(),
+      authorId,
+      mimetype: image2.mimetype,
+      size: image2.size,
+      isPrivate: false,
+      metadata: {},
+    }),
   };
 
   const newFilepath = 'newFilepath';
@@ -241,8 +249,8 @@ describe('ImageWriter', () => {
       const first = results[0];
       const second = results[1];
 
-      expect(first.originalFilename).toBe(image1.originalFilename);
-      expect(second.originalFilename).toBe(image2.originalFilename);
+      expect(first.fileDetails.originalFilename).toBe(image1.originalFilename);
+      expect(second.fileDetails.originalFilename).toBe(image2.originalFilename);
     });
 
     test('throws an error if makeAndRunResizeScript throws an error and runs rollBackWrites', async () => {

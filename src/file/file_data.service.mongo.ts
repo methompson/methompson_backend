@@ -8,7 +8,7 @@ import {
   FileSortOption,
   GetFileListOptions,
 } from '@/src/file/file_data.service';
-import { FileDetails, NewFileDetails } from '@/src/models/file_models';
+import { FileDetails, NewFileDetailsJSON } from '@/src/models/file_models';
 
 import {
   DatabaseNotAvailableException,
@@ -135,7 +135,7 @@ export class MongoFileDataService implements FileDataService {
     await fileCollection.createIndex({ filename: 1 });
   }
 
-  async addFiles(fileDetails: NewFileDetails[]): Promise<FileDetails[]> {
+  async addFiles(fileDetails: NewFileDetailsJSON[]): Promise<FileDetails[]> {
     if (!this._initialized) {
       throw new DatabaseNotAvailableException('Database Not Available');
     }
@@ -145,7 +145,9 @@ export class MongoFileDataService implements FileDataService {
     }
 
     // Conforming details to fit MongoDB
-    const details = fileDetails.map((fileDetail) => fileDetail.toMongo());
+    const details = fileDetails.map((fileDetail) =>
+      fileDetail.fileDetails.toMongo(),
+    );
 
     const fileCollection = await this.fileCollection;
 

@@ -12,7 +12,11 @@ import {
   fileCollectionName,
 } from '@/src/file/file_data.service.mongo';
 import { MongoDBClient } from '@/src/utils/mongodb_client_class';
-import { FileDetailsMetadata, NewFileDetails } from '@/src/models/file_models';
+import {
+  FileDetailsBase,
+  FileDetailsMetadata,
+  NewFileDetailsJSON,
+} from '@/src/models/file_models';
 import { FileSortOption } from '@/src/file/file_data.service';
 import { ConfigService } from '@nestjs/config';
 
@@ -69,17 +73,19 @@ describe('MongoFileDataService', () => {
   const isPrivate1 = true;
   const metadata1: FileDetailsMetadata = {};
 
-  const nfd1 = new NewFileDetails(
+  const nfd1: NewFileDetailsJSON = {
     filepath,
-    originalFilename1,
-    filename1,
-    dateAdded1,
-    authorId1,
-    mimetype1,
-    size1,
-    isPrivate1,
-    metadata1,
-  );
+    fileDetails: new FileDetailsBase(
+      originalFilename1,
+      filename1,
+      dateAdded1,
+      authorId1,
+      mimetype1,
+      size1,
+      isPrivate1,
+      metadata1,
+    ),
+  };
 
   const originalFilename2 = 'originalFilename2';
   const filename2 = '94ee3041-90e9-455c-b124-1eacdfaa3b45';
@@ -90,17 +96,19 @@ describe('MongoFileDataService', () => {
   const isPrivate2 = false;
   const metadata2: FileDetailsMetadata = {};
 
-  const nfd2 = new NewFileDetails(
+  const nfd2: NewFileDetailsJSON = {
     filepath,
-    originalFilename2,
-    filename2,
-    dateAdded2,
-    authorId2,
-    mimetype2,
-    size2,
-    isPrivate2,
-    metadata2,
-  );
+    fileDetails: new FileDetailsBase(
+      originalFilename2,
+      filename2,
+      dateAdded2,
+      authorId2,
+      mimetype2,
+      size2,
+      isPrivate2,
+      metadata2,
+    ),
+  };
 
   const collection = Db.prototype.collection as unknown as jest.Mock;
   const collections = Db.prototype.collections as unknown as jest.Mock;
@@ -433,14 +441,18 @@ describe('MongoFileDataService', () => {
         (el) => el.originalFilename === originalFilename2,
       );
 
-      expect(result1.baseDetails()).toMatchObject(nfd1.baseDetails());
-      expect(result2.baseDetails()).toMatchObject(nfd2.baseDetails());
+      expect(result1.baseDetails()).toMatchObject(
+        nfd1.fileDetails.baseDetails(),
+      );
+      expect(result2.baseDetails()).toMatchObject(
+        nfd2.fileDetails.baseDetails(),
+      );
 
       expect(insertMany).toHaveBeenCalledTimes(1);
       expect(insertMany).toHaveBeenCalledWith(
         [
-          expect.objectContaining(nfd1.toMongo()),
-          expect.objectContaining(nfd2.toMongo()),
+          expect.objectContaining(nfd1.fileDetails.toMongo()),
+          expect.objectContaining(nfd2.fileDetails.toMongo()),
         ],
         { ordered: true },
       );
@@ -480,8 +492,8 @@ describe('MongoFileDataService', () => {
       expect(insertMany).toHaveBeenCalledTimes(1);
       expect(insertMany).toHaveBeenCalledWith(
         [
-          expect.objectContaining(nfd1.toMongo()),
-          expect.objectContaining(nfd2.toMongo()),
+          expect.objectContaining(nfd1.fileDetails.toMongo()),
+          expect.objectContaining(nfd2.fileDetails.toMongo()),
         ],
         { ordered: true },
       );
@@ -505,8 +517,8 @@ describe('MongoFileDataService', () => {
       expect(insertMany).toHaveBeenCalledTimes(1);
       expect(insertMany).toHaveBeenCalledWith(
         [
-          expect.objectContaining(nfd1.toMongo()),
-          expect.objectContaining(nfd2.toMongo()),
+          expect.objectContaining(nfd1.fileDetails.toMongo()),
+          expect.objectContaining(nfd2.fileDetails.toMongo()),
         ],
         { ordered: true },
       );
@@ -530,8 +542,8 @@ describe('MongoFileDataService', () => {
       expect(insertMany).toHaveBeenCalledTimes(1);
       expect(insertMany).toHaveBeenCalledWith(
         [
-          expect.objectContaining(nfd1.toMongo()),
-          expect.objectContaining(nfd2.toMongo()),
+          expect.objectContaining(nfd1.fileDetails.toMongo()),
+          expect.objectContaining(nfd2.fileDetails.toMongo()),
         ],
         { ordered: true },
       );
@@ -553,8 +565,8 @@ describe('MongoFileDataService', () => {
       expect(insertMany).toHaveBeenCalledTimes(1);
       expect(insertMany).toHaveBeenCalledWith(
         [
-          expect.objectContaining(nfd1.toMongo()),
-          expect.objectContaining(nfd2.toMongo()),
+          expect.objectContaining(nfd1.fileDetails.toMongo()),
+          expect.objectContaining(nfd2.fileDetails.toMongo()),
         ],
         { ordered: true },
       );
@@ -567,8 +579,8 @@ describe('MongoFileDataService', () => {
 
       const toArraySpy = jest.spyOn(cursor, 'toArray');
       toArraySpy.mockImplementationOnce(async () => [
-        { ...nfd1.toMongo(), _id: new ObjectId(objectId1) },
-        { ...nfd2.toMongo(), _id: new ObjectId(objectId2) },
+        { ...nfd1.fileDetails.toMongo(), _id: new ObjectId(objectId1) },
+        { ...nfd2.fileDetails.toMongo(), _id: new ObjectId(objectId2) },
       ]);
 
       const aggregateSpy = jest.spyOn(mockCollection, 'aggregate');
@@ -581,11 +593,19 @@ describe('MongoFileDataService', () => {
 
       expect(result.length).toBe(2);
 
-      const result1 = result.find((el) => el.filename === nfd1.filename);
-      const result2 = result.find((el) => el.filename === nfd2.filename);
+      const result1 = result.find(
+        (el) => el.filename === nfd1.fileDetails.filename,
+      );
+      const result2 = result.find(
+        (el) => el.filename === nfd2.fileDetails.filename,
+      );
 
-      expect(result1.baseDetails()).toMatchObject(nfd1.baseDetails());
-      expect(result2.baseDetails()).toMatchObject(nfd2.baseDetails());
+      expect(result1.baseDetails()).toMatchObject(
+        nfd1.fileDetails.baseDetails(),
+      );
+      expect(result2.baseDetails()).toMatchObject(
+        nfd2.fileDetails.baseDetails(),
+      );
 
       expect(aggregate).toHaveBeenCalledTimes(1);
       expect(aggregate).toHaveBeenCalledWith([
@@ -601,8 +621,8 @@ describe('MongoFileDataService', () => {
 
       const toArraySpy = jest.spyOn(cursor, 'toArray');
       toArraySpy.mockImplementationOnce(async () => [
-        { ...nfd1.toMongo(), _id: new ObjectId(objectId1) },
-        { ...nfd2.toMongo(), _id: new ObjectId(objectId2) },
+        { ...nfd1.fileDetails.toMongo(), _id: new ObjectId(objectId1) },
+        { ...nfd2.fileDetails.toMongo(), _id: new ObjectId(objectId2) },
       ]);
 
       const aggregateSpy = jest.spyOn(mockCollection, 'aggregate');
@@ -617,11 +637,19 @@ describe('MongoFileDataService', () => {
 
       expect(result.length).toBe(2);
 
-      const result1 = result.find((el) => el.filename === nfd1.filename);
-      const result2 = result.find((el) => el.filename === nfd2.filename);
+      const result1 = result.find(
+        (el) => el.filename === nfd1.fileDetails.filename,
+      );
+      const result2 = result.find(
+        (el) => el.filename === nfd2.fileDetails.filename,
+      );
 
-      expect(result1.baseDetails()).toMatchObject(nfd1.baseDetails());
-      expect(result2.baseDetails()).toMatchObject(nfd2.baseDetails());
+      expect(result1.baseDetails()).toMatchObject(
+        nfd1.fileDetails.baseDetails(),
+      );
+      expect(result2.baseDetails()).toMatchObject(
+        nfd2.fileDetails.baseDetails(),
+      );
 
       expect(aggregate).toHaveBeenCalledTimes(1);
       expect(aggregate).toHaveBeenCalledWith([
@@ -638,8 +666,8 @@ describe('MongoFileDataService', () => {
 
       const toArraySpy = jest.spyOn(cursor, 'toArray');
       toArraySpy.mockImplementation(async () => [
-        { ...nfd1.toMongo(), _id: new ObjectId(objectId1) },
-        { ...nfd2.toMongo(), _id: new ObjectId(objectId2) },
+        { ...nfd1.fileDetails.toMongo(), _id: new ObjectId(objectId1) },
+        { ...nfd2.fileDetails.toMongo(), _id: new ObjectId(objectId2) },
       ]);
 
       const aggregateSpy = jest.spyOn(mockCollection, 'aggregate');
@@ -694,7 +722,10 @@ describe('MongoFileDataService', () => {
     test('morePages is dependent on passed in values and returned results', async () => {
       const cursor = new AggregationCursor<Document>();
 
-      const val = { ...nfd1.toMongo(), _id: new ObjectId(objectId1) };
+      const val = {
+        ...nfd1.fileDetails.toMongo(),
+        _id: new ObjectId(objectId1),
+      };
 
       const toArraySpy = jest.spyOn(cursor, 'toArray');
       toArraySpy.mockImplementationOnce(async () => [val, val, val, val]);
@@ -751,19 +782,23 @@ describe('MongoFileDataService', () => {
     test('Runs findOne and returns the results', async () => {
       const findOneSpy = jest.spyOn(mockCollection, 'findOne');
       findOneSpy.mockImplementationOnce(() => ({
-        ...nfd1.toMongo(),
+        ...nfd1.fileDetails.toMongo(),
         _id: new ObjectId(objectId1),
       }));
 
       const svc = await new MongoFileDataService(
         mockMongoDBClient,
       ).initialize();
-      const result = await svc.getFileByName(nfd1.filename);
+      const result = await svc.getFileByName(nfd1.fileDetails.filename);
 
-      expect(result.baseDetails()).toMatchObject(nfd1.baseDetails());
+      expect(result.baseDetails()).toMatchObject(
+        nfd1.fileDetails.baseDetails(),
+      );
 
       expect(findOneSpy).toHaveBeenCalledTimes(1);
-      expect(findOneSpy).toHaveBeenCalledWith({ filename: nfd1.filename });
+      expect(findOneSpy).toHaveBeenCalledWith({
+        filename: nfd1.fileDetails.filename,
+      });
     });
 
     test('Throws an error if fileCollection throws an error', async () => {
@@ -774,9 +809,9 @@ describe('MongoFileDataService', () => {
         throw new Error(testError);
       });
 
-      await expect(() => svc.getFileByName(nfd1.filename)).rejects.toThrow(
-        testError,
-      );
+      await expect(() =>
+        svc.getFileByName(nfd1.fileDetails.filename),
+      ).rejects.toThrow(testError);
       expect(findOne).toHaveBeenCalledTimes(0);
     });
 
@@ -789,12 +824,14 @@ describe('MongoFileDataService', () => {
       const svc = await new MongoFileDataService(
         mockMongoDBClient,
       ).initialize();
-      await expect(() => svc.getFileByName(nfd1.filename)).rejects.toThrow(
-        testError,
-      );
+      await expect(() =>
+        svc.getFileByName(nfd1.fileDetails.filename),
+      ).rejects.toThrow(testError);
 
       expect(findOneSpy).toHaveBeenCalledTimes(1);
-      expect(findOneSpy).toHaveBeenCalledWith({ filename: nfd1.filename });
+      expect(findOneSpy).toHaveBeenCalledWith({
+        filename: nfd1.fileDetails.filename,
+      });
     });
 
     test('Throws an error if result is null', async () => {
@@ -805,12 +842,14 @@ describe('MongoFileDataService', () => {
         mockMongoDBClient,
       ).initialize();
 
-      await expect(() => svc.getFileByName(nfd1.filename)).rejects.toThrow(
-        'Result is null',
-      );
+      await expect(() =>
+        svc.getFileByName(nfd1.fileDetails.filename),
+      ).rejects.toThrow('Result is null');
 
       expect(findOneSpy).toHaveBeenCalledTimes(1);
-      expect(findOneSpy).toHaveBeenCalledWith({ filename: nfd1.filename });
+      expect(findOneSpy).toHaveBeenCalledWith({
+        filename: nfd1.fileDetails.filename,
+      });
     });
   });
 
@@ -819,12 +858,12 @@ describe('MongoFileDataService', () => {
       const delSpy = jest.spyOn(mockCollection, 'findOneAndDelete');
       delSpy.mockImplementation(() => ({
         value: {
-          ...nfd1.toMongo(),
+          ...nfd1.fileDetails.toMongo(),
           _id: new ObjectId(objectId1),
         },
       }));
 
-      const filename = nfd1.filename;
+      const filename = nfd1.fileDetails.filename;
 
       const svc = await new MongoFileDataService(
         mockMongoDBClient,
@@ -836,31 +875,31 @@ describe('MongoFileDataService', () => {
       expect(result[filename].error).toBeUndefined();
       expect(result[filename].filename).toBe(filename);
       expect(result[filename]?.fileDetails?.baseDetails()).toMatchObject(
-        nfd1.baseDetails(),
+        nfd1.fileDetails.baseDetails(),
       );
 
       expect(findOneAndDelete).toHaveBeenCalledTimes(1);
       expect(findOneAndDelete).toHaveBeenCalledWith({
-        filename: nfd1.filename,
+        filename: nfd1.fileDetails.filename,
       });
     });
 
     test('Runs findOneAndDelete for every name passed in', async () => {
       const delSpy = jest.spyOn(mockCollection, 'findOneAndDelete');
-      const filename1 = nfd1.filename;
-      const filename2 = nfd2.filename;
+      const filename1 = nfd1.fileDetails.filename;
+      const filename2 = nfd2.fileDetails.filename;
 
       delSpy.mockImplementation((el) => {
         let value = null;
         if (el.filename === filename1) {
           value = {
-            ...nfd1.toMongo(),
+            ...nfd1.fileDetails.toMongo(),
             _id: new ObjectId(objectId1),
           };
         }
         if (el.filename === filename2) {
           value = {
-            ...nfd2.toMongo(),
+            ...nfd2.fileDetails.toMongo(),
             _id: new ObjectId(objectId2),
           };
         }
@@ -878,13 +917,13 @@ describe('MongoFileDataService', () => {
       expect(result[filename1].error).toBeUndefined();
       expect(result[filename1].filename).toBe(filename1);
       expect(result[filename1]?.fileDetails?.baseDetails()).toMatchObject(
-        nfd1.baseDetails(),
+        nfd1.fileDetails.baseDetails(),
       );
 
       expect(result[filename2].error).toBeUndefined();
       expect(result[filename2].filename).toBe(filename2);
       expect(result[filename2]?.fileDetails?.baseDetails()).toMatchObject(
-        nfd2.baseDetails(),
+        nfd2.fileDetails.baseDetails(),
       );
 
       expect(findOneAndDelete).toHaveBeenCalledTimes(2);
@@ -904,9 +943,9 @@ describe('MongoFileDataService', () => {
         throw new Error(testError);
       });
 
-      await expect(() => svc.deleteFiles([nfd1.filename])).rejects.toThrow(
-        testError,
-      );
+      await expect(() =>
+        svc.deleteFiles([nfd1.fileDetails.filename]),
+      ).rejects.toThrow(testError);
       expect(insertMany).toHaveBeenCalledTimes(0);
     });
 
@@ -916,7 +955,7 @@ describe('MongoFileDataService', () => {
         throw new Error(testError);
       });
 
-      const filename = nfd1.filename;
+      const filename = nfd1.fileDetails.filename;
 
       const svc = await new MongoFileDataService(
         mockMongoDBClient,
@@ -931,7 +970,7 @@ describe('MongoFileDataService', () => {
 
       expect(findOneAndDelete).toHaveBeenCalledTimes(1);
       expect(findOneAndDelete).toHaveBeenCalledWith({
-        filename: nfd1.filename,
+        filename: nfd1.fileDetails.filename,
       });
     });
 
@@ -941,7 +980,7 @@ describe('MongoFileDataService', () => {
         value: null,
       }));
 
-      const filename = nfd1.filename;
+      const filename = nfd1.fileDetails.filename;
 
       const svc = await new MongoFileDataService(
         mockMongoDBClient,
@@ -956,7 +995,7 @@ describe('MongoFileDataService', () => {
 
       expect(findOneAndDelete).toHaveBeenCalledTimes(1);
       expect(findOneAndDelete).toHaveBeenCalledWith({
-        filename: nfd1.filename,
+        filename: nfd1.fileDetails.filename,
       });
     });
 
@@ -964,11 +1003,11 @@ describe('MongoFileDataService', () => {
       const delSpy = jest.spyOn(mockCollection, 'findOneAndDelete');
       delSpy.mockImplementation(() => ({
         value: {
-          ...nfd1.toMongo(),
+          ...nfd1.fileDetails.toMongo(),
         },
       }));
 
-      const filename = nfd1.filename;
+      const filename = nfd1.fileDetails.filename;
 
       const svc = await new MongoFileDataService(
         mockMongoDBClient,
@@ -983,7 +1022,7 @@ describe('MongoFileDataService', () => {
 
       expect(findOneAndDelete).toHaveBeenCalledTimes(1);
       expect(findOneAndDelete).toHaveBeenCalledWith({
-        filename: nfd1.filename,
+        filename: nfd1.fileDetails.filename,
       });
     });
   });

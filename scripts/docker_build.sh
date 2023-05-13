@@ -2,5 +2,6 @@
 
 (
   cd docker && \
-  docker build -t methompson-blog-backend .
+  docker build \
+  -t methompson-blog-backend .
 )

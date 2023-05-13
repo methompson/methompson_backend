@@ -7,7 +7,7 @@ import {
   FileSortOption,
   GetFileListOptions,
 } from '@/src/file/file_data.service';
-import { FileDetails, NewFileDetails } from '@/src/models/file_models';
+import { FileDetails, NewFileDetailsJSON } from '@/src/models/file_models';
 import { isNullOrUndefined } from '@/src/utils/type_guards';
 import { NotFoundError } from '@/src/errors';
 
@@ -55,7 +55,7 @@ export class InMemoryFileDataService implements FileDataService {
     return fileList;
   }
 
-  async addFiles(newFileDetails: NewFileDetails[]): Promise<FileDetails[]> {
+  async addFiles(newFileDetails: NewFileDetailsJSON[]): Promise<FileDetails[]> {
     const files = newFileDetails.map((nfd) => {
       const id = uuidv4();
       const fileDetails = FileDetails.fromNewFileDetails(id, nfd);

@@ -17,7 +17,7 @@ export class InMemoryBlogService implements BlogService {
 
   constructor(inputPosts: BlogPost[] = []) {
     for (const post of inputPosts) {
-      this.blogPosts[post.slug] = post;
+      this._blogPosts[post.slug] = post;
     }
   }
 
@@ -26,7 +26,7 @@ export class InMemoryBlogService implements BlogService {
   }
 
   get blogPostsByDate(): BlogPost[] {
-    const posts = Object.values(this.blogPosts);
+    const posts = Object.values(this._blogPosts);
 
     // Sorts in reverse chronological order
     return posts.sort((a, b) => b.dateAdded.getTime() - a.dateAdded.getTime());
@@ -47,7 +47,7 @@ export class InMemoryBlogService implements BlogService {
   }
 
   async findBySlug(slug: string): Promise<BlogPost> {
-    const blog = this.blogPosts[slug];
+    const blog = this._blogPosts[slug];
 
     if (isUndefined(blog)) {
       throw new NotFoundError('Blog Post Does Not Exist');
@@ -62,19 +62,19 @@ export class InMemoryBlogService implements BlogService {
     const id = uuidv4();
     const post = BlogPost.fromNewBlogPost(id, newPost);
 
-    this.blogPosts[post.slug] = post;
+    this._blogPosts[post.slug] = post;
 
     return post;
   }
 
   async deleteBlogPost(slug: string): Promise<BlogPost> {
-    const post = this.blogPosts[slug];
+    const post = this._blogPosts[slug];
 
     if (isNullOrUndefined(post)) {
       throw new NotFoundError('Blog Post Does Not Exist');
     }
 
-    delete this.blogPosts[slug];
+    delete this._blogPosts[slug];
 
     return post;
   }

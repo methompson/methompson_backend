@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {
   FileDetails,
   FileDetailsJSON,
-  NewFileDetails,
+  NewFileDetailsJSON,
 } from '@/src/models/file_models';
 import { Backupable } from '@/src/utils/backuppable';
 
@@ -43,7 +43,7 @@ export interface DeleteResultJSON {
 
 @Injectable()
 export abstract class FileDataService implements Backupable {
-  abstract addFiles(fileDetails: NewFileDetails[]): Promise<FileDetails[]>;
+  abstract addFiles(fileDetails: NewFileDetailsJSON[]): Promise<FileDetails[]>;
 
   abstract getFileList(options?: GetFileListOptions): Promise<FileDetails[]>;
 

@@ -8,8 +8,9 @@ import {
 } from '@/src/file/file_data.service.file';
 import {
   FileDetailsMetadata,
-  NewFileDetails,
+  FileDetailsBase,
   FileDetails,
+  NewFileDetailsJSON,
 } from '@/src/models/file_models';
 
 const filepath = 'path/to/file';
@@ -23,17 +24,19 @@ const size1 = 1024;
 const isPrivate1 = true;
 const metadata1: FileDetailsMetadata = {};
 
-const nfd1 = new NewFileDetails(
+const nfd1: NewFileDetailsJSON = {
   filepath,
-  originalFilename1,
-  filename1,
-  dateAdded1,
-  authorId1,
-  mimetype1,
-  size1,
-  isPrivate1,
-  metadata1,
-);
+  fileDetails: new FileDetailsBase(
+    originalFilename1,
+    filename1,
+    dateAdded1,
+    authorId1,
+    mimetype1,
+    size1,
+    isPrivate1,
+    metadata1,
+  ),
+};
 
 const originalFilename2 = 'originalFilename2';
 const filename2 = '94ee3041-90e9-455c-b124-1eacdfaa3b45';
@@ -44,17 +47,19 @@ const size2 = 512;
 const isPrivate2 = false;
 const metadata2: FileDetailsMetadata = {};
 
-const nfd2 = new NewFileDetails(
+const nfd2: NewFileDetailsJSON = {
   filepath,
-  originalFilename2,
-  filename2,
-  dateAdded2,
-  authorId2,
-  mimetype2,
-  size2,
-  isPrivate2,
-  metadata2,
-);
+  fileDetails: new FileDetailsBase(
+    originalFilename2,
+    filename2,
+    dateAdded2,
+    authorId2,
+    mimetype2,
+    size2,
+    isPrivate2,
+    metadata2,
+  ),
+};
 
 const fd1 = FileDetails.fromNewFileDetails('id1', nfd1);
 const fd2 = FileDetails.fromNewFileDetails('id2', nfd2);
@@ -115,7 +120,7 @@ describe('FileFileDataService', () => {
 
       const post = svc.filesList[0];
       expect(post.toJSON()).toStrictEqual(
-        expect.objectContaining(nfd1.toJSON()),
+        expect.objectContaining(nfd1.fileDetails.toJSON()),
       );
     });
 
@@ -269,7 +274,7 @@ describe('FileFileDataService', () => {
     });
   });
 
-  describe.skip('backup', () => {
+  describe('backup', () => {
     test('runs writeBackup with expected values', async () => {
       const mockFileHandle1 = new MockFileHandle();
       const mockFileHandle2 = new MockFileHandle();
@@ -282,7 +287,7 @@ describe('FileFileDataService', () => {
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
       expect(makeFileHandleSpy).toHaveBeenCalledWith(
         'path/backup',
-        expect.stringContaining('blog_data_backup'),
+        expect.stringContaining('files_data_backup'),
       );
 
       expect(truncateMock).toHaveBeenCalledTimes(1);
@@ -309,7 +314,7 @@ describe('FileFileDataService', () => {
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
       expect(makeFileHandleSpy).toHaveBeenCalledWith(
         'path/backup',
-        expect.stringContaining('blog_data_backup'),
+        expect.stringContaining('files_data_backup'),
       );
 
       expect(truncateMock).toHaveBeenCalledTimes(0);
@@ -334,7 +339,7 @@ describe('FileFileDataService', () => {
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
       expect(makeFileHandleSpy).toHaveBeenCalledWith(
         'path/backup',
-        expect.stringContaining('blog_data_backup'),
+        expect.stringContaining('files_data_backup'),
       );
 
       expect(truncateMock).toHaveBeenCalledTimes(1);
@@ -362,7 +367,7 @@ describe('FileFileDataService', () => {
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
       expect(makeFileHandleSpy).toHaveBeenCalledWith(
         'path/backup',
-        expect.stringContaining('blog_data_backup'),
+        expect.stringContaining('files_data_backup'),
       );
 
       expect(truncateMock).toHaveBeenCalledTimes(1);
@@ -391,7 +396,7 @@ describe('FileFileDataService', () => {
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
       expect(makeFileHandleSpy).toHaveBeenCalledWith(
         'path/backup',
-        expect.stringContaining('blog_data_backup'),
+        expect.stringContaining('files_data_backup'),
       );
 
       expect(truncateMock).toHaveBeenCalledTimes(1);
@@ -404,7 +409,7 @@ describe('FileFileDataService', () => {
     });
   });
 
-  describe.skip('makeFileHandle', () => {
+  describe('makeFileHandle', () => {
     const path = 'path/to/file';
     const name = 'name.ext';
 
@@ -470,7 +475,7 @@ describe('FileFileDataService', () => {
     });
   });
 
-  describe.skip('writeBackup', () => {
+  describe('writeBackup', () => {
     const stringData = 'string data';
     const backupPath = 'backupPath';
     const filename = 'name';
@@ -582,10 +587,10 @@ describe('FileFileDataService', () => {
     });
   });
 
-  describe.skip('init', () => {
-    const blogPath = 'blog path';
+  describe('init', () => {
+    const filesPath = 'file path';
 
-    test('creates a file handle, reads a file, creates blog posts and returns a new FileFileDataService', async () => {
+    test('creates a file handle, reads a file, creates files and returns a new FileFileDataService', async () => {
       const mockFileHandle = new MockFileHandle();
       mockOpen.mockImplementationOnce(async () => mockFileHandle);
 
@@ -593,12 +598,12 @@ describe('FileFileDataService', () => {
 
       readFileMock.mockImplementationOnce(async () => buf);
 
-      const svc = await FileFileDataService.init(blogPath);
+      const svc = await FileFileDataService.init(filesPath);
 
       expect(readFileMock).toHaveBeenCalledTimes(1);
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
 
-      expect((await svc).filesList.length).toBe(4);
+      expect((await svc).filesList.length).toBe(2);
 
       expect(truncateMock).toHaveBeenCalledTimes(0);
       expect(writeMock).toHaveBeenCalledTimes(0);
@@ -612,12 +617,12 @@ describe('FileFileDataService', () => {
 
       readFileMock.mockImplementationOnce(async () => buf);
 
-      const svc = await FileFileDataService.init(blogPath);
+      const svc = await FileFileDataService.init(filesPath);
 
       expect(readFileMock).toHaveBeenCalledTimes(1);
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
 
-      expect((await svc).filesList.length).toBe(3);
+      expect((await svc).filesList.length).toBe(2);
 
       expect(truncateMock).toHaveBeenCalledTimes(0);
       expect(writeMock).toHaveBeenCalledTimes(0);
@@ -631,7 +636,7 @@ describe('FileFileDataService', () => {
 
       readFileMock.mockImplementationOnce(async () => buf);
 
-      const svc = await FileFileDataService.init(blogPath);
+      const svc = await FileFileDataService.init(filesPath);
 
       expect(readFileMock).toHaveBeenCalledTimes(1);
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
@@ -648,7 +653,7 @@ describe('FileFileDataService', () => {
       readFileMock.mockImplementationOnce(async () => buf);
       writeBackupSpy.mockImplementationOnce(async () => {});
 
-      const svc = await FileFileDataService.init(blogPath);
+      const svc = await FileFileDataService.init(filesPath);
 
       expect(readFileMock).toHaveBeenCalledTimes(1);
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
@@ -668,7 +673,7 @@ describe('FileFileDataService', () => {
         throw new Error(testError);
       });
 
-      await expect(() => FileFileDataService.init(blogPath)).rejects.toThrow(
+      await expect(() => FileFileDataService.init(filesPath)).rejects.toThrow(
         testError,
       );
 
@@ -688,7 +693,7 @@ describe('FileFileDataService', () => {
         throw new Error(testError);
       });
 
-      await expect(() => FileFileDataService.init(blogPath)).rejects.toThrow(
+      await expect(() => FileFileDataService.init(filesPath)).rejects.toThrow(
         testError,
       );
 
@@ -711,7 +716,7 @@ describe('FileFileDataService', () => {
         throw new Error(testError);
       });
 
-      await expect(() => FileFileDataService.init(blogPath)).rejects.toThrow(
+      await expect(() => FileFileDataService.init(filesPath)).rejects.toThrow(
         testError,
       );
 
@@ -736,7 +741,7 @@ describe('FileFileDataService', () => {
         throw new Error(testError);
       });
 
-      await expect(() => FileFileDataService.init(blogPath)).rejects.toThrow(
+      await expect(() => FileFileDataService.init(filesPath)).rejects.toThrow(
         testError,
       );
 
@@ -761,7 +766,7 @@ describe('FileFileDataService', () => {
         throw new Error(testError);
       });
 
-      await expect(() => FileFileDataService.init(blogPath)).rejects.toThrow(
+      await expect(() => FileFileDataService.init(filesPath)).rejects.toThrow(
         testError,
       );
 
