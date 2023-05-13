@@ -13,12 +13,16 @@ export class InMemoryBlogService implements BlogService {
   /**
    * Blog Posts are an object of String to BlogPost. The key is the slug.
    */
-  protected blogPosts: Record<string, BlogPost> = {};
+  protected _blogPosts: Record<string, BlogPost> = {};
 
   constructor(inputPosts: BlogPost[] = []) {
     for (const post of inputPosts) {
       this.blogPosts[post.slug] = post;
     }
+  }
+
+  get blogPosts() {
+    return { ...this._blogPosts };
   }
 
   get blogPostsByDate(): BlogPost[] {

@@ -8,7 +8,7 @@ import { InMemoryFileDataService } from './file_data.service.memory';
 
 const BASE_NAME = 'files_data';
 const FILE_EXTENSION = 'json';
-const FILE_NAME = `${BASE_NAME}.${FILE_EXTENSION}`;
+export const FILE_NAME = `${BASE_NAME}.${FILE_EXTENSION}`;
 
 @Injectable()
 export class FileFileDataService extends InMemoryFileDataService {
@@ -53,11 +53,13 @@ export class FileFileDataService extends InMemoryFileDataService {
 
   static async makeFileHandle(
     filesPath: string,
-    filename: string,
+    name?: string,
   ): Promise<FileHandle> {
     await mkdir(filesPath, {
       recursive: true,
     });
+
+    const filename = name ?? FILE_NAME;
 
     const filepath = path.join(filesPath, filename);
 

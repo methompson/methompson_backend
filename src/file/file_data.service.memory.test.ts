@@ -58,12 +58,12 @@ describe('InMemoryFileDataService', () => {
     test('adds a file to the files record', async () => {
       const fds = new InMemoryFileDataService();
 
-      expect(Object.keys(fds.files).length).toBe(0);
+      expect(fds.filesList.length).toBe(0);
       fds.addFiles([newFile1]);
 
-      expect(Object.keys(fds.files).length).toBe(1);
+      expect(fds.filesList.length).toBe(1);
 
-      const result = Object.values(fds.files)[0];
+      const result = fds.filesList[0];
 
       expect(result.baseDetails()).toMatchObject(newFile1.baseDetails());
     });
@@ -71,18 +71,18 @@ describe('InMemoryFileDataService', () => {
     test('adds multiple files to the files record', async () => {
       const fds = new InMemoryFileDataService();
 
-      expect(Object.keys(fds.files).length).toBe(0);
+      expect(fds.filesList.length).toBe(0);
       fds.addFiles([newFile1, newFile2]);
 
-      expect(Object.keys(fds.files).length).toBe(2);
+      expect(fds.filesList.length).toBe(2);
 
-      const result1 = Object.values(fds.files).find(
+      const result1 = fds.filesList.find(
         (el) => el.originalFilename === originalFileName1,
       );
 
       expect(result1.baseDetails()).toMatchObject(newFile1.baseDetails());
 
-      const result2 = Object.values(fds.files).find(
+      const result2 = fds.filesList.find(
         (el) => el.originalFilename === originalFileName2,
       );
 
@@ -94,7 +94,7 @@ describe('InMemoryFileDataService', () => {
     test('Returns a list of files sorted by name', async () => {
       const fds = new InMemoryFileDataService();
       fds.addFiles([newFile1, newFile2]);
-      expect(Object.keys(fds.files).length).toBe(2);
+      expect(fds.filesList.length).toBe(2);
 
       const files = await fds.getFileList();
       expect(files.length).toBe(2);
@@ -109,7 +109,7 @@ describe('InMemoryFileDataService', () => {
     test('Returns a list of files sorted by dateAdded when dateAdded option is added', async () => {
       const fds = new InMemoryFileDataService();
       fds.addFiles([newFile1, newFile2]);
-      expect(Object.keys(fds.files).length).toBe(2);
+      expect(fds.filesList.length).toBe(2);
 
       const files = await fds.getFileList({
         page: 1,
@@ -127,7 +127,7 @@ describe('InMemoryFileDataService', () => {
 
     test('Returns an empty array when no files exist', async () => {
       const fds = new InMemoryFileDataService();
-      expect(Object.keys(fds.files).length).toBe(0);
+      expect(fds.filesList.length).toBe(0);
 
       const files = await fds.getFileList({ page: 1, pagination: 2 });
       expect(files).toStrictEqual([]);
@@ -164,11 +164,11 @@ describe('InMemoryFileDataService', () => {
       const file2 = FileDetails.fromNewFileDetails(id2, newFile2);
 
       const fds = new InMemoryFileDataService([file1, file2]);
-      expect(Object.keys(fds.files).length).toBe(2);
+      expect(fds.filesList.length).toBe(2);
 
       const result = await fds.deleteFiles([file1.filename]);
 
-      expect(Object.keys(fds.files).length).toBe(1);
+      expect(fds.filesList.length).toBe(1);
 
       expect(result[file1.filename].fileDetails.toJSON()).toStrictEqual(
         file1.toJSON(),
@@ -182,11 +182,11 @@ describe('InMemoryFileDataService', () => {
       const file2 = FileDetails.fromNewFileDetails(id2, newFile2);
 
       const fds = new InMemoryFileDataService([file1, file2]);
-      expect(Object.keys(fds.files).length).toBe(2);
+      expect(fds.filesList.length).toBe(2);
 
       const result = await fds.deleteFiles([file1.filename, file2.filename]);
 
-      expect(Object.keys(fds.files).length).toBe(0);
+      expect(fds.filesList.length).toBe(0);
 
       expect(result[file1.filename].fileDetails.toJSON()).toStrictEqual(
         file1.toJSON(),
@@ -205,7 +205,7 @@ describe('InMemoryFileDataService', () => {
       const file2 = FileDetails.fromNewFileDetails(id2, newFile2);
 
       const fds = new InMemoryFileDataService([file1, file2]);
-      expect(Object.keys(fds.files).length).toBe(2);
+      expect(fds.filesList.length).toBe(2);
 
       const filename = 'test filename';
       const result = await fds.deleteFiles([filename]);
