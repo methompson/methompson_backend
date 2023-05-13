@@ -24,7 +24,7 @@ import { isPromiseRejected } from '@/src/utils/type_guards';
 @UseInterceptors(RequestLogInterceptor)
 @Controller({ path: 'files' })
 export class FileController {
-  private _savedFilePath = './files';
+  private _savedFilePath = './files/files';
 
   constructor(
     private configService: ConfigService,

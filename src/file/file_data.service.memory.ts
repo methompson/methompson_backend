@@ -7,9 +7,11 @@ import {
   FileSortOption,
   GetFileListOptions,
 } from '@/src/file/file_data.service';
-import { FileDetails, NewFileDetails } from '@/src/models/file_models';
+import { FileDetails, NewFileDetailsJSON } from '@/src/models/file_models';
 import { isNullOrUndefined } from '@/src/utils/type_guards';
 import { NotFoundError } from '@/src/errors';
+
+const stringCompare = (a: string, b: string) => a.localeCompare(b);
 
 @Injectable()
 export class InMemoryFileDataService implements FileDataService {
@@ -25,16 +27,40 @@ export class InMemoryFileDataService implements FileDataService {
     }
   }
 
-  get files() {
-    return this._files;
+  get files(): Record<string, FileDetails> {
+    return { ...this._files };
   }
 
-  async addFiles(newFileDetails: NewFileDetails[]): Promise<FileDetails[]> {
+  get filesList(): FileDetails[] {
+    return Object.values(this._files);
+  }
+
+  get filesByName(): FileDetails[] {
+    const sort = (a: FileDetails, b: FileDetails) =>
+      stringCompare(a.originalFilename, b.originalFilename);
+
+    const fileList = this.filesList;
+    fileList.sort(sort);
+
+    return fileList;
+  }
+
+  get filesByDate(): FileDetails[] {
+    const sort = (a: FileDetails, b: FileDetails) =>
+      stringCompare(a.dateAdded.toISOString(), b.dateAdded.toISOString());
+
+    const fileList = this.filesList;
+    fileList.sort(sort);
+
+    return fileList;
+  }
+
+  async addFiles(newFileDetails: NewFileDetailsJSON[]): Promise<FileDetails[]> {
     const files = newFileDetails.map((nfd) => {
       const id = uuidv4();
       const fileDetails = FileDetails.fromNewFileDetails(id, nfd);
 
-      this.files[fileDetails.filename] = fileDetails;
+      this._files[fileDetails.filename] = fileDetails;
 
       return fileDetails;
     });
@@ -46,25 +72,16 @@ export class InMemoryFileDataService implements FileDataService {
     const page = options?.page ?? 1;
     const pagination = options?.pagination ?? 20;
 
-    const stringCompare = (a: string, b: string) => a.localeCompare(b);
-
-    const sortByName = (a: FileDetails, b: FileDetails) =>
-      stringCompare(a.originalFilename, b.originalFilename);
-
-    const sortByDate = (a: FileDetails, b: FileDetails) =>
-      stringCompare(a.dateAdded.toISOString(), b.dateAdded.toISOString());
-
-    let sortFunction = sortByName;
+    let fileList: FileDetails[];
 
     if (options?.sortBy === FileSortOption.DateAdded) {
-      sortFunction = sortByDate;
+      fileList = this.filesByDate;
+    } else {
+      fileList = this.filesByName;
     }
 
     const skip = pagination * (page - 1);
     const end = pagination * page;
-
-    const fileList = Object.values(this.files);
-    fileList.sort(sortFunction);
 
     const files = fileList.slice(skip, end);
 
@@ -72,11 +89,11 @@ export class InMemoryFileDataService implements FileDataService {
   }
 
   async getTotalFiles(): Promise<number> {
-    return Object.keys(this.files).length;
+    return Object.keys(this._files).length;
   }
 
   async getFileByName(name: string): Promise<FileDetails> {
-    const file = this.files[name];
+    const file = this._files[name];
 
     if (isNullOrUndefined(file)) {
       throw new NotFoundError('File Not Found');
@@ -89,9 +106,9 @@ export class InMemoryFileDataService implements FileDataService {
     const output: Record<string, DeleteDetails> = {};
 
     for (const filename of names) {
-      const file = this.files[filename];
+      const file = this._files[filename];
       if (!isNullOrUndefined(file)) {
-        delete this.files[filename];
+        delete this._files[filename];
         output[filename] = {
           filename,
           fileDetails: file,

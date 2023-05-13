@@ -39,14 +39,12 @@ export class MongoBlogService implements BlogService {
 
     try {
       if (!(await this.containsBlogCollection())) {
-        console.log('Does not contain a blog Collection');
         await this.makeBlogCollection();
       }
 
       console.log('Initialized Blog Service');
       this._initialized = true;
     } catch (e) {
-      // console.error('Error Connecting to MongoDB.', e);
       console.error('Error Connecting to MongoDB.');
 
       if (isNumber(maxAttempts) && attempt > maxAttempts) {

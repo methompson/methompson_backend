@@ -32,7 +32,6 @@ export class BlogController {
 
   @Get()
   async getPosts(@Req() request: Request): Promise<BlogPostRequestOutput> {
-    console.log('getting posts controller');
     const pageQP = request.query?.page;
     const paginationQP = request.query?.pagination;
 

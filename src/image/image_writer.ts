@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { ImageDimensions, ImageResizeOptions } from '@/src/models/image_models';
 import {
-  NewFileDetails,
+  FileDetailsBase,
   NewFileDetailsJSON,
   ParsedImageFilesAndFields,
   UploadedFile,
@@ -39,7 +39,7 @@ export class ImageWriter {
   async convertImages(
     parsedData: ParsedImageFilesAndFields,
     authorId: string,
-  ): Promise<NewFileDetails[]> {
+  ): Promise<NewFileDetailsJSON[]> {
     if (parsedData.imageFiles.length == 0) {
       throw new HttpException('No Image File Provided', HttpStatus.BAD_REQUEST);
     }
@@ -101,12 +101,11 @@ export class ImageWriter {
     const imageSuccess = imageDetailResults
       .filter(isPromiseFulfilled)
       .map((el) => el.value)
-      .flat()
-      .map((detail) => NewFileDetails.fromJSON(detail));
+      .flat();
 
     if (imageErrors.length > 0) {
       const filesToDelete = imageSuccess.map((el) =>
-        path.join(this.savedImagePath, el.filename),
+        path.join(this.savedImagePath, el.fileDetails.filename),
       );
 
       await this.rollBackWrites(filesToDelete);
@@ -164,8 +163,7 @@ export class ImageWriter {
     const newMimetype = resizeOptions.newMimetype ?? imageFile.mimetype;
     const resolution = await this.getFileDimensions(result.newFilepath);
 
-    return {
-      filepath: imageFile.filepath,
+    const fileDetails = FileDetailsBase.fromJSON({
       authorId,
       originalFilename: imageFile.originalFilename,
       dateAdded: new Date().toISOString(),
@@ -178,6 +176,11 @@ export class ImageWriter {
         'resolution.y': resolution.y,
         imageIdentifier: resizeOptions.identifier,
       },
+    });
+
+    return {
+      filepath: imageFile.filepath,
+      fileDetails,
     };
   }
 

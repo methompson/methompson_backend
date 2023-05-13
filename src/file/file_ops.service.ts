@@ -4,7 +4,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 import {
   FileDetails,
-  NewFileDetails,
+  FileDetailsBase,
+  NewFileDetailsJSON,
   ParsedFilesAndFields,
   ParsedImageFilesAndFields,
   UploadedFile,
@@ -36,7 +37,7 @@ export class FileOpsService {
     parsedData: ParsedFilesAndFields,
     userId: string,
   ): Promise<FileDetails[]> {
-    let newFiles: NewFileDetails[];
+    let newFiles: NewFileDetailsJSON[];
     try {
       newFiles = this.makeNewFileDetails(parsedData, userId);
 
@@ -66,7 +67,7 @@ export class FileOpsService {
     imageWriter?: ImageWriter,
   ): Promise<FileDetails[]> {
     const iw = imageWriter ?? new ImageWriter(this.savedFilePath);
-    let newFiles: NewFileDetails[];
+    let newFiles: NewFileDetailsJSON[];
 
     try {
       newFiles = await iw.convertImages(parsedData, userId);
@@ -88,11 +89,11 @@ export class FileOpsService {
   makeNewFileDetails(
     data: ParsedFilesAndFields,
     userId: string,
-  ): NewFileDetails[] {
+  ): NewFileDetailsJSON[] {
     const newFileDetails = data.files.map((file) => {
       const filename = uuidv4();
 
-      return NewFileDetails.fromJSON({
+      const fileDetails = FileDetailsBase.fromJSON({
         filepath: file.filepath,
         originalFilename: file.originalFilename,
         filename,
@@ -103,19 +104,27 @@ export class FileOpsService {
         isPrivate: data.ops.isPrivate ?? true,
         metadata: {},
       });
+
+      return {
+        filepath: file.filepath,
+        fileDetails,
+      };
     });
 
     return newFileDetails;
   }
 
   async saveFilesToFileSystem(
-    files: NewFileDetails[],
+    files: NewFileDetailsJSON[],
     service?: FileSystemService,
   ): Promise<void> {
     const fss = service ?? new FileSystemService();
     const ops = files.map((file) => {
       // const originalFilePath = path.join(this._uploadFilePath, file.filename);
-      const newFilePath = path.join(this._savedFilePath, file.filename);
+      const newFilePath = path.join(
+        this._savedFilePath,
+        file.fileDetails.filename,
+      );
 
       return fss.moveFile(file.filepath, newFilePath);
     });
@@ -123,20 +132,25 @@ export class FileOpsService {
     await Promise.all(ops);
   }
 
-  async saveFilesToService(newFiles: NewFileDetails[]): Promise<FileDetails[]> {
+  async saveFilesToService(
+    newFiles: NewFileDetailsJSON[],
+  ): Promise<FileDetails[]> {
     const savedFiles = await this.fileService.addFiles(newFiles);
     return savedFiles;
   }
 
   async rollBackFSWrites(
-    files: NewFileDetails[],
+    files: NewFileDetailsJSON[],
     uploadedFiles: UploadedFile[],
     service?: FileSystemService,
   ) {
     const fss = service ?? new FileSystemService();
 
     const deleteOps1 = files.map(async (el) => {
-      const newFilePath = path.join(this._savedFilePath, el.filename);
+      const newFilePath = path.join(
+        this._savedFilePath,
+        el.fileDetails.filename,
+      );
       try {
         await fss.deleteFile(newFilePath);
       } catch (e) {
