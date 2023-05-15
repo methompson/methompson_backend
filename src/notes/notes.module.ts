@@ -2,28 +2,27 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import { LoggerModule } from '@/src/logger/logger.module';
-import { NotesController } from './notes.controller';
-import { InMemoryNotesService } from './notes.service.memory';
+import { NotesController } from '@/src/notes/notes.controller';
+import { InMemoryNotesService } from '@/src/notes/notes.service.memory';
+import { isString } from '@/src/utils/type_guards';
+import { FileNotesService } from '@/src/notes/notes.service.file';
 
 const notesServiceFactory = {
   provide: 'NOTE_SERVICE',
-  useFactory: async (configService: ConfigService) =>
-    // const type = configService.get('blogType');
+  useFactory: async (configService: ConfigService) => {
+    const type = configService.get('notesType');
+    console.log('Notes Service Factory', type);
 
-    // if (type === 'mongo_db') {
-    //   try {
-    //     const service = MongoBlogService.makeFromConfig(configService);
-    //     service.initialize();
-    //     return service;
-    //   } catch (e) {
-    //     console.error('blogServiceFactory Error:', e);
-    //     throw e;
-    //   }
-    // }
+    if (type === 'file') {
+      const path = configService.get('notesFilePath');
+      if (isString(path)) {
+        const service = await FileNotesService.init(path);
+        return service;
+      }
+    }
 
-    // return new InMemoryBlogService();
-
-    new InMemoryNotesService(),
+    return new InMemoryNotesService();
+  },
   inject: [ConfigService],
 };
 

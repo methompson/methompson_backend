@@ -14,6 +14,7 @@ import { LoggerModule } from '@/src/logger/logger.module';
 import { authCheckMiddlewareFactory } from '@/src/middleware/auth_check.middleware';
 import { FileUploadModule } from '@/src/file/file.module';
 import { NotesModule } from '@/src/notes/notes.module';
+import { noteConfiguration } from '@/src/config/note_configuration';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { NotesModule } from '@/src/notes/notes.module';
         blogConfiguration,
         logConfiguration,
         authConfiguration,
+        noteConfiguration,
       ],
     }),
     LoggerModule,
