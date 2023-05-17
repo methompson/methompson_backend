@@ -3,7 +3,11 @@ import { Buffer } from 'node:buffer';
 import { join } from 'path';
 
 import { FILE_NAME, FileBlogService } from '@/src/blog/blog.service.file';
-import { BlogPost } from '@/src/models/blog_post_model';
+import {
+  BlogPost,
+  BlogStatus,
+  NewBlogPost,
+} from '@/src/models/blog_post_model';
 
 jest.mock('fs/promises', () => {
   const mkdir = jest.fn();
@@ -34,6 +38,7 @@ const post1 = new BlogPost(
   ['tag1'],
   'authorId1',
   new Date(1),
+  BlogStatus.Draft,
   {},
 );
 
@@ -45,6 +50,7 @@ const post2 = new BlogPost(
   ['tag2'],
   'authorId2',
   new Date(2),
+  BlogStatus.Posted,
   {},
 );
 
@@ -56,6 +62,7 @@ const post3 = new BlogPost(
   ['tag3'],
   'authorId3',
   new Date(3),
+  BlogStatus.Draft,
   {},
 );
 
@@ -67,6 +74,7 @@ const post4 = new BlogPost(
   ['tag4'],
   'authorId4',
   new Date(4),
+  BlogStatus.Posted,
   {},
 );
 
@@ -74,6 +82,11 @@ const mockOpen = open as unknown as jest.Mock;
 const mockMkdir = mkdir as unknown as jest.Mock;
 
 const testError = 'test error aoisdhfjnk';
+
+const logSpy = jest.spyOn(console, 'log');
+logSpy.mockImplementation(() => {});
+const errorSpy = jest.spyOn(console, 'error');
+errorSpy.mockImplementation(() => {});
 
 describe('FileBlogService', () => {
   const makeFileHandleSpy = jest.spyOn(FileBlogService, 'makeFileHandle');
@@ -92,6 +105,8 @@ describe('FileBlogService', () => {
   });
 
   describe('addBlogPost', () => {
+    const newPost = NewBlogPost.fromJSON(post1.toJSON());
+
     test('Adds a blog post given a valid blog post input', async () => {
       mockOpen.mockImplementationOnce(async () => new MockFileHandle());
 
@@ -99,52 +114,14 @@ describe('FileBlogService', () => {
 
       expect(svc.blogPostsByDate.length).toBe(0);
 
-      const input = post1.toJSON();
-      delete input.id;
-      await svc.addBlogPost(input);
+      await svc.addBlogPost(newPost);
 
       expect(svc.blogPostsByDate.length).toBe(1);
 
       const post = svc.blogPostsByDate[0];
-      expect(post.toJSON()).toStrictEqual(expect.objectContaining(input));
-    });
-
-    test('Throws an error if the input is invalid', async () => {
-      mockOpen.mockImplementationOnce(async () => new MockFileHandle());
-
-      const svc = new FileBlogService(await open(''), 'path');
-      expect(() => svc.addBlogPost({})).rejects.toThrow();
-
-      const validInput = { ...post1.toJSON() };
-      delete validInput.id;
-
-      await expect(svc.addBlogPost(validInput)).resolves.toEqual(
-        expect.anything(),
+      expect(post.toJSON()).toStrictEqual(
+        expect.objectContaining(newPost.toJSON()),
       );
-
-      let input = { ...validInput };
-      delete input.title;
-      expect(() => svc.addBlogPost(input)).rejects.toThrow();
-
-      input = { ...validInput };
-      delete input.slug;
-      expect(() => svc.addBlogPost(input)).rejects.toThrow();
-
-      input = { ...validInput };
-      delete input.body;
-      expect(() => svc.addBlogPost(input)).rejects.toThrow();
-
-      input = { ...validInput };
-      delete input.tags;
-      expect(() => svc.addBlogPost(input)).rejects.toThrow();
-
-      input = { ...validInput };
-      delete input.authorId;
-      expect(() => svc.addBlogPost(input)).rejects.toThrow();
-
-      input = { ...validInput };
-      delete input.dateAdded;
-      expect(() => svc.addBlogPost(input)).rejects.toThrow();
     });
 
     test('Runs writeToFile', async () => {
@@ -155,7 +132,7 @@ describe('FileBlogService', () => {
       const writeToFileSpy = jest.spyOn(svc, 'writeToFile');
       writeToFileSpy.mockImplementationOnce(async () => {});
 
-      await svc.addBlogPost(post1.toJSON());
+      await svc.addBlogPost(newPost);
 
       expect(writeToFileSpy).toHaveBeenCalledTimes(1);
     });
@@ -170,9 +147,7 @@ describe('FileBlogService', () => {
         throw new Error(testError);
       });
 
-      await expect(() => svc.addBlogPost(post1.toJSON())).rejects.toThrow(
-        testError,
-      );
+      await expect(() => svc.addBlogPost(newPost)).rejects.toThrow(testError);
 
       expect(writeToFileSpy).toHaveBeenCalledTimes(1);
     });

@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 
-import { BlogPost } from '@/src/models/blog_post_model';
+import { BlogPost, NewBlogPost } from '@/src/models/blog_post_model';
 import { DatabaseNotAvailableException, InvalidInputError } from '@/src/errors';
 import { isString } from '@/src/utils/type_guards';
 
@@ -84,7 +84,8 @@ export class BlogController {
   @UseInterceptors(AuthRequiredIncerceptor)
   async addNewPost(@Req() request: Request): Promise<BlogPost> {
     try {
-      return await this.blogService.addBlogPost(request.body);
+      const newPost = NewBlogPost.fromJSON(request.body);
+      return await this.blogService.addBlogPost(newPost);
     } catch (e) {
       if (e instanceof InvalidInputError) {
         throw new HttpException(

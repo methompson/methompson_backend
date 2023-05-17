@@ -7,6 +7,7 @@ import {
   DatabaseNotAvailableException,
   InvalidInputError,
   NotFoundError,
+  UnimplementedError,
 } from '@/src/errors';
 import { BlogService, BlogPostRequestOutput } from '@/src/blog/blog.service';
 import { MongoDBClient } from '@/src/utils/mongodb_client_class';
@@ -114,6 +115,13 @@ export class MongoBlogService implements BlogService {
     await blogCollection.createIndex({ slug: 1 }, { unique: true });
   }
 
+  async getAllPosts(
+    page: number,
+    pagination: number,
+  ): Promise<BlogPostRequestOutput> {
+    throw new UnimplementedError();
+  }
+
   async getPosts(page = 1, pagination = 10): Promise<BlogPostRequestOutput> {
     if (!this._initialized) {
       throw new DatabaseNotAvailableException('Database Not Available');
@@ -168,16 +176,10 @@ export class MongoBlogService implements BlogService {
     return await BlogPost.fromMongoDB(result);
   }
 
-  async addBlogPost(requestBody: unknown): Promise<BlogPost> {
+  async addBlogPost(newPost: NewBlogPost): Promise<BlogPost> {
     if (!this._initialized) {
       throw new DatabaseNotAvailableException('Database Not Available');
     }
-
-    if (!NewBlogPost.isNewBlogPostInterface(requestBody)) {
-      throw new InvalidInputError('Invalid request body');
-    }
-
-    const newPost = NewBlogPost.fromJSON(requestBody);
 
     try {
       const blogCollection = await this.blogCollection;

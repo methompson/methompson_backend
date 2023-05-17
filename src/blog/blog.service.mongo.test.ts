@@ -10,7 +10,11 @@ import {
 
 import { MongoBlogService } from '@/src/blog/blog.service.mongo';
 import { MongoDBClient } from '@/src/utils/mongodb_client_class';
-import { BlogPost } from '@/src/models/blog_post_model';
+import {
+  BlogPost,
+  BlogStatus,
+  NewBlogPost,
+} from '@/src/models/blog_post_model';
 import { InvalidInputError, NotFoundError } from '@/src/errors';
 
 jest.mock('mongodb', () => {
@@ -71,6 +75,7 @@ const post1 = new BlogPost(
   ['tag1'],
   'authorId1',
   new Date(1),
+  BlogStatus.Posted,
   {},
 );
 
@@ -82,6 +87,7 @@ const post2 = new BlogPost(
   ['tag2'],
   'authorId2',
   new Date(2),
+  BlogStatus.Posted,
   {},
 );
 
@@ -93,6 +99,7 @@ const post3 = new BlogPost(
   ['tag3'],
   'authorId3',
   new Date(3),
+  BlogStatus.Draft,
   {},
 );
 
@@ -104,6 +111,7 @@ const post4 = new BlogPost(
   ['tag4'],
   'authorId4',
   new Date(4),
+  BlogStatus.Draft,
   {},
 );
 
@@ -618,21 +626,13 @@ describe('MongoBlogService', () => {
       }));
 
       const svc = await new MongoBlogService(mockMongoDBClient).initialize();
-      const result = await svc.addBlogPost(post1.toJSON());
+
+      const newPost = NewBlogPost.fromJSON(post1.toJSON());
+
+      const result = await svc.addBlogPost(newPost);
 
       expect(insertOneSpy).toHaveBeenCalledTimes(1);
       expect(result.id).toBe(objectId1);
-    });
-
-    test('Throws an error when the input is not a valid blogPost', async () => {
-      const insertOne = jest.spyOn(mockCollection, 'insertOne');
-
-      const svc = await new MongoBlogService(mockMongoDBClient).initialize();
-      await expect(() => svc.addBlogPost({})).rejects.toThrow(
-        new InvalidInputError('Invalid request body'),
-      );
-
-      expect(insertOne).toHaveBeenCalledTimes(0);
     });
 
     test('Throws an error when insertOne throws an error', async () => {
@@ -641,8 +641,10 @@ describe('MongoBlogService', () => {
         throw new Error(testError);
       });
 
+      const newPost = NewBlogPost.fromJSON(post1.toJSON());
+
       const svc = await new MongoBlogService(mockMongoDBClient).initialize();
-      await expect(() => svc.addBlogPost(post1.toJSON())).rejects.toThrow(
+      await expect(() => svc.addBlogPost(newPost)).rejects.toThrow(
         'Add blog error',
       );
 
@@ -659,8 +661,10 @@ describe('MongoBlogService', () => {
         throw er;
       });
 
+      const newPost = NewBlogPost.fromJSON(post1.toJSON());
+
       const svc = await new MongoBlogService(mockMongoDBClient).initialize();
-      await expect(() => svc.addBlogPost(post1.toJSON())).rejects.toThrow(
+      await expect(() => svc.addBlogPost(newPost)).rejects.toThrow(
         'Duplicate Key Error. The following keys must be unique:',
       );
 
@@ -671,8 +675,10 @@ describe('MongoBlogService', () => {
       const insertOneSpy = jest.spyOn(mockCollection, 'insertOne');
       insertOneSpy.mockImplementationOnce(async () => ({}));
 
+      const newPost = NewBlogPost.fromJSON(post1.toJSON());
+
       const svc = await new MongoBlogService(mockMongoDBClient).initialize();
-      await expect(() => svc.addBlogPost(post1.toJSON())).rejects.toThrow();
+      await expect(() => svc.addBlogPost(newPost)).rejects.toThrow();
 
       expect(insertOneSpy).toHaveBeenCalledTimes(1);
     });

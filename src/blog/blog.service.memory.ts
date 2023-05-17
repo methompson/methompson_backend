@@ -3,10 +3,15 @@
 import { Injectable } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 
-import { NewBlogPost, BlogPost } from '@/src/models/blog_post_model';
+import {
+  NewBlogPost,
+  BlogPost,
+  BlogStatus,
+} from '@/src/models/blog_post_model';
 import { NotFoundError } from '@/src/errors';
 import { BlogService, BlogPostRequestOutput } from '@/src/blog/blog.service';
 import { isNullOrUndefined, isUndefined } from '@/src/utils/type_guards';
+import { arrayToObject } from '@/src/utils/array_to_obj';
 
 @Injectable()
 export class InMemoryBlogService implements BlogService {
@@ -16,9 +21,7 @@ export class InMemoryBlogService implements BlogService {
   protected _blogPosts: Record<string, BlogPost> = {};
 
   constructor(inputPosts: BlogPost[] = []) {
-    for (const post of inputPosts) {
-      this._blogPosts[post.slug] = post;
-    }
+    this._blogPosts = arrayToObject(inputPosts, (p) => p.slug);
   }
 
   get blogPosts() {
@@ -32,7 +35,33 @@ export class InMemoryBlogService implements BlogService {
     return posts.sort((a, b) => b.dateAdded.getTime() - a.dateAdded.getTime());
   }
 
+  get postedBlogPosts(): BlogPost[] {
+    return Object.values(this.blogPosts).filter(
+      (p) => p.status === BlogStatus.Posted,
+    );
+  }
+
+  get postedBlogPostsByDate(): BlogPost[] {
+    const posts = this.postedBlogPosts;
+
+    return posts.sort((a, b) => b.dateAdded.getTime() - a.dateAdded.getTime());
+  }
+
   async getPosts(page = 1, pagination = 10): Promise<BlogPostRequestOutput> {
+    const skip = pagination * (page - 1);
+    const end = pagination * page;
+
+    const posts = this.postedBlogPostsByDate.slice(skip, end);
+
+    const morePages = end < this.postedBlogPostsByDate.length;
+
+    return {
+      posts,
+      morePages,
+    };
+  }
+
+  async getAllPosts(page = 1, pagination = 10): Promise<BlogPostRequestOutput> {
     const skip = pagination * (page - 1);
     const end = pagination * page;
 
@@ -56,9 +85,7 @@ export class InMemoryBlogService implements BlogService {
     return blog;
   }
 
-  async addBlogPost(requestBody: unknown): Promise<BlogPost> {
-    const newPost = NewBlogPost.fromJSON(requestBody);
-
+  async addBlogPost(newPost: NewBlogPost): Promise<BlogPost> {
     const id = uuidv4();
     const post = BlogPost.fromNewBlogPost(id, newPost);
 

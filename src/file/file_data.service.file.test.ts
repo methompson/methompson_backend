@@ -90,6 +90,11 @@ const mockMkdir = mkdir as unknown as jest.Mock;
 
 const testError = 'test error aoisdhfjnk';
 
+const logSpy = jest.spyOn(console, 'log');
+logSpy.mockImplementation(() => {});
+const errorSpy = jest.spyOn(console, 'error');
+errorSpy.mockImplementation(() => {});
+
 describe('FileFileDataService', () => {
   const makeFileHandleSpy = jest.spyOn(FileFileDataService, 'makeFileHandle');
   const writeBackupSpy = jest.spyOn(FileFileDataService, 'writeBackup');

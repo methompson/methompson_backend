@@ -4,7 +4,7 @@ import { FileHandle, mkdir, open } from 'fs/promises';
 import { join } from 'path';
 import { Injectable } from '@nestjs/common';
 
-import { BlogPost } from '@/src/models/blog_post_model';
+import { BlogPost, NewBlogPost } from '@/src/models/blog_post_model';
 import { InMemoryBlogService } from '@/src/blog/blog.service.memory';
 
 const BASE_NAME = 'blog_data';
@@ -25,8 +25,8 @@ export class FileBlogService extends InMemoryBlogService {
     return JSON.stringify(Object.values(this.blogPosts));
   }
 
-  async addBlogPost(requestBody: unknown): Promise<BlogPost> {
-    const post = await super.addBlogPost(requestBody);
+  async addBlogPost(newPost: NewBlogPost): Promise<BlogPost> {
+    const post = await super.addBlogPost(newPost);
 
     await this.writeToFile();
 

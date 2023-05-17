@@ -4,7 +4,11 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 import { BlogController } from '@/src/blog/blog.controller';
 import { InMemoryBlogService } from '@/src/blog/blog.service.memory';
 import { LoggerService } from '@/src/logger/logger.service';
-import { BlogPost } from '@/src/models/blog_post_model';
+import {
+  BlogPost,
+  BlogStatus,
+  NewBlogPost,
+} from '@/src/models/blog_post_model';
 import { InvalidInputError } from '@/src/errors';
 import { UserAuthRequest } from '@/src/middleware/auth_model_decorator';
 
@@ -16,6 +20,7 @@ const post1 = new BlogPost(
   ['tag1'],
   'authorId1',
   new Date('2022-08-15'),
+  BlogStatus.Draft,
   {},
 );
 
@@ -27,6 +32,7 @@ const post2 = new BlogPost(
   ['tag2'],
   'authorId2',
   new Date('2022-08-10'),
+  BlogStatus.Posted,
   {},
 );
 
@@ -322,8 +328,10 @@ describe('BlogController', () => {
 
       expect(value.toJSON()).toStrictEqual(post1.toJSON());
 
+      const expectation = NewBlogPost.fromJSON(postData);
+
       expect(addBlogPostSpy).toHaveBeenCalledTimes(1);
-      expect(addBlogPostSpy).toHaveBeenCalledWith(postData);
+      expect(addBlogPostSpy).toHaveBeenCalledWith(expectation);
     });
 
     test('Throws a specific error if addBlogPost throws an InvalidInputError', async () => {
