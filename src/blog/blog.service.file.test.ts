@@ -153,6 +153,69 @@ describe('FileBlogService', () => {
     });
   });
 
+  describe('updateBlogPost', () => {
+    test('replaces the old post with the updated post', async () => {
+      mockOpen.mockImplementationOnce(async () => new MockFileHandle());
+      const svc = new FileBlogService(await open(''), 'path', [
+        post1,
+        post2,
+        post3,
+        post4,
+      ]);
+      const body = 'updated body';
+      const updatedPost1 = BlogPost.fromJSON({
+        ...post1.toJSON(),
+        body,
+      });
+
+      expect(svc.blogPosts[post1.slug]).toBe(post1);
+
+      const post = await svc.updateBlogPost(updatedPost1);
+
+      expect(post).toBe(updatedPost1);
+
+      expect(svc.blogPosts[post1.slug]).toBe(updatedPost1);
+      expect(svc.blogPosts[post1.slug]?.body).toBe(body);
+    });
+
+    test('Runs writeToFile', async () => {
+      mockOpen.mockImplementationOnce(async () => new MockFileHandle());
+      const svc = new FileBlogService(await open(''), 'path', [
+        post1,
+        post2,
+        post3,
+        post4,
+      ]);
+      const body = 'updated body';
+      const updatedPost1 = BlogPost.fromJSON({
+        ...post1.toJSON(),
+        body,
+      });
+
+      const writeToFileSpy = jest.spyOn(svc, 'writeToFile');
+      writeToFileSpy.mockImplementationOnce(async () => {});
+
+      await svc.updateBlogPost(updatedPost1);
+
+      expect(writeToFileSpy).toHaveBeenCalledTimes(1);
+    });
+
+    test("throws an error if the updated post's slug does not exist in the current set", async () => {
+      mockOpen.mockImplementationOnce(async () => new MockFileHandle());
+      const svc = new FileBlogService(await open(''), 'path', []);
+      expect(svc.blogPosts[post1.slug]).toBeUndefined();
+
+      const writeToFileSpy = jest.spyOn(svc, 'writeToFile');
+      writeToFileSpy.mockImplementationOnce(async () => {});
+
+      await expect(() => svc.updateBlogPost(post1)).rejects.toThrow(
+        'Blog post does not exist. Cannot update.',
+      );
+
+      expect(writeToFileSpy).toHaveBeenCalledTimes(0);
+    });
+  });
+
   describe('deleteBlogPost', () => {
     test('deletes post from posts, returns post', async () => {
       mockOpen.mockImplementationOnce(async () => new MockFileHandle());

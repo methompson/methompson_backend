@@ -24,7 +24,7 @@
       "runtimeArgs": [
         "--inspect-brk",
         "${workspaceRoot}/node_modules/.bin/jest",
-        "${workspaceRoot}/src/models/blog_post_model",
+        "${workspaceRoot}/src/blog/blog.controller.test",
         "--runInBand"
       ],
       "console": "integratedTerminal",

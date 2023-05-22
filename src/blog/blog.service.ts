@@ -26,6 +26,8 @@ export abstract class BlogService implements Backupable {
 
   abstract addBlogPost(newPost: NewBlogPost): Promise<BlogPost>;
 
+  abstract updateBlogPost(updatedPost: BlogPost): Promise<BlogPost>;
+
   abstract deleteBlogPost(slug: string): Promise<BlogPost>;
 
   abstract backup(): Promise<void>;

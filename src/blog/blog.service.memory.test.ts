@@ -175,6 +175,33 @@ describe('InMemoryBlogService', () => {
     });
   });
 
+  describe('updateBlogPost', () => {
+    test('replaces the old post with the updated post', async () => {
+      const svc = new InMemoryBlogService([post1, post2, post3, post4]);
+      const body = 'updated body';
+      const updatedPost1 = BlogPost.fromJSON({
+        ...post1.toJSON(),
+        body,
+      });
+
+      expect(svc.blogPosts[post1.slug]).toBe(post1);
+
+      const post = await svc.updateBlogPost(updatedPost1);
+
+      expect(post).toBe(updatedPost1);
+
+      expect(svc.blogPosts[post1.slug]).toBe(updatedPost1);
+      expect(svc.blogPosts[post1.slug]?.body).toBe(body);
+    });
+
+    test('throws an error if the updated post\'s slug does not exist in the current set', async () => {
+      const svc = new InMemoryBlogService([]);
+      expect(svc.blogPosts[post1.slug]).toBeUndefined();
+
+      await expect(() => svc.updateBlogPost(post1)).rejects.toThrow('Blog post does not exist. Cannot update.');
+    });
+  });
+
   describe('deleteBlogPost', () => {
     test('deletes post from posts, returns post', async () => {
       const svc = new InMemoryBlogService([post1, post2, post3, post4]);

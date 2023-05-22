@@ -66,7 +66,7 @@ export class InMemoryNotesService implements NotesService {
     const oldNote = this._notes[note.id];
 
     if (isUndefined(oldNote)) {
-      throw new MutateDataException('Note does not exist. Cannot update');
+      throw new MutateDataException('Note does not exist. Cannot update.');
     }
 
     this._notes[note.id] = note;

@@ -33,6 +33,14 @@ export class FileBlogService extends InMemoryBlogService {
     return post;
   }
 
+  async updateBlogPost(updatedPost: BlogPost): Promise<BlogPost> {
+    const post = await super.updateBlogPost(updatedPost);
+
+    await this.writeToFile();
+
+    return post;
+  }
+
   async deleteBlogPost(slug: string): Promise<BlogPost> {
     const post = await super.deleteBlogPost(slug);
 
@@ -57,9 +65,7 @@ export class FileBlogService extends InMemoryBlogService {
     blogPath: string,
     name?: string,
   ): Promise<FileHandle> {
-    await mkdir(blogPath, {
-      recursive: true,
-    });
+    await mkdir(blogPath, { recursive: true });
 
     const filename = name ?? FILE_NAME;
 

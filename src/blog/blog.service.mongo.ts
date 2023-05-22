@@ -21,6 +21,9 @@ export class MongoBlogService implements BlogService {
   protected _initialized = false;
 
   constructor(protected _mongoDBClient: MongoDBClient) {}
+  updateBlogPost(_updatedPost: BlogPost): Promise<BlogPost> {
+    throw new UnimplementedError('Method not implemented.');
+  }
 
   protected get blogCollection(): Promise<Collection<Document>> {
     return this.mongoDBClient.db.then((db) =>
@@ -116,8 +119,8 @@ export class MongoBlogService implements BlogService {
   }
 
   async getAllPosts(
-    page: number,
-    pagination: number,
+    _page: number,
+    _pagination: number,
   ): Promise<BlogPostRequestOutput> {
     throw new UnimplementedError();
   }

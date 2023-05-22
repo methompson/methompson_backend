@@ -8,7 +8,7 @@ import {
   BlogPost,
   BlogStatus,
 } from '@/src/models/blog_post_model';
-import { NotFoundError } from '@/src/errors';
+import { MutateDataException, NotFoundError } from '@/src/errors';
 import { BlogService, BlogPostRequestOutput } from '@/src/blog/blog.service';
 import { isNullOrUndefined, isUndefined } from '@/src/utils/type_guards';
 import { arrayToObject } from '@/src/utils/array_to_obj';
@@ -92,6 +92,18 @@ export class InMemoryBlogService implements BlogService {
     this._blogPosts[post.slug] = post;
 
     return post;
+  }
+
+  async updateBlogPost(updatedPost: BlogPost): Promise<BlogPost> {
+    const oldBlog = this._blogPosts[updatedPost.slug];
+
+    if (isUndefined(oldBlog)) {
+      throw new MutateDataException('Blog post does not exist. Cannot update.');
+    }
+
+    this._blogPosts[updatedPost.slug] = updatedPost;
+
+    return updatedPost;
   }
 
   async deleteBlogPost(slug: string): Promise<BlogPost> {
