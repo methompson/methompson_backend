@@ -8,12 +8,14 @@ export interface NotesRequestOutput {
   morePages: boolean;
 }
 
+export interface GetNotesInput {
+  page?: number;
+  pagination?: number;
+}
+
 @Injectable()
 export abstract class NotesService implements Backupable {
-  abstract getNotes(
-    page: number,
-    pagination: number,
-  ): Promise<NotesRequestOutput>;
+  abstract getNotes(input?: GetNotesInput): Promise<NotesRequestOutput>;
 
   abstract getById(id: string): Promise<Note>;
 

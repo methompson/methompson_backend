@@ -143,7 +143,7 @@ export class MongoBlogService implements BlogService {
 
     const aggregation = await rawAggregation.toArray();
 
-    const output = [];
+    const output: BlogPost[] = [];
 
     for (const r of aggregation) {
       try {

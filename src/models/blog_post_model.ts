@@ -5,6 +5,7 @@ import {
   isRecord,
   isStringArray,
   isUndefined,
+  isNullOrUndefined,
 } from '@/src/utils/type_guards';
 import {
   isValidDate,
@@ -45,13 +46,13 @@ export interface BlogPostInterface extends NewBlogPostInterface {
 }
 
 interface BlogPostInputOptions {
-  updateAuthorId?: string;
-  dateUpdated?: ValidDate;
+  updateAuthorId?: string | undefined;
+  dateUpdated?: ValidDate | undefined;
 }
 
 export class NewBlogPost {
-  protected _updateAuthorId: string | null;
-  protected _dateUpdated: ValidDate | null;
+  protected _updateAuthorId: string | undefined;
+  protected _dateUpdated: ValidDate | undefined;
 
   constructor(
     protected _title: string,
@@ -63,8 +64,8 @@ export class NewBlogPost {
     protected _status: BlogStatus,
     options: BlogPostInputOptions,
   ) {
-    this._updateAuthorId = options.updateAuthorId ?? null;
-    this._dateUpdated = options.dateUpdated ?? null;
+    this._updateAuthorId = options.updateAuthorId ?? undefined;
+    this._dateUpdated = options.dateUpdated ?? undefined;
   }
 
   // Protecting immutability while giving access to values
@@ -89,10 +90,10 @@ export class NewBlogPost {
   get status(): BlogStatus {
     return this._status;
   }
-  get updateAuthorId(): string | null {
+  get updateAuthorId(): string | undefined {
     return this._updateAuthorId;
   }
-  get dateUpdated(): ValidDate | null {
+  get dateUpdated(): ValidDate | undefined {
     return this._dateUpdated;
   }
 
@@ -107,10 +108,10 @@ export class NewBlogPost {
       status: this.status,
     };
 
-    if (this.updateAuthorId !== null) {
+    if (!isNullOrUndefined(this.updateAuthorId)) {
       output.updateAuthorId = this.updateAuthorId;
     }
-    if (this.dateUpdated !== null) {
+    if (!isNullOrUndefined(this.dateUpdated)) {
       output.dateUpdated = this.dateUpdated.toISOString();
     }
 

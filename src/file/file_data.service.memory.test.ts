@@ -87,7 +87,7 @@ describe('InMemoryFileDataService', () => {
         (el) => el.originalFilename === originalFileName1,
       );
 
-      expect(result1.baseDetails()).toMatchObject(
+      expect(result1?.baseDetails()).toMatchObject(
         newFile1.fileDetails.baseDetails(),
       );
 
@@ -95,7 +95,7 @@ describe('InMemoryFileDataService', () => {
         (el) => el.originalFilename === originalFileName2,
       );
 
-      expect(result2.baseDetails()).toMatchObject(
+      expect(result2?.baseDetails()).toMatchObject(
         newFile2.fileDetails.baseDetails(),
       );
     });
@@ -140,10 +140,10 @@ describe('InMemoryFileDataService', () => {
         (el) => el.filename === newFile2.fileDetails.filename,
       );
 
-      expect(result1.baseDetails()).toMatchObject(
+      expect(result1?.baseDetails()).toMatchObject(
         newFile1.fileDetails.baseDetails(),
       );
-      expect(result2.baseDetails()).toMatchObject(
+      expect(result2?.baseDetails()).toMatchObject(
         newFile2.fileDetails.baseDetails(),
       );
     });
@@ -193,7 +193,7 @@ describe('InMemoryFileDataService', () => {
 
       expect(fds.filesList.length).toBe(1);
 
-      expect(result[file1.filename].fileDetails.toJSON()).toStrictEqual(
+      expect(result[file1.filename].fileDetails?.toJSON()).toStrictEqual(
         file1.toJSON(),
       );
       expect(result[file1.filename].filename).toBe(file1.filename);
@@ -211,12 +211,12 @@ describe('InMemoryFileDataService', () => {
 
       expect(fds.filesList.length).toBe(0);
 
-      expect(result[file1.filename].fileDetails.toJSON()).toStrictEqual(
+      expect(result[file1.filename].fileDetails?.toJSON()).toStrictEqual(
         file1.toJSON(),
       );
       expect(result[file1.filename].filename).toBe(file1.filename);
       expect(result[file1.filename].error).toBeUndefined();
-      expect(result[file2.filename].fileDetails.toJSON()).toStrictEqual(
+      expect(result[file2.filename].fileDetails?.toJSON()).toStrictEqual(
         file2.toJSON(),
       );
       expect(result[file2.filename].filename).toBe(file2.filename);
@@ -233,7 +233,7 @@ describe('InMemoryFileDataService', () => {
       const filename = 'test filename';
       const result = await fds.deleteFiles([filename]);
       expect(result[filename].filename).toBe(filename);
-      expect(result[filename].fileDetails).toBe(null);
+      expect(result[filename].fileDetails).toBeUndefined();
       expect(result[filename].error).toBe('File Does Not Exist In Database');
     });
   });

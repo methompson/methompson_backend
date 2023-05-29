@@ -37,7 +37,7 @@ export class FileOpsService {
     parsedData: ParsedFilesAndFields,
     userId: string,
   ): Promise<FileDetails[]> {
-    let newFiles: NewFileDetailsJSON[];
+    let newFiles: NewFileDetailsJSON[] = [];
     try {
       newFiles = this.makeNewFileDetails(parsedData, userId);
 
@@ -47,7 +47,7 @@ export class FileOpsService {
 
       return result;
     } catch (e) {
-      if (!isNullOrUndefined(newFiles)) {
+      if (newFiles.length > 0) {
         await this.rollBackFSWrites(newFiles, parsedData.files);
       }
 
@@ -67,7 +67,7 @@ export class FileOpsService {
     imageWriter?: ImageWriter,
   ): Promise<FileDetails[]> {
     const iw = imageWriter ?? new ImageWriter(this.savedFilePath);
-    let newFiles: NewFileDetailsJSON[];
+    let newFiles: NewFileDetailsJSON[] = [];
 
     try {
       newFiles = await iw.convertImages(parsedData, userId);

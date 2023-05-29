@@ -161,7 +161,8 @@ describe('InMemoryBlogService', () => {
 
       expect(svc.blogPostsByDate.length).toBe(0);
 
-      const input = post1.toJSON();
+      const input: Record<string, unknown> =
+        post1.toJSON() as unknown as Record<string, unknown>;
       delete input.id;
 
       const newPost = NewBlogPost.fromJSON(input);
@@ -194,11 +195,13 @@ describe('InMemoryBlogService', () => {
       expect(svc.blogPosts[post1.slug]?.body).toBe(body);
     });
 
-    test('throws an error if the updated post\'s slug does not exist in the current set', async () => {
+    test("throws an error if the updated post's slug does not exist in the current set", async () => {
       const svc = new InMemoryBlogService([]);
       expect(svc.blogPosts[post1.slug]).toBeUndefined();
 
-      await expect(() => svc.updateBlogPost(post1)).rejects.toThrow('Blog post does not exist. Cannot update.');
+      await expect(() => svc.updateBlogPost(post1)).rejects.toThrow(
+        'Blog post does not exist. Cannot update.',
+      );
     });
   });
 

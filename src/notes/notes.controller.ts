@@ -46,7 +46,7 @@ export class NotesController {
       : 10;
 
     try {
-      return await this.notesService.getNotes(page, pagination);
+      return await this.notesService.getNotes({ page, pagination });
     } catch (e) {
       if (e instanceof DatabaseNotAvailableException) {
         throw new HttpException(

@@ -5,7 +5,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const envPort = parseInt(process.env.PORT, 10);
+  const envPort = parseInt(process.env.PORT ?? '80', 10);
 
   const port = Number.isNaN(envPort) ? 8000 : envPort;
 

@@ -116,7 +116,7 @@ export class InMemoryFileDataService implements FileDataService {
       } else {
         output[filename] = {
           filename,
-          fileDetails: null,
+          fileDetails: undefined,
           error: 'File Does Not Exist In Database',
         };
       }

@@ -11,11 +11,11 @@ export enum ImageType {
 
 interface ImageResizeOptionsJSON {
   identifier?: string;
-  newFormat?: ImageType | null;
+  newFormat?: ImageType;
   retainImage?: boolean;
   resize?: boolean;
   stripMeta?: boolean;
-  maxSize?: number | null;
+  maxSize?: number;
   isPrivate?: boolean;
 }
 
@@ -34,7 +34,7 @@ export class ImageResizeOptions {
 
   // If the user wants to convert to a specific image format (e.g. png), they can
   // use this value to do that.
-  protected _newFormat: ImageType | null;
+  protected _newFormat: ImageType | undefined;
 
   // If set to true, the image will be resized to maxSize
   protected _resize: boolean;
@@ -46,24 +46,24 @@ export class ImageResizeOptions {
   // This nullable value represents the maximum size set by the user when uploading
   // image files. If this value is not set, the resize function will default to
   // whatever value it wants.
-  protected _maxSize: number | null;
+  protected _maxSize: number | undefined;
 
   // Determines if a file is private
   protected _isPrivate: boolean;
 
   constructor(protected _identifier: string, options: ImageResizeOptionsJSON) {
-    this._newFormat = options.newFormat ?? null;
+    this._newFormat = options.newFormat ?? undefined;
     this._retainImage = options.retainImage ?? false;
     this._stripMeta = options.stripMeta ?? false;
     this._resize = options.resize ?? false;
-    this._maxSize = options.maxSize ?? null;
+    this._maxSize = options.maxSize ?? undefined;
     this._isPrivate = options.isPrivate ?? true;
   }
 
   get doNotConvert(): boolean {
     return this._retainImage;
   }
-  get newFormat(): ImageType | null {
+  get newFormat(): ImageType | undefined {
     return this._newFormat;
   }
   get resize(): boolean {
@@ -72,7 +72,7 @@ export class ImageResizeOptions {
   get stripMeta(): boolean {
     return this._stripMeta;
   }
-  get maxSize(): number | null {
+  get maxSize(): number | undefined {
     return this._maxSize;
   }
   get identifier(): string {
@@ -82,7 +82,7 @@ export class ImageResizeOptions {
     return this._isPrivate;
   }
 
-  get newMimetype(): string | null {
+  get newMimetype(): string | undefined {
     switch (this.newFormat) {
       case ImageType.png:
         return 'image/png';
@@ -97,7 +97,7 @@ export class ImageResizeOptions {
       case ImageType.tiff:
         return 'image/tiff';
       default:
-        return null;
+        return undefined;
     }
   }
 
@@ -164,9 +164,9 @@ export class ImageResizeOptions {
     return new ImageResizeOptions(identifier, options);
   }
 
-  static getImageTypeFromString(type: unknown): ImageType | null {
+  static getImageTypeFromString(type: unknown): ImageType | undefined {
     if (!isString(type)) {
-      return null;
+      return undefined;
     }
 
     switch (type.toLowerCase()) {
@@ -183,9 +183,9 @@ export class ImageResizeOptions {
         return ImageType.bmp;
       case 'tiff':
         return ImageType.tiff;
+      default:
+        return undefined;
     }
-
-    return null;
   }
 }
 

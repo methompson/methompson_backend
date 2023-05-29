@@ -439,10 +439,10 @@ describe('MongoBlogService', () => {
       const result3 = result.posts.find((el) => el.title === post3.title);
       const result4 = result.posts.find((el) => el.title === post4.title);
 
-      expect(result1.toJSON()).toStrictEqual(post1.toJSON());
-      expect(result2.toJSON()).toStrictEqual(post2.toJSON());
-      expect(result3.toJSON()).toStrictEqual(post3.toJSON());
-      expect(result4.toJSON()).toStrictEqual(post4.toJSON());
+      expect(result1?.toJSON()).toStrictEqual(post1.toJSON());
+      expect(result2?.toJSON()).toStrictEqual(post2.toJSON());
+      expect(result3?.toJSON()).toStrictEqual(post3.toJSON());
+      expect(result4?.toJSON()).toStrictEqual(post4.toJSON());
     });
 
     test('Changing the pagination affects the values passed into aggregate', async () => {
