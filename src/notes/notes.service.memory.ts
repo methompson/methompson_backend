@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 
-import { NotesRequestOutput, NotesService } from '@/src/notes/notes.service';
+import {
+  GetNotesInput,
+  NotesRequestOutput,
+  NotesService,
+} from '@/src/notes/notes.service';
 import { NewNote, Note } from '@/src/models/notes_model';
 import { isUndefined } from '@/src/utils/type_guards';
 import { NotFoundError, MutateDataException } from '@/src/errors';
@@ -14,12 +18,12 @@ export class InMemoryNotesService implements NotesService {
    */
   protected _notes: Record<string, Note> = {};
 
-  get notes(): Record<string, Note> {
-    return { ...this._notes };
-  }
-
   constructor(inputNotes: Note[] = []) {
     this._notes = arrayToObject(inputNotes, (n) => n.id);
+  }
+
+  get notes(): Record<string, Note> {
+    return { ...this._notes };
   }
 
   get notesByDate(): Note[] {
@@ -29,7 +33,10 @@ export class InMemoryNotesService implements NotesService {
     return notes.sort((a, b) => b.dateAdded.getTime() - a.dateAdded.getTime());
   }
 
-  async getNotes(page = 1, pagination = 10): Promise<NotesRequestOutput> {
+  async getNotes(input?: GetNotesInput): Promise<NotesRequestOutput> {
+    const page = input?.page ?? 1;
+    const pagination = input?.pagination ?? 10;
+
     const skip = pagination * (page - 1);
     const end = pagination * page;
 
@@ -66,7 +73,7 @@ export class InMemoryNotesService implements NotesService {
     const oldNote = this._notes[note.id];
 
     if (isUndefined(oldNote)) {
-      throw new MutateDataException('Note does not exist. Cannot update');
+      throw new MutateDataException('Note does not exist. Cannot update.');
     }
 
     this._notes[note.id] = note;

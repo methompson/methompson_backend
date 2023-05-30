@@ -173,7 +173,7 @@ describe('FileOpsService', () => {
       const result = await fos.saveUploadedFiles(parsedFiles, authorId);
 
       const file1 = result.find((el) => el.filename === newFilename1);
-      expect(file1.toJSON()).toMatchObject({
+      expect(file1?.toJSON()).toMatchObject({
         originalFilename: uploadedFile1.originalFilename,
         filename: newFilename1,
         authorId,
@@ -184,7 +184,7 @@ describe('FileOpsService', () => {
       });
 
       const file2 = result.find((el) => el.filename === newFilename2);
-      expect(file2.toJSON()).toMatchObject({
+      expect(file2?.toJSON()).toMatchObject({
         originalFilename: uploadedFile2.originalFilename,
         filename: newFilename2,
         authorId,
@@ -811,8 +811,8 @@ describe('FileOpsService', () => {
       const file1 = result.find(
         (el) => el.fileDetails.filename === newFilename1,
       );
-      expect(file1.filepath).toBe(uploadedFile1.filepath);
-      expect(file1.fileDetails.toJSON()).toMatchObject({
+      expect(file1?.filepath).toBe(uploadedFile1.filepath);
+      expect(file1?.fileDetails.toJSON()).toMatchObject({
         originalFilename: uploadedFile1.originalFilename,
         filename: newFilename1,
         authorId,
@@ -825,8 +825,8 @@ describe('FileOpsService', () => {
       const file2 = result.find(
         (el) => el.fileDetails.filename === newFilename2,
       );
-      expect(file2.filepath).toBe(uploadedFile2.filepath);
-      expect(file2.fileDetails.toJSON()).toMatchObject({
+      expect(file2?.filepath).toBe(uploadedFile2.filepath);
+      expect(file2?.fileDetails.toJSON()).toMatchObject({
         originalFilename: uploadedFile2.originalFilename,
         filename: newFilename2,
         authorId,

@@ -1,41 +1,58 @@
 import { WithId, Document } from 'mongodb';
 
-import { isString, isRecord, isStringArray } from '@/src/utils/type_guards';
-import { isValidDate, ValidDate } from '@/src/utils/valid_date';
+import {
+  isString,
+  isRecord,
+  isStringArray,
+  isUndefined,
+  isNullOrUndefined,
+} from '@/src/utils/type_guards';
+import {
+  isValidDate,
+  isValidDateString,
+  ValidDate,
+} from '@/src/utils/valid_date';
 import { InvalidInputError } from '@/src/errors';
 
-interface NewBlogPostInterface {
+export enum BlogStatus {
+  Posted = 'posted',
+  Draft = 'draft',
+}
+
+export function blogStatusFromString(input): BlogStatus {
+  switch (input) {
+    case 'draft':
+      return BlogStatus.Draft;
+    case 'posted':
+    default:
+      return BlogStatus.Posted;
+  }
+}
+
+export interface NewBlogPostInterface {
   title: string;
   slug: string;
   body: string;
   tags: string[];
   authorId: string;
   dateAdded: string;
+  status?: string;
   updateAuthorId?: string;
   dateUpdated?: string;
 }
 
-export interface BlogPostInterface {
-  [key: string]: unknown;
+export interface BlogPostInterface extends NewBlogPostInterface {
   id: string;
-  title: string;
-  slug: string;
-  body: string;
-  tags: string[];
-  authorId: string;
-  dateAdded: string;
-  updateAuthorId?: string;
-  dateUpdated?: string;
 }
 
 interface BlogPostInputOptions {
-  updateAuthorId?: string;
-  dateUpdated?: ValidDate;
+  updateAuthorId?: string | undefined;
+  dateUpdated?: ValidDate | undefined;
 }
 
 export class NewBlogPost {
-  protected _updateAuthorId: string | null;
-  protected _dateUpdated: ValidDate | null;
+  protected _updateAuthorId: string | undefined;
+  protected _dateUpdated: ValidDate | undefined;
 
   constructor(
     protected _title: string,
@@ -44,10 +61,11 @@ export class NewBlogPost {
     protected _tags: string[],
     protected _authorId: string,
     protected _dateAdded: ValidDate,
+    protected _status: BlogStatus,
     options: BlogPostInputOptions,
   ) {
-    this._updateAuthorId = options.updateAuthorId ?? null;
-    this._dateUpdated = options.dateUpdated ?? null;
+    this._updateAuthorId = options.updateAuthorId ?? undefined;
+    this._dateUpdated = options.dateUpdated ?? undefined;
   }
 
   // Protecting immutability while giving access to values
@@ -69,10 +87,13 @@ export class NewBlogPost {
   get dateAdded(): ValidDate {
     return this._dateAdded;
   }
-  get updateAuthorId(): string | null {
+  get status(): BlogStatus {
+    return this._status;
+  }
+  get updateAuthorId(): string | undefined {
     return this._updateAuthorId;
   }
-  get dateUpdated(): ValidDate | null {
+  get dateUpdated(): ValidDate | undefined {
     return this._dateUpdated;
   }
 
@@ -84,13 +105,14 @@ export class NewBlogPost {
       tags: this.tags,
       authorId: this.authorId,
       dateAdded: this.dateAdded.toISOString(),
+      status: this.status,
     };
 
-    if (this.updateAuthorId !== null) {
+    if (!isNullOrUndefined(this.updateAuthorId)) {
       output.updateAuthorId = this.updateAuthorId;
     }
-    if (this.dateUpdated !== null) {
-      output.dateUpdated = this.dateUpdated.toDateString();
+    if (!isNullOrUndefined(this.dateUpdated)) {
+      output.dateUpdated = this.dateUpdated.toISOString();
     }
 
     return output;
@@ -105,13 +127,15 @@ export class NewBlogPost {
       throw new InvalidInputError('Invalid Slug');
     }
 
+    const status = blogStatusFromString(input.status);
+
     const options: BlogPostInputOptions = {};
 
-    if (isValidDate(input.dateUpdated)) {
-      options.dateUpdated = input.dateUpdated;
-    }
-
-    if (isString(input.updateAuthorId)) {
+    if (
+      isValidDateString(input.dateUpdated) &&
+      isString(input.updateAuthorId)
+    ) {
+      options.dateUpdated = new Date(input.dateUpdated);
       options.updateAuthorId = input.updateAuthorId;
     }
 
@@ -122,37 +146,51 @@ export class NewBlogPost {
       input.tags,
       input.authorId,
       new Date(input.dateAdded),
+      status,
       options,
     );
   }
 
-  static isNewBlogPostInterface(value: unknown): value is NewBlogPostInterface {
-    if (!isRecord(value)) {
-      return false;
+  static isNewBlogPostInterface(input: unknown): input is NewBlogPostInterface {
+    const result = NewBlogPost.newBlogPostInterfaceTest(input);
+
+    return result.length === 0;
+  }
+
+  static newBlogPostInterfaceTest(input: unknown): string[] {
+    const output: string[] = [];
+
+    if (!isRecord(input)) {
+      return ['root'];
     }
 
     // If dateAdded is not a string or the string is not a valid date, return false
-    if (!isString(value.dateAdded) || !isValidDate(new Date(value.dateAdded))) {
-      return false;
+    if (!isString(input.dateAdded) || !isValidDate(new Date(input.dateAdded))) {
+      output.push('dateAdded');
     }
 
-    // If dateUpdated IS a string, but is not a valid date, return false
-    if (
-      isString(value.dateUpdated) &&
-      !isValidDate(new Date(value.dateUpdated))
+    if (!isString(input.title)) output.push('title');
+    if (!isString(input.slug)) output.push('slug');
+    if (!isString(input.body)) output.push('body');
+    if (!isStringArray(input.tags)) output.push('tags');
+    if (!isString(input.authorId)) output.push('authorId');
+    if (!isString(input.status) && !isUndefined(input.status))
+      output.push('status');
+
+    if (!isUndefined(input.updateAuthorId) && !isString(input.updateAuthorId)) {
+      output.push('updateAuthorId');
+    }
+
+    if (!isUndefined(input.dateUpdated) && !isString(input.dateUpdated)) {
+      output.push('dateUpdated');
+    } else if (
+      isString(input.dateUpdated) &&
+      !isValidDate(new Date(input.dateUpdated))
     ) {
-      return false;
+      output.push('dateUpdated');
     }
 
-    return (
-      isString(value.title) &&
-      isString(value.slug) &&
-      isString(value.body) &&
-      isString(value.authorId) &&
-      isStringArray(value.tags) &&
-      ((isString(value.updateAuthorId) && isString(value.dateUpdated)) ||
-        (value.updateAuthorId === undefined && value.dateUpdated === undefined))
-    );
+    return output;
   }
 }
 
@@ -165,9 +203,10 @@ export class BlogPost extends NewBlogPost {
     tags: string[],
     authorId: string,
     dateAdded: ValidDate,
+    status: BlogStatus,
     options: BlogPostInputOptions,
   ) {
-    super(title, slug, body, tags, authorId, dateAdded, options);
+    super(title, slug, body, tags, authorId, dateAdded, status, options);
   }
 
   get id(): string {
@@ -198,12 +237,18 @@ export class BlogPost extends NewBlogPost {
     });
   }
 
-  static isBlogPostInterface(value: unknown): value is BlogPostInterface {
-    return (
-      isRecord(value) &&
-      isString(value.id) &&
-      NewBlogPost.isNewBlogPostInterface(value)
-    );
+  static isBlogPostInterface(input: unknown): input is BlogPostInterface {
+    const result = BlogPost.blogPostInterfaceTest(input);
+
+    return result.length === 0;
+  }
+
+  static blogPostInterfaceTest(input: unknown): string[] {
+    const output: string[] = NewBlogPost.newBlogPostInterfaceTest(input);
+
+    if (isRecord(input) && !isString(input.id)) output.push('id');
+
+    return output;
   }
 
   static fromNewBlogPost(id: string, input: NewBlogPost): BlogPost {
@@ -215,6 +260,7 @@ export class BlogPost extends NewBlogPost {
       input.tags,
       input.authorId,
       input.dateAdded,
+      input.status,
       {
         dateUpdated: input.dateUpdated,
         updateAuthorId: input.updateAuthorId,

@@ -441,10 +441,10 @@ describe('MongoFileDataService', () => {
         (el) => el.originalFilename === originalFilename2,
       );
 
-      expect(result1.baseDetails()).toMatchObject(
+      expect(result1?.baseDetails()).toMatchObject(
         nfd1.fileDetails.baseDetails(),
       );
-      expect(result2.baseDetails()).toMatchObject(
+      expect(result2?.baseDetails()).toMatchObject(
         nfd2.fileDetails.baseDetails(),
       );
 
@@ -600,10 +600,10 @@ describe('MongoFileDataService', () => {
         (el) => el.filename === nfd2.fileDetails.filename,
       );
 
-      expect(result1.baseDetails()).toMatchObject(
+      expect(result1?.baseDetails()).toMatchObject(
         nfd1.fileDetails.baseDetails(),
       );
-      expect(result2.baseDetails()).toMatchObject(
+      expect(result2?.baseDetails()).toMatchObject(
         nfd2.fileDetails.baseDetails(),
       );
 
@@ -644,10 +644,10 @@ describe('MongoFileDataService', () => {
         (el) => el.filename === nfd2.fileDetails.filename,
       );
 
-      expect(result1.baseDetails()).toMatchObject(
+      expect(result1?.baseDetails()).toMatchObject(
         nfd1.fileDetails.baseDetails(),
       );
-      expect(result2.baseDetails()).toMatchObject(
+      expect(result2?.baseDetails()).toMatchObject(
         nfd2.fileDetails.baseDetails(),
       );
 
@@ -890,7 +890,7 @@ describe('MongoFileDataService', () => {
       const filename2 = nfd2.fileDetails.filename;
 
       delSpy.mockImplementation((el) => {
-        let value = null;
+        let value: unknown = null;
         if (el.filename === filename1) {
           value = {
             ...nfd1.fileDetails.toMongo(),

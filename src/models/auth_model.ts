@@ -1,10 +1,14 @@
 import { decode } from 'jsonwebtoken';
 
-import { isRecord, isString } from '@/src/utils/type_guards';
+import { isNumber, isRecord, isString } from '@/src/utils/type_guards';
 import { InvalidInputError } from '@/src/errors';
 
 export class AuthModel {
-  constructor(protected decodedToken: Record<string, unknown> | null) {}
+  decodedToken: Record<string, unknown>;
+
+  constructor(decodedToken?: Record<string, unknown> | undefined) {
+    this.decodedToken = decodedToken ?? {};
+  }
 
   get token() {
     return {
@@ -23,7 +27,10 @@ export class AuthModel {
   }
 
   get isNotExpired(): boolean {
-    const exp = this.decodedToken?.exp ?? 0;
+    const expRaw = this.decodedToken?.exp;
+
+    const exp = isNumber(expRaw) ? expRaw : 0;
+
     return exp >= new Date().getTime() / 1000;
   }
 

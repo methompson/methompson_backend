@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { BlogPost } from '@/src/models/blog_post_model';
+import { BlogPost, NewBlogPost } from '@/src/models/blog_post_model';
 import { Backupable } from '@/src/utils/backuppable';
 
 export interface BlogPostRequestOutput {
@@ -10,14 +10,23 @@ export interface BlogPostRequestOutput {
 
 @Injectable()
 export abstract class BlogService implements Backupable {
+  // Gets only posted posts
   abstract getPosts(
+    page: number,
+    pagination: number,
+  ): Promise<BlogPostRequestOutput>;
+
+  // Gets draft posts, too
+  abstract getAllPosts(
     page: number,
     pagination: number,
   ): Promise<BlogPostRequestOutput>;
 
   abstract findBySlug(slug: string): Promise<BlogPost>;
 
-  abstract addBlogPost(requestBody: unknown): Promise<BlogPost>;
+  abstract addBlogPost(newPost: NewBlogPost): Promise<BlogPost>;
+
+  abstract updateBlogPost(updatedPost: BlogPost): Promise<BlogPost>;
 
   abstract deleteBlogPost(slug: string): Promise<BlogPost>;
 

@@ -112,6 +112,7 @@ module.exports = {
     quotes: [
       'warn',
       'single',
+      { avoidEscape: true }
     ],
     'import/no-named-as-default-member': 'off',
     'no-restricted-imports': [

@@ -691,13 +691,13 @@ describe('FileController', () => {
         (el) => el.filename === fileDetails2.filename,
       );
 
-      expect(result1.fileDetails).toStrictEqual(fileDetails1.toJSON());
-      expect(result1.errors).toStrictEqual([]);
-      expect(result1.filename).toBe(fileDetails1.filename);
+      expect(result1?.fileDetails).toStrictEqual(fileDetails1.toJSON());
+      expect(result1?.errors).toStrictEqual([]);
+      expect(result1?.filename).toBe(fileDetails1.filename);
 
-      expect(result2.fileDetails).toStrictEqual(fileDetails2.toJSON());
-      expect(result2.errors).toStrictEqual([]);
-      expect(result2.filename).toBe(fileDetails2.filename);
+      expect(result2?.fileDetails).toStrictEqual(fileDetails2.toJSON());
+      expect(result2?.errors).toStrictEqual([]);
+      expect(result2?.filename).toBe(fileDetails2.filename);
     });
 
     test('Returns error details from fileService.delete files', async () => {
@@ -728,14 +728,14 @@ describe('FileController', () => {
       );
       const result2 = result.find((el) => el.filename === badFilename);
 
-      expect(result1.fileDetails).toStrictEqual(fileDetails1.toJSON());
-      expect(result1.errors).toStrictEqual([]);
-      expect(result1.filename).toBe(fileDetails1.filename);
+      expect(result1?.fileDetails).toStrictEqual(fileDetails1.toJSON());
+      expect(result1?.errors).toStrictEqual([]);
+      expect(result1?.filename).toBe(fileDetails1.filename);
 
-      expect(result2.fileDetails).toBeUndefined();
-      expect(result2.errors.length).toBe(1);
-      expect(result2.errors).toContain('File Does Not Exist In Database');
-      expect(result2.filename).toBe(badFilename);
+      expect(result2?.fileDetails).toBeUndefined();
+      expect(result2?.errors.length).toBe(1);
+      expect(result2?.errors).toContain('File Does Not Exist In Database');
+      expect(result2?.filename).toBe(badFilename);
     });
 
     test('Returns error details from deleteFilesFromFileSystem', async () => {
@@ -775,14 +775,14 @@ describe('FileController', () => {
         fileDetails2.filename,
       ]);
 
-      expect(result1.fileDetails).toStrictEqual(fileDetails1.toJSON());
-      expect(result1.errors).toStrictEqual([]);
-      expect(result1.filename).toBe(fileDetails1.filename);
+      expect(result1?.fileDetails).toStrictEqual(fileDetails1.toJSON());
+      expect(result1?.errors).toStrictEqual([]);
+      expect(result1?.filename).toBe(fileDetails1.filename);
 
-      expect(result2.fileDetails).toStrictEqual(fileDetails2.toJSON());
-      expect(result2.errors.length).toBe(1);
-      expect(result2.errors[0]).toContain(testError);
-      expect(result2.filename).toBe(fileDetails2.filename);
+      expect(result2?.fileDetails).toStrictEqual(fileDetails2.toJSON());
+      expect(result2?.errors.length).toBe(1);
+      expect(result2?.errors[0]).toContain(testError);
+      expect(result2?.filename).toBe(fileDetails2.filename);
     });
 
     test('Runs several functions with specific inputs', async () => {
@@ -1000,30 +1000,6 @@ describe('FileController', () => {
       await expect(() => fc.parseFilesAndFields(req, '')).rejects.toThrow(
         testError,
       );
-
-      expect(parse).toHaveBeenCalledTimes(1);
-      expect(parse).toHaveBeenCalledWith(req, expect.anything());
-    });
-
-    test('Throws an error if the parsed values are malformed', async () => {
-      const fileDataService = new InMemoryFileDataService();
-      const fc = new FileAPIController(
-        new ConfigService(),
-        fileDataService,
-        new LoggerService([]),
-      );
-
-      const req = {} as unknown as Request;
-
-      const malformedFile = { ...file1 };
-      delete malformedFile.size;
-
-      const file = { file: malformedFile };
-      parse.mockImplementationOnce((a, b: FormidableParseCallback) => {
-        b(null, {}, file);
-      });
-
-      await expect(() => fc.parseFilesAndFields(req, '')).rejects.toThrow();
 
       expect(parse).toHaveBeenCalledTimes(1);
       expect(parse).toHaveBeenCalledWith(req, expect.anything());

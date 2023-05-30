@@ -1,15 +1,15 @@
 import { ConfigService } from '@nestjs/config';
 import { Db, MongoClient } from 'mongodb';
 
-import { isString } from '@/src/utils/type_guards';
+import { isNullOrUndefined, isString } from '@/src/utils/type_guards';
 
 export class MongoDBClient {
-  protected _mongoClient?: MongoClient = null;
+  protected _mongoClient?: MongoClient;
 
   constructor(protected mongoDBUri: string, protected dbName: string) {}
 
   get mongoClient(): Promise<MongoClient> {
-    if (this._mongoClient !== null) {
+    if (!isNullOrUndefined(this._mongoClient)) {
       return Promise.resolve(this._mongoClient);
     }
 
@@ -29,7 +29,7 @@ export class MongoDBClient {
 
   async close() {
     await this._mongoClient?.close();
-    this._mongoClient = null;
+    this._mongoClient = undefined;
   }
 
   static fromConfiguration(configService: ConfigService): MongoDBClient {

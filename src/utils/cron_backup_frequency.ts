@@ -1,6 +1,11 @@
+import { isString } from '@/src/utils/type_guards';
+
 export function getBackupFrequency(): string {
   const { BACKUP_FREQUENCY } = process.env;
-  const num = Number.parseInt(BACKUP_FREQUENCY);
+
+  const bu = isString(BACKUP_FREQUENCY) ? BACKUP_FREQUENCY : '24';
+
+  const num = Number.parseInt(bu);
 
   const hours: number = Number.isNaN(num) ? 24 : num;
 

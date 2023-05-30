@@ -13,7 +13,7 @@ import { ImageResizeOptions } from '@/src/models/image_models';
 import { FileSystemService } from '@/src/file/file_system_service';
 
 type ExecCallback = (
-  error: Error | null,
+  error: Error | undefined,
   sdout: string,
   stderr: string,
 ) => void;
@@ -66,7 +66,7 @@ describe('ImageWriter', () => {
     join.mockClear();
 
     exec.mockImplementation((_, a: ExecCallback) => {
-      a(null, '', '');
+      a(undefined, '', '');
     });
   });
 
@@ -424,7 +424,7 @@ describe('ImageWriter', () => {
       const opts = new ImageResizeOptions('web', {});
 
       exec.mockImplementation((_, result: ExecCallback) => {
-        result(null, '', testError);
+        result(undefined, '', testError);
       });
 
       try {
@@ -453,7 +453,7 @@ describe('ImageWriter', () => {
       const script = `identify -format "%w,%h" ${filepath}`;
 
       exec.mockImplementationOnce((_, callback: ExecCallback) => {
-        callback(null, '640,480', '');
+        callback(undefined, '640,480', '');
       });
 
       const result = await iw.getFileDimensions(filepath);
@@ -483,7 +483,7 @@ describe('ImageWriter', () => {
       const filepath = 'path/to/file.ext';
 
       exec.mockImplementationOnce((_, callback: ExecCallback) => {
-        callback(null, '', testError);
+        callback(undefined, '', testError);
       });
 
       await expect(() => iw.getFileDimensions(filepath)).rejects.toThrow(
@@ -498,7 +498,7 @@ describe('ImageWriter', () => {
       const filepath = 'path/to/file.ext';
 
       exec.mockImplementationOnce((_, callback: ExecCallback) => {
-        callback(null, '640', '');
+        callback(undefined, '640', '');
       });
 
       await expect(() => iw.getFileDimensions(filepath)).rejects.toThrow(
@@ -513,7 +513,7 @@ describe('ImageWriter', () => {
       const filepath = 'path/to/file.ext';
 
       exec.mockImplementationOnce((_, callback: ExecCallback) => {
-        callback(null, 'B,480', '');
+        callback(undefined, 'B,480', '');
       });
 
       await expect(() => iw.getFileDimensions(filepath)).rejects.toThrow(
@@ -528,7 +528,7 @@ describe('ImageWriter', () => {
       const filepath = 'path/to/file.ext';
 
       exec.mockImplementationOnce((_, callback: ExecCallback) => {
-        callback(null, '640,A', '');
+        callback(undefined, '640,A', '');
       });
 
       await expect(() => iw.getFileDimensions(filepath)).rejects.toThrow(

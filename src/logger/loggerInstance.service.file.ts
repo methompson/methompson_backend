@@ -46,9 +46,9 @@ export class FileLoggerInstanceService implements LoggerInstanceService {
     const basePath = `${FILE_PATH}/${FILE_NAME}`;
     const fileStat = await FileLoggerInstanceService.getFileStat(basePath);
 
-    // If fileStat is null, we close the old fileHandle (what's it pointing to?)
+    // If fileStat is undefined, we close the old fileHandle (what's it pointing to?)
     // then we create a new one and go from there.
-    if (fileStat === null) {
+    if (fileStat === undefined) {
       this.fileHandle.close();
       this.fileHandle = await FileLoggerInstanceService.makeFileHandle();
       return;
@@ -79,11 +79,11 @@ export class FileLoggerInstanceService implements LoggerInstanceService {
     this.fileHandle = await FileLoggerInstanceService.makeFileHandle();
   }
 
-  static async getFileStat(filepath: string): Promise<Stats | null> {
+  static async getFileStat(filepath: string): Promise<Stats | undefined> {
     try {
       return await stat(filepath);
     } catch (e) {
-      return null;
+      return undefined;
     }
   }
 

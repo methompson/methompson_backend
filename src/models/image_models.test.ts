@@ -35,9 +35,9 @@ describe('Image Models', () => {
         expect(iro.newMimetype).toBe('image/tiff');
       });
 
-      test('returns null if nothing is provided', () => {
+      test('returns undefined if nothing is provided', () => {
         const iro = new ImageResizeOptions('', {});
-        expect(iro.newMimetype).toBe(null);
+        expect(iro.newMimetype).toBeUndefined();
       });
     });
 
@@ -82,10 +82,10 @@ describe('Image Models', () => {
       test('Default values', () => {
         const iro = ImageResizeOptions.fromWebFields({});
         expect(iro.doNotConvert).toBe(false);
-        expect(iro.newFormat).toBe(null);
+        expect(iro.newFormat).toBeUndefined();
         expect(iro.resize).toBe(true);
         expect(iro.stripMeta).toBe(false);
-        expect(iro.maxSize).toBe(null);
+        expect(iro.maxSize).toBeUndefined();
         expect(iro.identifier).toBe('');
         expect(iro.isPrivate).toBe(true);
       });
@@ -172,9 +172,9 @@ describe('Image Models', () => {
       });
 
       test('Returns an ImageResizeOptions object with maxSize not set', () => {
-        expect(ImageResizeOptions.fromWebFields({ maxSize: '' }).maxSize).toBe(
-          null,
-        );
+        expect(
+          ImageResizeOptions.fromWebFields({ maxSize: '' }).maxSize,
+        ).toBeUndefined();
       });
 
       test('Returns an ImageResizeOptions object with newFormat set', () => {
@@ -210,37 +210,37 @@ describe('Image Models', () => {
       test('Returns an ImageResizeOptions object with newFormat not set', () => {
         expect(
           ImageResizeOptions.fromWebFields({ newFormat: 'jg' }).newFormat,
-        ).toBe(null);
+        ).toBeUndefined();
         expect(
           ImageResizeOptions.fromWebFields({ newFormat: 'pg' }).newFormat,
-        ).toBe(null);
+        ).toBeUndefined();
         expect(
           ImageResizeOptions.fromWebFields({ newFormat: 'bp' }).newFormat,
-        ).toBe(null);
+        ).toBeUndefined();
         expect(
           ImageResizeOptions.fromWebFields({ newFormat: 'bmp3' }).newFormat,
-        ).toBe(null);
+        ).toBeUndefined();
         expect(
           ImageResizeOptions.fromWebFields({ newFormat: 'pdf' }).newFormat,
-        ).toBe(null);
+        ).toBeUndefined();
         expect(
           ImageResizeOptions.fromWebFields({ newFormat: 'aic' }).newFormat,
-        ).toBe(null);
+        ).toBeUndefined();
         expect(
           ImageResizeOptions.fromWebFields({ newFormat: 'tif' }).newFormat,
-        ).toBe(null);
+        ).toBeUndefined();
         expect(
           ImageResizeOptions.fromWebFields({ newFormat: 'jpge' }).newFormat,
-        ).toBe(null);
+        ).toBeUndefined();
         expect(
           ImageResizeOptions.fromWebFields({ newFormat: 'jpe' }).newFormat,
-        ).toBe(null);
+        ).toBeUndefined();
         expect(
           ImageResizeOptions.fromWebFields({ newFormat: 'ping' }).newFormat,
-        ).toBe(null);
+        ).toBeUndefined();
         expect(
           ImageResizeOptions.fromWebFields({ newFormat: 'jif' }).newFormat,
-        ).toBe(null);
+        ).toBeUndefined();
       });
 
       test('Returns an ImageResizeObject with stripMeta set', () => {
@@ -314,25 +314,41 @@ describe('Image Models', () => {
       });
 
       test('non-string returns null', () => {
-        expect(ImageResizeOptions.getImageTypeFromString(true)).toBe(null);
-        expect(ImageResizeOptions.getImageTypeFromString(null)).toBe(null);
-        expect(ImageResizeOptions.getImageTypeFromString(1)).toBe(null);
-        expect(ImageResizeOptions.getImageTypeFromString([])).toBe(null);
-        expect(ImageResizeOptions.getImageTypeFromString({})).toBe(null);
+        expect(ImageResizeOptions.getImageTypeFromString(true)).toBeUndefined();
+        expect(ImageResizeOptions.getImageTypeFromString(null)).toBeUndefined();
+        expect(ImageResizeOptions.getImageTypeFromString(1)).toBeUndefined();
+        expect(ImageResizeOptions.getImageTypeFromString([])).toBeUndefined();
+        expect(ImageResizeOptions.getImageTypeFromString({})).toBeUndefined();
       });
 
       test('string values apart from the above return null', () => {
-        expect(ImageResizeOptions.getImageTypeFromString('jg')).toBe(null);
-        expect(ImageResizeOptions.getImageTypeFromString('pg')).toBe(null);
-        expect(ImageResizeOptions.getImageTypeFromString('bp')).toBe(null);
-        expect(ImageResizeOptions.getImageTypeFromString('bmp3')).toBe(null);
-        expect(ImageResizeOptions.getImageTypeFromString('pdf')).toBe(null);
-        expect(ImageResizeOptions.getImageTypeFromString('aic')).toBe(null);
-        expect(ImageResizeOptions.getImageTypeFromString('tif')).toBe(null);
-        expect(ImageResizeOptions.getImageTypeFromString('jpge')).toBe(null);
-        expect(ImageResizeOptions.getImageTypeFromString('jpe')).toBe(null);
-        expect(ImageResizeOptions.getImageTypeFromString('ping')).toBe(null);
-        expect(ImageResizeOptions.getImageTypeFromString('jif')).toBe(null);
+        expect(ImageResizeOptions.getImageTypeFromString('jg')).toBeUndefined();
+        expect(ImageResizeOptions.getImageTypeFromString('pg')).toBeUndefined();
+        expect(ImageResizeOptions.getImageTypeFromString('bp')).toBeUndefined();
+        expect(
+          ImageResizeOptions.getImageTypeFromString('bmp3'),
+        ).toBeUndefined();
+        expect(
+          ImageResizeOptions.getImageTypeFromString('pdf'),
+        ).toBeUndefined();
+        expect(
+          ImageResizeOptions.getImageTypeFromString('aic'),
+        ).toBeUndefined();
+        expect(
+          ImageResizeOptions.getImageTypeFromString('tif'),
+        ).toBeUndefined();
+        expect(
+          ImageResizeOptions.getImageTypeFromString('jpge'),
+        ).toBeUndefined();
+        expect(
+          ImageResizeOptions.getImageTypeFromString('jpe'),
+        ).toBeUndefined();
+        expect(
+          ImageResizeOptions.getImageTypeFromString('ping'),
+        ).toBeUndefined();
+        expect(
+          ImageResizeOptions.getImageTypeFromString('jif'),
+        ).toBeUndefined();
       });
     });
   });

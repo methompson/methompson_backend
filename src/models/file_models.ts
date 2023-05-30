@@ -61,21 +61,18 @@ export class UploadedFile {
       throw new InvalidInputError('Invalid Uploaded File format');
     }
 
-    const filepathTest = isString(file.filepath);
-    const originalFilenameTest = isString(file.originalFilename);
-    const mimetypeTest = isString(file.mimetype);
-    const sizeTest = isNumber(file.size);
+    const { filepath, originalFilename, mimetype, size } = file;
+
+    const filepathTest = isString(filepath);
+    const originalFilenameTest = isString(originalFilename);
+    const mimetypeTest = isString(mimetype);
+    const sizeTest = isNumber(size);
 
     if (!filepathTest || !originalFilenameTest || !mimetypeTest || !sizeTest) {
       throw new InvalidInputError('Invalid Uploaded File format');
     }
 
-    return new UploadedFile(
-      file.filepath,
-      file.originalFilename,
-      file.mimetype,
-      file.size,
-    );
+    return new UploadedFile(filepath, originalFilename, mimetype, size);
   }
 
   static sanitizeFilename(filename: string): string {

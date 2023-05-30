@@ -1,9 +1,19 @@
-import { isDate } from '@/src/utils/type_guards';
+import { isDate, isString } from '@/src/utils/type_guards';
 
-type ValidDate = Date;
+export type ValidDate = Date;
 
-function isValidDate(value: unknown): value is ValidDate {
+export function isValidDate(value: unknown): value is ValidDate {
   return isDate(value) && !Number.isNaN(value.getTime());
 }
 
-export { ValidDate, isValidDate };
+export type ValidDateString = string;
+
+export function isValidDateString(value: unknown): value is ValidDateString {
+  if (!isString(value)) {
+    return false;
+  }
+
+  const date = new Date(value);
+
+  return !Number.isNaN(date.getTime());
+}
