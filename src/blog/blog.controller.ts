@@ -45,7 +45,34 @@ export class BlogController {
       : 10;
 
     try {
-      return await this.blogService.getPosts(page, pagination);
+      const posts = await this.blogService.getPosts(page, pagination);
+      return posts;
+    } catch (e) {
+      if (e instanceof DatabaseNotAvailableException) {
+        throw new HttpException(
+          'Database Not Available',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+      await this.loggerService.addErrorLog(e);
+      throw e;
+    }
+  }
+
+  @Get('allPosts')
+  @UseInterceptors(AuthRequiredIncerceptor)
+  async getAllPosts(@Req() request: Request): Promise<BlogPostRequestOutput> {
+    const pageQP = request.query?.page;
+    const paginationQP = request.query?.pagination;
+
+    const page = isString(pageQP) ? getIntFromString(pageQP, 1) : 1;
+    const pagination = isString(paginationQP)
+      ? getIntFromString(paginationQP, 10)
+      : 10;
+
+    try {
+      const posts = await this.blogService.getAllPosts(page, pagination);
+      return posts;
     } catch (e) {
       if (e instanceof DatabaseNotAvailableException) {
         throw new HttpException(
@@ -89,7 +116,9 @@ export class BlogController {
   async addNewPost(@Req() request: Request): Promise<BlogPost> {
     try {
       const newPost = NewBlogPost.fromJSON(request.body);
-      return await this.blogService.addBlogPost(newPost);
+      const post = await this.blogService.addBlogPost(newPost);
+
+      return post;
     } catch (e) {
       if (e instanceof InvalidInputError) {
         throw new HttpException(

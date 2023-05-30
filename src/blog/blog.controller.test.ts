@@ -188,6 +188,148 @@ describe('BlogController', () => {
     });
   });
 
+  describe('getAllPosts', () => {
+    test('returns the value returned from the blogService', async () => {
+      const blogService = new InMemoryBlogService();
+      const loggerService = new LoggerService([]);
+
+      const controller = new BlogController(blogService, loggerService);
+
+      const page = 2;
+      const pagination = 8;
+
+      // Coercing this value into a Request object just to get TS to shut up
+      const req = {
+        query: {
+          page: `${page}`,
+          pagination: `${pagination}`,
+        },
+      } as unknown as Request;
+
+      const getAllPostsSpy = jest.spyOn(blogService, 'getAllPosts');
+      getAllPostsSpy.mockImplementationOnce(async () => ({
+        posts: [post1, post2],
+        morePages: false,
+      }));
+
+      const result = await controller.getAllPosts(req);
+
+      expect(getAllPostsSpy).toHaveBeenCalledTimes(1);
+      expect(getAllPostsSpy).toHaveBeenCalledWith(page, pagination);
+
+      expect(result.posts.length).toBe(2);
+      expect(result.morePages).toBe(false);
+
+      const resultPost1 = result.posts[0];
+      expect(resultPost1.toJSON()).toStrictEqual(post1.toJSON());
+
+      const resultPost2 = result.posts[1];
+      expect(resultPost2.toJSON()).toStrictEqual(post2.toJSON());
+    });
+
+    test('returns an empty array if the blogService returns an empty array', async () => {
+      const blogService = new InMemoryBlogService();
+      const loggerService = new LoggerService([]);
+
+      const controller = new BlogController(blogService, loggerService);
+
+      const req = {} as unknown as Request;
+
+      const getAllPostsSpy = jest.spyOn(blogService, 'getAllPosts');
+      getAllPostsSpy.mockImplementationOnce(async () => ({
+        posts: [],
+        morePages: false,
+      }));
+
+      const result = await controller.getAllPosts(req);
+
+      expect(result.posts.length).toBe(0);
+    });
+
+    test('uses default page and pagination values if none are provided', async () => {
+      const blogService = new InMemoryBlogService();
+      const loggerService = new LoggerService([]);
+
+      const controller = new BlogController(blogService, loggerService);
+
+      const req = {} as unknown as Request;
+
+      const getAllPostsSpy = jest.spyOn(blogService, 'getAllPosts');
+      getAllPostsSpy.mockImplementationOnce(async () => ({
+        posts: [],
+        morePages: false,
+      }));
+
+      await controller.getAllPosts(req);
+
+      expect(getAllPostsSpy).toHaveBeenCalledWith(1, 10);
+    });
+
+    test('uses default page and pagination values if provided values are not string numbers', async () => {
+      const blogService = new InMemoryBlogService();
+      const loggerService = new LoggerService([]);
+
+      const controller = new BlogController(blogService, loggerService);
+
+      const req = {
+        query: {
+          page: 100,
+          pagination: 25,
+        },
+      } as unknown as Request;
+
+      const getAllPostsSpy = jest.spyOn(blogService, 'getAllPosts');
+      getAllPostsSpy.mockImplementationOnce(async () => ({
+        posts: [],
+        morePages: false,
+      }));
+
+      await controller.getAllPosts(req);
+
+      expect(getAllPostsSpy).toHaveBeenCalledWith(1, 10);
+    });
+
+    test('throws an error if getAllPosts throws an error', async () => {
+      const blogService = new InMemoryBlogService();
+      const loggerService = new LoggerService([]);
+
+      const controller = new BlogController(blogService, loggerService);
+
+      const req = {} as unknown as Request;
+
+      const getAllPostsSpy = jest.spyOn(blogService, 'getAllPosts');
+      getAllPostsSpy.mockImplementationOnce(async () => {
+        throw new Error('test error');
+      });
+
+      expect(() => controller.getAllPosts(req)).rejects.toThrow();
+    });
+
+    test('logs an error if getAllPosts throws an error', async () => {
+      expect.assertions(1);
+
+      const blogService = new InMemoryBlogService();
+      const loggerService = new LoggerService([]);
+
+      const controller = new BlogController(blogService, loggerService);
+
+      const req = {} as unknown as Request;
+
+      const getAllPostsSpy = jest.spyOn(blogService, 'getAllPosts');
+      getAllPostsSpy.mockImplementationOnce(async () => {
+        throw new Error('test error');
+      });
+
+      const loggerSpy = jest.spyOn(loggerService, 'addErrorLog');
+
+      try {
+        await controller.getAllPosts(req);
+      } catch (e) {
+        expect(loggerSpy).toHaveBeenCalledTimes(1);
+      }
+    });
+  });
+
   describe('findBySlug', () => {
     test('Returns the value returned by findBySlug', async () => {
       const blogService = new InMemoryBlogService();
