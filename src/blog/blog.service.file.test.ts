@@ -24,7 +24,14 @@ const readFileMock = jest.fn();
 const truncateMock = jest.fn();
 const writeMock = jest.fn();
 
-function MockFileHandle() {}
+class MockFileHandle {
+  close() {}
+  readFile() {}
+  truncate() {}
+  write() {}
+}
+
+// function MockFileHandle() {}
 MockFileHandle.prototype.close = closeMock;
 MockFileHandle.prototype.readFile = readFileMock;
 MockFileHandle.prototype.truncate = truncateMock;

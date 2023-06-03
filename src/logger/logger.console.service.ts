@@ -13,7 +13,7 @@ export class ConsoleLoggerInstanceService implements LoggerInstanceService {
     const requestType = req.method;
     const path = req.path;
     const remoteAddress =
-      req.header['x-forwarded-for'] ?? req.socket.remoteAddress;
+      req.header('x-forwarded-for') ?? req.socket.remoteAddress;
 
     console.log(
       `${this.isoTime} - ${remoteAddress} - ${requestType} - ${path}`,

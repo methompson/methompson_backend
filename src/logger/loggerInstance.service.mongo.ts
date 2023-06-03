@@ -129,7 +129,7 @@ export class MongoLoggerInstanceService implements LoggerInstanceService {
     const method = req.method;
     const path = req.path;
     const remoteAddress =
-      req.header['x-forwarded-for'] ?? req.socket.remoteAddress;
+      req.header('x-forwarded-for') ?? req.socket.remoteAddress;
 
     const _date = new Date();
     const loggerCollection = await this.loggerCollection;

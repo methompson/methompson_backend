@@ -23,7 +23,7 @@ export class FileLoggerInstanceService implements LoggerInstanceService {
     const requestType = req.method;
     const path = req.path;
     const remoteAddress =
-      req.header['x-forwarded-for'] ?? req.socket.remoteAddress;
+      req.header('x-forwarded-for') ?? req.socket.remoteAddress;
 
     const msg = `${this.isoTime} - ${remoteAddress} - ${requestType} - ${path}\n`;
 

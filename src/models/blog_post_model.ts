@@ -19,7 +19,7 @@ export enum BlogStatus {
   Draft = 'draft',
 }
 
-export function blogStatusFromString(input): BlogStatus {
+export function blogStatusFromString(input: unknown): BlogStatus {
   switch (input) {
     case 'draft':
       return BlogStatus.Draft;

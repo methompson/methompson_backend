@@ -453,7 +453,7 @@ export class FileAPIController {
             const ops: Record<string, Record<string, unknown>> = {};
 
             // Saves all ops to a Record. The key is the identifier.
-            parsedOps.forEach((op) => {
+            parsedOps.forEach((op: unknown) => {
               if (isRecord(op)) {
                 const id = isString(op?.identifier) ? op.identifier : '';
 
