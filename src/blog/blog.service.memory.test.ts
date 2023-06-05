@@ -187,7 +187,7 @@ describe('InMemoryBlogService', () => {
 
       expect(svc.blogPosts[post1.slug]).toBe(post1);
 
-      const post = await svc.updateBlogPost(updatedPost1);
+      const post = await svc.updateBlogPost(post1.slug, updatedPost1);
 
       expect(post).toBe(updatedPost1);
 
@@ -199,7 +199,7 @@ describe('InMemoryBlogService', () => {
       const svc = new InMemoryBlogService([]);
       expect(svc.blogPosts[post1.slug]).toBeUndefined();
 
-      await expect(() => svc.updateBlogPost(post1)).rejects.toThrow(
+      await expect(() => svc.updateBlogPost(post1.slug, post1)).rejects.toThrow(
         'Blog post does not exist. Cannot update.',
       );
     });

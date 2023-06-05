@@ -15,6 +15,7 @@ import {
   DatabaseNotAvailableException,
   InvalidInputError,
   MutateDataException,
+  NotFoundError,
 } from '@/src/errors';
 import { isString } from '@/src/utils/type_guards';
 
@@ -96,7 +97,7 @@ export class BlogController {
     try {
       return await this.blogService.findBySlug(slug);
     } catch (e) {
-      if (e instanceof InvalidInputError) {
+      if (e instanceof InvalidInputError || e instanceof NotFoundError) {
         throw new HttpException('No Blog Post', HttpStatus.NOT_FOUND);
       } else if (e instanceof DatabaseNotAvailableException) {
         throw new HttpException(
@@ -142,9 +143,14 @@ export class BlogController {
   @UseInterceptors(AuthRequiredIncerceptor)
   async updatePost(@Req() request: Request): Promise<BlogPost> {
     try {
-      const updatedPost = BlogPost.fromJSON(request.body);
+      const updatedPost = BlogPost.fromJSON(request.body?.updatedPost);
+      const oldSlug = request.body?.oldSlug;
 
-      return await this.blogService.updateBlogPost(updatedPost);
+      if (!isString(oldSlug)) {
+        throw new InvalidInputError('Invalid old slug');
+      }
+
+      return await this.blogService.updateBlogPost(oldSlug, updatedPost);
     } catch (e) {
       if (e instanceof MutateDataException) {
         throw new HttpException(
@@ -182,7 +188,7 @@ export class BlogController {
     try {
       return await this.blogService.deleteBlogPost(slug);
     } catch (e) {
-      if (e instanceof InvalidInputError) {
+      if (e instanceof InvalidInputError || e instanceof NotFoundError) {
         throw new HttpException('No Blog Post', HttpStatus.NOT_FOUND);
       } else if (e instanceof DatabaseNotAvailableException) {
         throw new HttpException(

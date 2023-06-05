@@ -94,12 +94,17 @@ export class InMemoryBlogService implements BlogService {
     return post;
   }
 
-  async updateBlogPost(updatedPost: BlogPost): Promise<BlogPost> {
-    const oldBlog = this._blogPosts[updatedPost.slug];
+  async updateBlogPost(
+    oldSlug: string,
+    updatedPost: BlogPost,
+  ): Promise<BlogPost> {
+    const oldBlog = this._blogPosts[oldSlug];
 
     if (isUndefined(oldBlog)) {
       throw new MutateDataException('Blog post does not exist. Cannot update.');
     }
+
+    delete this._blogPosts[oldSlug];
 
     this._blogPosts[updatedPost.slug] = updatedPost;
 

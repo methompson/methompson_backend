@@ -33,8 +33,11 @@ export class FileBlogService extends InMemoryBlogService {
     return post;
   }
 
-  async updateBlogPost(updatedPost: BlogPost): Promise<BlogPost> {
-    const post = await super.updateBlogPost(updatedPost);
+  async updateBlogPost(
+    oldSlug: string,
+    updatedPost: BlogPost,
+  ): Promise<BlogPost> {
+    const post = await super.updateBlogPost(oldSlug, updatedPost);
 
     await this.writeToFile();
 

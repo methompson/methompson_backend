@@ -546,7 +546,7 @@ describe('BlogController', () => {
     });
   });
 
-  describe('updatedPost', () => {
+  describe('updatePost', () => {
     test('Returns a blog post returned by updateBlogPost', async () => {
       const blogService = new InMemoryBlogService([post1]);
       const loggerService = new LoggerService([]);
@@ -562,7 +562,10 @@ describe('BlogController', () => {
       const postData = updatedBlog.toJSON();
 
       const req = {
-        body: postData,
+        body: {
+          oldSlug: post1.slug,
+          updatedPost: postData,
+        },
         authModel: { authorized: true },
       } as unknown as UserAuthRequest;
 
@@ -574,7 +577,7 @@ describe('BlogController', () => {
       expect(value.toJSON()).toStrictEqual(updatedBlog.toJSON());
 
       expect(updateBlogPostSpy).toHaveBeenCalledTimes(1);
-      expect(updateBlogPostSpy).toHaveBeenCalledWith(updatedBlog);
+      expect(updateBlogPostSpy).toHaveBeenCalledWith(post1.slug, updatedBlog);
     });
 
     test('throws a specific error if the original post does not exist', async () => {
@@ -592,7 +595,10 @@ describe('BlogController', () => {
       const postData = updatedBlog.toJSON();
 
       const req = {
-        body: postData,
+        body: {
+          oldSlug: post1.slug,
+          updatedPost: postData,
+        },
         authModel: { authorized: true },
       } as unknown as UserAuthRequest;
 
@@ -606,7 +612,7 @@ describe('BlogController', () => {
       );
 
       expect(updateBlogPostSpy).toHaveBeenCalledTimes(1);
-      expect(updateBlogPostSpy).toHaveBeenCalledWith(updatedBlog);
+      expect(updateBlogPostSpy).toHaveBeenCalledWith(post1.slug, updatedBlog);
     });
 
     test('throws a specific error if the input is not a blog post', async () => {
@@ -647,7 +653,10 @@ describe('BlogController', () => {
       const postData = updatedBlog.toJSON();
 
       const req = {
-        body: postData,
+        body: {
+          oldSlug: post1.slug,
+          updatedPost: postData,
+        },
         authModel: { authorized: true },
       } as unknown as UserAuthRequest;
 
@@ -661,7 +670,7 @@ describe('BlogController', () => {
       );
 
       expect(updateBlogPostSpy).toHaveBeenCalledTimes(1);
-      expect(updateBlogPostSpy).toHaveBeenCalledWith(updatedBlog);
+      expect(updateBlogPostSpy).toHaveBeenCalledWith(post1.slug, updatedBlog);
     });
 
     test('throws a generic error if updateBlogPost throws a non-standard error', async () => {
@@ -679,7 +688,10 @@ describe('BlogController', () => {
       const postData = updatedBlog.toJSON();
 
       const req = {
-        body: postData,
+        body: {
+          oldSlug: post1.slug,
+          updatedPost: postData,
+        },
         authModel: { authorized: true },
       } as unknown as UserAuthRequest;
 
@@ -695,7 +707,7 @@ describe('BlogController', () => {
       await expect(() => controller.updatePost(req)).rejects.toThrow();
 
       expect(updateBlogPostSpy).toHaveBeenCalledTimes(1);
-      expect(updateBlogPostSpy).toHaveBeenCalledWith(updatedBlog);
+      expect(updateBlogPostSpy).toHaveBeenCalledWith(post1.slug, updatedBlog);
 
       expect(loggerSpy).toHaveBeenCalledTimes(1);
       expect(loggerSpy).toHaveBeenCalledWith(`Error Updating Post: ${error}`);

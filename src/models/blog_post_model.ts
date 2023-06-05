@@ -120,7 +120,8 @@ export class NewBlogPost {
 
   static fromJSON(input: unknown): NewBlogPost {
     if (!NewBlogPost.isNewBlogPostInterface(input)) {
-      throw new InvalidInputError('Invalid Blog Post Input');
+      const results = NewBlogPost.newBlogPostInterfaceTest(input);
+      throw new InvalidInputError(`Invalid Blog Post Input: ${results.join()}`);
     }
 
     if (input.slug.length === 0) {
@@ -174,8 +175,9 @@ export class NewBlogPost {
     if (!isString(input.body)) output.push('body');
     if (!isStringArray(input.tags)) output.push('tags');
     if (!isString(input.authorId)) output.push('authorId');
-    if (!isString(input.status) && !isUndefined(input.status))
+    if (!isString(input.status) && !isUndefined(input.status)) {
       output.push('status');
+    }
 
     if (!isUndefined(input.updateAuthorId) && !isString(input.updateAuthorId)) {
       output.push('updateAuthorId');
