@@ -129,7 +129,7 @@ describe('InMemoryFileDataService', () => {
       const files = await fds.getFileList({
         page: 1,
         pagination: 20,
-        sortBy: FileSortOption.DateAdded,
+        sortBy: FileSortOption.Chrono,
       });
       expect(files.length).toBe(2);
 

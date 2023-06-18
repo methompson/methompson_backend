@@ -45,7 +45,27 @@ export class InMemoryFileDataService implements FileDataService {
     return fileList;
   }
 
-  get filesByDate(): FileDetails[] {
+  get filesByReverseName(): FileDetails[] {
+    const sort = (a: FileDetails, b: FileDetails) =>
+      stringCompare(b.originalFilename, a.originalFilename);
+
+    const fileList = this.filesList;
+    fileList.sort(sort);
+
+    return fileList;
+  }
+
+  get filesByChrono(): FileDetails[] {
+    const sort = (a: FileDetails, b: FileDetails) =>
+      stringCompare(a.dateAdded.toISOString(), b.dateAdded.toISOString());
+
+    const fileList = this.filesList;
+    fileList.sort(sort);
+
+    return fileList;
+  }
+
+  get filesByReverseChrono(): FileDetails[] {
     const sort = (a: FileDetails, b: FileDetails) =>
       stringCompare(b.dateAdded.toISOString(), a.dateAdded.toISOString());
 
@@ -76,8 +96,12 @@ export class InMemoryFileDataService implements FileDataService {
 
     if (options?.sortBy === FileSortOption.Filename) {
       fileList = this.filesByName;
+    } else if (options?.sortBy === FileSortOption.ReverseChrono) {
+      fileList = this.filesByReverseChrono;
+    } else if (options?.sortBy === FileSortOption.Chrono) {
+      fileList = this.filesByChrono;
     } else {
-      fileList = this.filesByDate;
+      fileList = this.filesByReverseChrono;
     }
 
     const skip = pagination * (page - 1);

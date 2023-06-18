@@ -7,8 +7,10 @@ import {
 import { Backupable } from '@/src/utils/backuppable';
 
 export enum FileSortOption {
-  Filename = 'Filename',
-  DateAdded = 'DateAdded',
+  Filename = 'filename',
+  ReverseFilename = 'reverseFilename',
+  Chrono = 'chrono',
+  ReverseChrono = 'reverseChrono',
 }
 
 export interface GetFileListOptions {
