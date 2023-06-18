@@ -54,7 +54,7 @@ export class FileController {
     @Req() request: Request,
     @Res() response: Response,
   ): Promise<void> {
-    const auth = (request as any).authModel;
+    const auth = (request as unknown as Record<string, unknown>).authModel;
     if (!AuthModel.isAuthModel(auth)) {
       throw new HttpException('', HttpStatus.INTERNAL_SERVER_ERROR);
     }

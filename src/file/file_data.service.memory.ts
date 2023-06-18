@@ -47,7 +47,7 @@ export class InMemoryFileDataService implements FileDataService {
 
   get filesByDate(): FileDetails[] {
     const sort = (a: FileDetails, b: FileDetails) =>
-      stringCompare(a.dateAdded.toISOString(), b.dateAdded.toISOString());
+      stringCompare(b.dateAdded.toISOString(), a.dateAdded.toISOString());
 
     const fileList = this.filesList;
     fileList.sort(sort);
@@ -74,10 +74,10 @@ export class InMemoryFileDataService implements FileDataService {
 
     let fileList: FileDetails[];
 
-    if (options?.sortBy === FileSortOption.DateAdded) {
-      fileList = this.filesByDate;
-    } else {
+    if (options?.sortBy === FileSortOption.Filename) {
       fileList = this.filesByName;
+    } else {
+      fileList = this.filesByDate;
     }
 
     const skip = pagination * (page - 1);

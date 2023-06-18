@@ -14,7 +14,7 @@ class AuthCheckMiddlware implements NestMiddleware {
     // First we attempt to get authorization from the header. Then we get it from
     // the cookies. If both fail, we get an empty string.
     const authHeader =
-      req.header('authorization') ?? req.cookies?.authorization ?? '';
+      req.header('authorization') ?? req.cookies?.idToken ?? '';
 
     // console.log('authHeader', authHeader);
     let token = {};
