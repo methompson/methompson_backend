@@ -13,7 +13,7 @@ import {
 import { FileDataService } from '@/src/file/file_data.service';
 import { FileSystemService } from '@/src/file/file_system_service';
 import { ImageWriter } from '@/src/image/image_writer';
-import { isNullOrUndefined, isPromiseRejected } from '@/src/utils/type_guards';
+import { isPromiseRejected } from '@/src/utils/type_guards';
 
 export class FileOpsService {
   constructor(
