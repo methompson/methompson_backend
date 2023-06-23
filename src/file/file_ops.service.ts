@@ -93,6 +93,11 @@ export class FileOpsService {
     const newFileDetails = data.files.map((file) => {
       const filename = uuidv4();
 
+      const isPrivate =
+        data.fileOps[file.originalFilename]?.isPrivate ??
+        data.ops.isPrivate ??
+        true;
+
       const fileDetails = FileDetailsBase.fromJSON({
         filepath: file.filepath,
         originalFilename: file.originalFilename,
@@ -101,7 +106,7 @@ export class FileOpsService {
         authorId: userId,
         mimetype: file.mimetype,
         size: file.size,
-        isPrivate: data.ops.isPrivate ?? true,
+        isPrivate,
         metadata: {},
       });
 

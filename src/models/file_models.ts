@@ -85,7 +85,13 @@ export class UploadedFile {
 export type ParsedFilesAndFields = {
   files: UploadedFile[];
   ops: Record<string, unknown>;
+  fileOps: Record<string, FileOps>;
 };
+
+export interface FileOps {
+  isPrivate: boolean;
+  filename: string;
+}
 
 export type ParsedImageFilesAndFields = {
   imageFiles: UploadedFile[];
