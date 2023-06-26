@@ -1,12 +1,12 @@
-FROM node:18-slim
-# FROM alpine:3.15
+# FROM node:18-slim
+FROM node:alpine
 
-RUN apt update && \
-  apt -y --no-install-recommends install imagemagick && \
-  apt clean && \
-  rm -rf /var/lib/apt/lists/* && \
-  mkdir -p /srv/blog && \
-  mkdir -p /srv/blog/images
+# RUN apt update && \
+#   apt -y --no-install-recommends install imagemagick && \
+#   apt clean && \
+#   rm -rf /var/lib/apt/lists/* && \
+#   mkdir -p /srv/blog && \
+#   mkdir -p /srv/blog/images
 
 WORKDIR /srv/blog
 
