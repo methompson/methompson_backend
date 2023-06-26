@@ -85,12 +85,13 @@ export class UploadedFile {
 export type ParsedFilesAndFields = {
   files: UploadedFile[];
   ops: Record<string, unknown>;
+  fileOps: Record<string, FileOps>;
 };
 
-export type ParsedImageFilesAndFields = {
-  imageFiles: UploadedFile[];
-  ops: Record<string, Record<string, unknown>>;
-};
+export interface FileOps {
+  isPrivate: boolean;
+  filename: string;
+}
 
 export type FileDetailsMetadata = Record<string, string | number | boolean>;
 

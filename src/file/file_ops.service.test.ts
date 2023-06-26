@@ -8,13 +8,11 @@ import {
   NewFileDetailsJSON,
   FileDetailsBase,
   ParsedFilesAndFields,
-  ParsedImageFilesAndFields,
   UploadedFile,
 } from '@/src/models/file_models';
 import { FileOpsService } from '@/src/file/file_ops.service';
 import { InMemoryFileDataService } from '@/src/file/file_data.service.memory';
 import { FileSystemService } from '@/src/file/file_system_service';
-import { ImageWriter } from '@/src/image/image_writer';
 
 jest.mock('uuid', () => {
   const v4 = jest.fn(() => 'uuidv4');
@@ -23,21 +21,6 @@ jest.mock('uuid', () => {
     v4,
   };
 });
-
-// jest.mock('@/src/file/file_system_service', () => {
-//   function FileSystemService() {}
-//   FileSystemService.prototype.getNewFileName = jest.fn();
-//   FileSystemService.prototype.pathExists = jest.fn(async () => {});
-//   FileSystemService.prototype.makeDirectory = jest.fn(async () => {});
-//   FileSystemService.prototype.moveFile = jest.fn(async () => {});
-//   FileSystemService.prototype.deleteFile = jest.fn(async () => {});
-//   FileSystemService.prototype.deleteFiles = jest.fn(async () => {});
-//   FileSystemService.prototype.rollBackWrites = jest.fn(async () => {});
-
-//   return {
-//     FileSystemService,
-//   };
-// });
 
 const uuidv4 = uuid.v4 as jest.Mock<unknown, unknown[]>;
 
@@ -143,6 +126,7 @@ describe('FileOpsService', () => {
       const parsedFiles: ParsedFilesAndFields = {
         files: [uploadedFile1, uploadedFile2],
         ops: {},
+        fileOps: {},
       };
 
       let x = 0;
@@ -199,6 +183,7 @@ describe('FileOpsService', () => {
       const parsedFiles: ParsedFilesAndFields = {
         files: [uploadedFile1, uploadedFile2],
         ops: {},
+        fileOps: {},
       };
 
       let x = 0;
@@ -247,6 +232,7 @@ describe('FileOpsService', () => {
       const parsedFiles: ParsedFilesAndFields = {
         files: [uploadedFile1, uploadedFile2],
         ops: {},
+        fileOps: {},
       };
 
       const fos = new FileOpsService(
@@ -277,6 +263,7 @@ describe('FileOpsService', () => {
       const parsedFiles: ParsedFilesAndFields = {
         files: [uploadedFile1, uploadedFile2],
         ops: {},
+        fileOps: {},
       };
 
       let x = 0;
@@ -326,6 +313,7 @@ describe('FileOpsService', () => {
       const parsedFiles: ParsedFilesAndFields = {
         files: [uploadedFile1, uploadedFile2],
         ops: {},
+        fileOps: {},
       };
 
       let x = 0;
@@ -378,6 +366,7 @@ describe('FileOpsService', () => {
       const parsedFiles: ParsedFilesAndFields = {
         files: [uploadedFile1, uploadedFile2],
         ops: {},
+        fileOps: {},
       };
 
       const fos = new FileOpsService(
@@ -405,6 +394,7 @@ describe('FileOpsService', () => {
       const parsedFiles: ParsedFilesAndFields = {
         files,
         ops: {},
+        fileOps: {},
       };
 
       let x = 0;
@@ -451,6 +441,7 @@ describe('FileOpsService', () => {
       const parsedFiles: ParsedFilesAndFields = {
         files,
         ops: {},
+        fileOps: {},
       };
 
       let x = 0;
@@ -498,6 +489,7 @@ describe('FileOpsService', () => {
       const parsedFiles: ParsedFilesAndFields = {
         files,
         ops: {},
+        fileOps: {},
       };
 
       let x = 0;
@@ -544,250 +536,12 @@ describe('FileOpsService', () => {
     });
   });
 
-  describe('saveUploadedImages', () => {
-    test('Creates new files, saves files to service and returns the results', async () => {
-      const parsedFiles: ParsedImageFilesAndFields = {
-        imageFiles: [uploadedFile1, uploadedFile2],
-        ops: {},
-      };
-
-      const fos = new FileOpsService(
-        savedFilePath,
-        uploadFilePath,
-        new InMemoryFileDataService(),
-      );
-
-      const imageWriter = new ImageWriter(savedFilePath);
-
-      const convertImagesSpy = jest.spyOn(imageWriter, 'convertImages');
-      convertImagesSpy.mockImplementation(async () => [
-        newFileDetails1,
-        newFileDetails2,
-      ]);
-
-      const returnResult = [fileDetails1, fileDetails2];
-
-      const saveFilesSpy = jest.spyOn(fos, 'saveFilesToService');
-      saveFilesSpy.mockImplementation(async () => returnResult);
-
-      const result = await fos.saveUploadedImages(
-        parsedFiles,
-        authorId,
-        imageWriter,
-      );
-
-      expect(result).toBe(returnResult);
-    });
-
-    test('Runs convertImages and saveFilesToService with expected input', async () => {
-      const parsedFiles: ParsedImageFilesAndFields = {
-        imageFiles: [uploadedFile1, uploadedFile2],
-        ops: {},
-      };
-
-      const fos = new FileOpsService(
-        savedFilePath,
-        uploadFilePath,
-        new InMemoryFileDataService(),
-      );
-
-      const imageWriter = new ImageWriter(savedFilePath);
-
-      const newFilesArr = [newFileDetails1, newFileDetails2];
-      const convertImagesSpy = jest.spyOn(imageWriter, 'convertImages');
-      convertImagesSpy.mockImplementation(async () => newFilesArr);
-
-      const saveFilesSpy = jest.spyOn(fos, 'saveFilesToService');
-      saveFilesSpy.mockImplementation(async () => [fileDetails1, fileDetails2]);
-
-      await fos.saveUploadedImages(parsedFiles, authorId, imageWriter);
-
-      expect(convertImagesSpy).toHaveBeenCalledTimes(1);
-      expect(convertImagesSpy).toHaveBeenCalledWith(parsedFiles, authorId);
-
-      expect(saveFilesSpy).toHaveBeenCalledTimes(1);
-      expect(saveFilesSpy).toHaveBeenCalledWith(newFilesArr);
-    });
-
-    test('throws an error if convertImages throws an error', async () => {
-      const parsedFiles: ParsedImageFilesAndFields = {
-        imageFiles: [uploadedFile1, uploadedFile2],
-        ops: {},
-      };
-
-      const fos = new FileOpsService(
-        savedFilePath,
-        uploadFilePath,
-        new InMemoryFileDataService(),
-      );
-
-      const imageWriter = new ImageWriter(savedFilePath);
-
-      const convertImagesSpy = jest.spyOn(imageWriter, 'convertImages');
-      convertImagesSpy.mockImplementation(async () => {
-        throw new Error(testError);
-      });
-
-      const saveFilesSpy = jest.spyOn(fos, 'saveFilesToService');
-
-      await expect(() =>
-        fos.saveUploadedImages(parsedFiles, authorId, imageWriter),
-      ).rejects.toThrow(testError);
-
-      expect(convertImagesSpy).toHaveBeenCalledTimes(1);
-      expect(convertImagesSpy).toHaveBeenCalledWith(parsedFiles, authorId);
-
-      expect(saveFilesSpy).toHaveBeenCalledTimes(0);
-    });
-
-    test('throws an error if saveFilesToService throws an error', async () => {
-      const parsedFiles: ParsedImageFilesAndFields = {
-        imageFiles: [uploadedFile1, uploadedFile2],
-        ops: {},
-      };
-
-      const fos = new FileOpsService(
-        savedFilePath,
-        uploadFilePath,
-        new InMemoryFileDataService(),
-      );
-
-      const imageWriter = new ImageWriter(savedFilePath);
-
-      const newFilesArr = [newFileDetails1, newFileDetails2];
-      const convertImagesSpy = jest.spyOn(imageWriter, 'convertImages');
-      convertImagesSpy.mockImplementation(async () => newFilesArr);
-
-      const saveFilesSpy = jest.spyOn(fos, 'saveFilesToService');
-      saveFilesSpy.mockImplementation(async () => {
-        throw new Error(testError);
-      });
-
-      const rollBackSpy = jest.spyOn(fos, 'rollBackFSWrites');
-      rollBackSpy.mockImplementationOnce(async () => {});
-
-      await expect(() =>
-        fos.saveUploadedImages(parsedFiles, authorId, imageWriter),
-      ).rejects.toThrow(testError);
-
-      expect(convertImagesSpy).toHaveBeenCalledTimes(1);
-      expect(convertImagesSpy).toHaveBeenCalledWith(parsedFiles, authorId);
-
-      expect(saveFilesSpy).toHaveBeenCalledTimes(1);
-      expect(saveFilesSpy).toHaveBeenCalledWith(newFilesArr);
-    });
-
-    test('runs rollBackWrites when an error is thrown and convertImages succeeds', async () => {
-      const imageFiles = [uploadedFile1, uploadedFile2];
-      const parsedFiles: ParsedImageFilesAndFields = {
-        imageFiles: imageFiles,
-        ops: {},
-      };
-
-      const fos = new FileOpsService(
-        savedFilePath,
-        uploadFilePath,
-        new InMemoryFileDataService(),
-      );
-
-      const imageWriter = new ImageWriter(savedFilePath);
-
-      const newFilesArr = [newFileDetails1, newFileDetails2];
-      const convertImagesSpy = jest.spyOn(imageWriter, 'convertImages');
-      convertImagesSpy.mockImplementation(async () => newFilesArr);
-
-      const saveFilesSpy = jest.spyOn(fos, 'saveFilesToService');
-      saveFilesSpy.mockImplementation(async () => {
-        throw new Error(testError);
-      });
-
-      const rollBackSpy = jest.spyOn(fos, 'rollBackFSWrites');
-      rollBackSpy.mockImplementationOnce(async () => {});
-
-      await expect(() =>
-        fos.saveUploadedImages(parsedFiles, authorId, imageWriter),
-      ).rejects.toThrow(testError);
-
-      expect(rollBackSpy).toHaveBeenCalledTimes(1);
-      expect(rollBackSpy).toHaveBeenCalledWith(newFilesArr, imageFiles);
-    });
-
-    test('does not run rollBackWrites when an error is thrown and convertImages fails', async () => {
-      const parsedFiles: ParsedImageFilesAndFields = {
-        imageFiles: [uploadedFile1, uploadedFile2],
-        ops: {},
-      };
-
-      const fos = new FileOpsService(
-        savedFilePath,
-        uploadFilePath,
-        new InMemoryFileDataService(),
-      );
-
-      const imageWriter = new ImageWriter(savedFilePath);
-
-      const convertImagesSpy = jest.spyOn(imageWriter, 'convertImages');
-      convertImagesSpy.mockImplementation(async () => {
-        throw new Error(testError);
-      });
-
-      const saveFilesSpy = jest.spyOn(fos, 'saveFilesToService');
-      const rollBackSpy = jest.spyOn(fos, 'rollBackFSWrites');
-
-      await expect(() =>
-        fos.saveUploadedImages(parsedFiles, authorId, imageWriter),
-      ).rejects.toThrow(testError);
-
-      expect(convertImagesSpy).toHaveBeenCalledTimes(1);
-      expect(convertImagesSpy).toHaveBeenCalledWith(parsedFiles, authorId);
-
-      expect(saveFilesSpy).toHaveBeenCalledTimes(0);
-      expect(rollBackSpy).toHaveBeenCalledTimes(0);
-    });
-
-    test('throws an error if an error is thrown and rollBackWrites throws an error', async () => {
-      const imageFiles = [uploadedFile1, uploadedFile2];
-      const parsedFiles: ParsedImageFilesAndFields = {
-        imageFiles: imageFiles,
-        ops: {},
-      };
-
-      const fos = new FileOpsService(
-        savedFilePath,
-        uploadFilePath,
-        new InMemoryFileDataService(),
-      );
-
-      const imageWriter = new ImageWriter(savedFilePath);
-
-      const newFilesArr = [newFileDetails1, newFileDetails2];
-      const convertImagesSpy = jest.spyOn(imageWriter, 'convertImages');
-      convertImagesSpy.mockImplementation(async () => newFilesArr);
-
-      const saveFilesSpy = jest.spyOn(fos, 'saveFilesToService');
-      saveFilesSpy.mockImplementation(async () => {
-        throw new Error(testError);
-      });
-
-      const rollBackSpy = jest.spyOn(fos, 'rollBackFSWrites');
-      rollBackSpy.mockImplementationOnce(async () => {
-        throw new Error(testError);
-      });
-
-      await expect(() =>
-        fos.saveUploadedImages(parsedFiles, authorId, imageWriter),
-      ).rejects.toThrow(testError);
-
-      expect(rollBackSpy).toHaveBeenCalledTimes(1);
-      expect(rollBackSpy).toHaveBeenCalledWith(newFilesArr, imageFiles);
-    });
-  });
-
   describe('makeNewFileDetails', () => {
     test('creates new files for all files provided', () => {
       const parsedFiles: ParsedFilesAndFields = {
         files: [uploadedFile1, uploadedFile2],
         ops: {},
+        fileOps: {},
       };
 
       let x = 0;
@@ -837,10 +591,72 @@ describe('FileOpsService', () => {
       });
     });
 
+    test('respects isPrivate set for a fileOp', () => {
+      const parsedFiles: ParsedFilesAndFields = {
+        files: [uploadedFile1, uploadedFile2],
+        ops: {
+          isPrivate: true,
+        },
+        fileOps: {
+          [uploadedFile1.originalFilename]: {
+            isPrivate: false,
+            filename: uploadedFile1.originalFilename,
+          },
+        },
+      };
+
+      let x = 0;
+      uuidv4.mockImplementation(() => {
+        if (x === 0) {
+          x++;
+          return newFilename1;
+        } else {
+          return newFilename2;
+        }
+      });
+
+      const fos = new FileOpsService(
+        savedFilePath,
+        uploadFilePath,
+        new InMemoryFileDataService(),
+      );
+
+      const result = fos.makeNewFileDetails(parsedFiles, authorId);
+
+      const file1 = result.find(
+        (el) => el.fileDetails.filename === newFilename1,
+      );
+      expect(file1?.filepath).toBe(uploadedFile1.filepath);
+      expect(file1?.fileDetails.toJSON()).toMatchObject({
+        originalFilename: uploadedFile1.originalFilename,
+        filename: newFilename1,
+        authorId,
+        mimetype: uploadedFile1.mimetype,
+        size: uploadedFile1.size,
+        isPrivate: false,
+        metadata: {},
+      });
+
+      const file2 = result.find(
+        (el) => el.fileDetails.filename === newFilename2,
+      );
+      expect(file2?.filepath).toBe(uploadedFile2.filepath);
+      expect(file2?.fileDetails.toJSON()).toMatchObject({
+        originalFilename: uploadedFile2.originalFilename,
+        filename: newFilename2,
+        authorId,
+        mimetype: uploadedFile2.mimetype,
+        size: uploadedFile2.size,
+        isPrivate: true,
+        metadata: {},
+      });
+    });
+
     test('runs uuidv4 for all files getting mapped', () => {
       const parsedFiles: ParsedFilesAndFields = {
         files: [uploadedFile1, uploadedFile2],
         ops: {},
+        fileOps: {},
       };
 
       uuidv4.mockImplementation(() => id1);
@@ -861,6 +677,7 @@ describe('FileOpsService', () => {
         ops: {
           isPrivate: 'maybe',
         },
+        fileOps: {},
       };
 
       uuidv4.mockImplementation(() => id1);

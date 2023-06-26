@@ -71,8 +71,8 @@ const deleteFiles = FileSystemService.prototype.deleteFiles as jest.Mock;
 
 const saveUploadedFiles = FileOpsService.prototype
   .saveUploadedFiles as jest.Mock;
-const saveUploadedImages = FileOpsService.prototype
-  .saveUploadedImages as jest.Mock;
+// const saveUploadedImages = FileOpsService.prototype
+//   .saveUploadedImages as jest.Mock;
 
 const errorSpy = jest.spyOn(console, 'error');
 errorSpy.mockImplementation(() => {});
@@ -138,9 +138,6 @@ describe('FileController', () => {
   };
   const fileDetails2 = FileDetails.fromJSON(fileDetailsJSON2);
 
-  const uploadedFile1 = UploadedFile.fromFormidable(file1);
-  const uploadedFile2 = UploadedFile.fromFormidable(file2);
-
   beforeEach(() => {
     parse.mockReset();
     parse.mockClear();
@@ -153,7 +150,7 @@ describe('FileController', () => {
     deleteFiles.mockReset();
 
     saveUploadedFiles.mockReset();
-    saveUploadedImages.mockReset();
+    // saveUploadedImages.mockReset();
   });
 
   const userId = '99c44a1a-2582-4792-9879-45b5e43b0f33';
@@ -176,7 +173,7 @@ describe('FileController', () => {
 
       expect(result).toStrictEqual({
         totalFiles: 2,
-        files: [fileDetails1.toJSON(), fileDetails2.toJSON()],
+        files: [fileDetails2.toJSON(), fileDetails1.toJSON()],
         page: 1,
         pagination: 20,
       });
@@ -391,6 +388,7 @@ describe('FileController', () => {
         {
           files: [UploadedFile.fromFormidable(file1)],
           ops: { isPrivate: true },
+          fileOps: {},
         },
         userId,
       );
@@ -467,6 +465,7 @@ describe('FileController', () => {
             UploadedFile.fromFormidable(file2),
           ],
           ops: { isPrivate: true },
+          fileOps: {},
         },
         userId,
       );
@@ -524,140 +523,6 @@ describe('FileController', () => {
 
       expect(parseSpy).toHaveBeenCalledTimes(1);
       expect(saveUploadedFiles).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe('uploadImages', () => {
-    test('Runs parseImageFilesAndFields and saveUploadedImages', async () => {
-      const fileDataService = new InMemoryFileDataService();
-      const fc = new FileAPIController(
-        new ConfigService(),
-        fileDataService,
-        new LoggerService([]),
-      );
-
-      const req = {} as unknown as Request;
-
-      const parseSpy = jest.spyOn(fc, 'parseImageFilesAndFields');
-      parseSpy.mockImplementationOnce(async () => ({
-        imageFiles: [uploadedFile1, uploadedFile2],
-        ops: {},
-      }));
-
-      saveUploadedImages.mockImplementationOnce(() => [
-        fileDetails1,
-        fileDetails2,
-      ]);
-
-      await fc.uploadImages(req, userId);
-
-      expect(parseSpy).toHaveBeenCalledTimes(1);
-      expect(parseSpy).toHaveBeenCalledWith(req, '');
-
-      expect(saveUploadedImages).toHaveBeenCalledTimes(1);
-      expect(saveUploadedImages).toHaveBeenCalledWith(
-        {
-          imageFiles: [uploadedFile1, uploadedFile2],
-          ops: {},
-        },
-        userId,
-      );
-    });
-
-    test('Returns an array of objects', async () => {
-      const fileDataService = new InMemoryFileDataService();
-      const fc = new FileAPIController(
-        new ConfigService(),
-        fileDataService,
-        new LoggerService([]),
-      );
-
-      const req = {} as unknown as Request;
-
-      const parseSpy = jest.spyOn(fc, 'parseImageFilesAndFields');
-      parseSpy.mockImplementationOnce(async () => ({
-        imageFiles: [uploadedFile1, uploadedFile2],
-        ops: {},
-      }));
-
-      saveUploadedImages.mockImplementationOnce(() => [
-        fileDetails1,
-        fileDetails2,
-      ]);
-
-      const result = await fc.uploadImages(req, userId);
-
-      expect(result).toStrictEqual([
-        fileDetails1.toJSON(),
-        fileDetails2.toJSON(),
-      ]);
-    });
-
-    test('throws an error if parseImageFilesAndFields throws an error', async () => {
-      const fileDataService = new InMemoryFileDataService();
-      const fc = new FileAPIController(
-        new ConfigService(),
-        fileDataService,
-        new LoggerService([]),
-      );
-
-      const req = {} as unknown as Request;
-
-      const parseSpy = jest.spyOn(fc, 'parseImageFilesAndFields');
-      parseSpy.mockImplementationOnce(async () => {
-        throw new Error(testError);
-      });
-
-      saveUploadedImages.mockImplementationOnce(() => [
-        fileDetails1,
-        fileDetails2,
-      ]);
-
-      await expect(() => fc.uploadImages(req, userId)).rejects.toThrow(
-        'Error Uploading Files',
-      );
-
-      expect(parseSpy).toHaveBeenCalledTimes(1);
-      expect(parseSpy).toHaveBeenCalledWith(req, '');
-
-      expect(saveUploadedImages).toHaveBeenCalledTimes(0);
-    });
-
-    test('throws an error if saveUploadedImages throws an error', async () => {
-      const fileDataService = new InMemoryFileDataService();
-      const fc = new FileAPIController(
-        new ConfigService(),
-        fileDataService,
-        new LoggerService([]),
-      );
-
-      const req = {} as unknown as Request;
-
-      const parseSpy = jest.spyOn(fc, 'parseImageFilesAndFields');
-      parseSpy.mockImplementationOnce(async () => ({
-        imageFiles: [uploadedFile1, uploadedFile2],
-        ops: {},
-      }));
-
-      saveUploadedImages.mockImplementationOnce(() => {
-        throw new Error(testError);
-      });
-
-      await expect(() => fc.uploadImages(req, userId)).rejects.toThrow(
-        'Error Uploading Files',
-      );
-
-      expect(parseSpy).toHaveBeenCalledTimes(1);
-      expect(parseSpy).toHaveBeenCalledWith(req, '');
-
-      expect(saveUploadedImages).toHaveBeenCalledTimes(1);
-      expect(saveUploadedImages).toHaveBeenCalledWith(
-        {
-          imageFiles: [uploadedFile1, uploadedFile2],
-          ops: {},
-        },
-        userId,
-      );
     });
   });
 
@@ -922,6 +787,7 @@ describe('FileController', () => {
       expect(result).toStrictEqual({
         files: [UploadedFile.fromFormidable(file1)],
         ops: { isPrivate: true },
+        fileOps: {},
       });
     });
 
@@ -937,7 +803,7 @@ describe('FileController', () => {
 
       const file = { file: file1 };
       const fields = {
-        ops: JSON.stringify({ isPrivate: false }),
+        ops: [JSON.stringify({ isPrivate: false })],
       };
       parse.mockImplementationOnce((a, b: FormidableParseCallback) => {
         b(null, fields, file);
@@ -951,6 +817,48 @@ describe('FileController', () => {
       expect(result).toStrictEqual({
         files: [UploadedFile.fromFormidable(file1)],
         ops: { isPrivate: false },
+        fileOps: {},
+      });
+    });
+
+    test('returns a file with fileOps set', async () => {
+      const fileDataService = new InMemoryFileDataService();
+      const fc = new FileAPIController(
+        new ConfigService(),
+        fileDataService,
+        new LoggerService([]),
+      );
+
+      const req = {} as unknown as Request;
+
+      const filename = file1.originalFilename ?? '';
+
+      const file = { file: file1 };
+      const fields = {
+        ops: [
+          JSON.stringify({
+            isPrivate: true,
+            fileOps: {
+              [filename]: { isPrivate: false },
+            },
+          }),
+        ],
+      };
+      parse.mockImplementationOnce((a, b: FormidableParseCallback) => {
+        b(null, fields, file);
+      });
+
+      const result = await fc.parseFilesAndFields(req, '');
+
+      expect(parse).toHaveBeenCalledTimes(1);
+      expect(parse).toHaveBeenCalledWith(req, expect.anything());
+
+      expect(result).toStrictEqual({
+        files: [UploadedFile.fromFormidable(file1)],
+        ops: { isPrivate: true },
+        fileOps: {
+          [filename]: { isPrivate: false, filename },
+        },
       });
     });
 
@@ -980,6 +888,7 @@ describe('FileController', () => {
           UploadedFile.fromFormidable(file2),
         ],
         ops: { isPrivate: true },
+        fileOps: {},
       });
     });
 
@@ -1003,258 +912,6 @@ describe('FileController', () => {
 
       expect(parse).toHaveBeenCalledTimes(1);
       expect(parse).toHaveBeenCalledWith(req, expect.anything());
-    });
-  });
-
-  describe('parseImageFilesAndFields', () => {
-    const image1 = {
-      filepath: newFilename1,
-      originalFilename: originalFilename1,
-      mimetype: 'image/jpeg',
-      size: 1024,
-    } as formidable.File;
-
-    const image2 = {
-      filepath: newFilename2,
-      originalFilename: originalFilename2,
-      mimetype: 'image/png',
-      size: 512,
-    } as formidable.File;
-
-    beforeEach(() => {
-      parse.mockClear();
-    });
-
-    test('returns a file and fields', async () => {
-      const req = {} as unknown as Request;
-
-      const file = { image: image1 } as formidable.Files;
-
-      const fields = {
-        field1: 'field1',
-        field2: 'field2',
-      };
-
-      parse.mockImplementationOnce((a, b: FormidableParseCallback) => {
-        b(null, fields, file);
-      });
-
-      const fileDataService = new InMemoryFileDataService();
-      const fc = new FileAPIController(
-        new ConfigService(),
-        fileDataService,
-        new LoggerService([]),
-      );
-      const result = await fc.parseImageFilesAndFields(req, '');
-
-      expect(parse).toHaveBeenCalledTimes(1);
-      expect(parse).toHaveBeenCalledWith(req, expect.anything());
-
-      expect(result).toStrictEqual({
-        imageFiles: [UploadedFile.fromFormidable(image1)],
-        ops: {},
-      });
-    });
-
-    test('returns files and fields', async () => {
-      const file = { image: [image1, image2] } as formidable.Files;
-      const identifier = 'identifier';
-      const ops = {
-        identifier,
-        field1: 'field1',
-        field2: 'field2',
-      };
-      const fields = {
-        ops: JSON.stringify([ops]),
-      } as unknown as formidable.Fields;
-
-      parse.mockImplementationOnce((a, b: FormidableParseCallback) => {
-        b(null, fields, file);
-      });
-
-      const fileDataService = new InMemoryFileDataService();
-      const fc = new FileAPIController(
-        new ConfigService(),
-        fileDataService,
-        new LoggerService([]),
-      );
-      const req = {} as unknown as Request;
-
-      const result = await fc.parseImageFilesAndFields(req, '');
-
-      expect(parse).toHaveBeenCalledTimes(1);
-      expect(parse).toHaveBeenCalledWith(req, expect.anything());
-
-      expect(result).toStrictEqual({
-        imageFiles: [
-          UploadedFile.fromFormidable(image1),
-          UploadedFile.fromFormidable(image2),
-        ],
-        ops: {
-          identifier: ops,
-        },
-      });
-    });
-
-    test('Returns a single field for an identifier two are provided with the same identifier', async () => {
-      const file = { image: [image1, image2] } as formidable.Files;
-      const identifier = 'identifier';
-      const ops1 = {
-        identifier,
-        field1: 'field1',
-        field2: 'field2',
-      };
-      const ops2 = {
-        identifier,
-        field1: 'field3',
-        field2: 'field4',
-      };
-      const fields = {
-        ops: JSON.stringify([ops1, ops2]),
-      } as unknown as formidable.Fields;
-
-      parse.mockImplementationOnce((a, b: FormidableParseCallback) => {
-        b(null, fields, file);
-      });
-
-      const fileDataService = new InMemoryFileDataService();
-      const fc = new FileAPIController(
-        new ConfigService(),
-        fileDataService,
-        new LoggerService([]),
-      );
-      const req = {} as unknown as Request;
-
-      const result = await fc.parseImageFilesAndFields(req, '');
-
-      expect(parse).toHaveBeenCalledTimes(1);
-      expect(parse).toHaveBeenCalledWith(req, expect.anything());
-
-      expect(result).toStrictEqual({
-        imageFiles: [
-          UploadedFile.fromFormidable(image1),
-          UploadedFile.fromFormidable(image2),
-        ],
-        ops: {
-          identifier: ops2,
-        },
-      });
-    });
-
-    test('Returns a single field if two are provided, but neither have an identifier', async () => {
-      const file = { image: [image1, image2] } as formidable.Files;
-      const ops1 = {
-        field1: 'field1',
-        field2: 'field2',
-      };
-      const ops2 = {
-        field1: 'field3',
-        field2: 'field4',
-      };
-      const fields = {
-        ops: JSON.stringify([ops1, ops2]),
-      } as unknown as formidable.Fields;
-
-      parse.mockImplementationOnce((a, b: FormidableParseCallback) => {
-        b(null, fields, file);
-      });
-
-      const fileDataService = new InMemoryFileDataService();
-      const fc = new FileAPIController(
-        new ConfigService(),
-        fileDataService,
-        new LoggerService([]),
-      );
-      const req = {} as unknown as Request;
-
-      const result = await fc.parseImageFilesAndFields(req, '');
-
-      expect(parse).toHaveBeenCalledTimes(1);
-      expect(parse).toHaveBeenCalledWith(req, expect.anything());
-
-      expect(result).toStrictEqual({
-        imageFiles: [
-          UploadedFile.fromFormidable(image1),
-          UploadedFile.fromFormidable(image2),
-        ],
-        ops: {
-          '': ops2,
-        },
-      });
-    });
-
-    test('Returns two ops two are provided and each has a unique identifier', async () => {
-      const file = { image: [image1, image2] } as formidable.Files;
-      const ops1 = {
-        identifier: 'id1',
-        field1: 'field1',
-        field2: 'field2',
-      };
-      const ops2 = {
-        identifier: 'id2',
-        field1: 'field3',
-        field2: 'field4',
-      };
-      const fields = {
-        ops: JSON.stringify([ops1, ops2]),
-      } as unknown as formidable.Fields;
-
-      parse.mockImplementationOnce((a, b: FormidableParseCallback) => {
-        b(null, fields, file);
-      });
-
-      const fileDataService = new InMemoryFileDataService();
-      const fc = new FileAPIController(
-        new ConfigService(),
-        fileDataService,
-        new LoggerService([]),
-      );
-      const req = {} as unknown as Request;
-
-      const result = await fc.parseImageFilesAndFields(req, '');
-
-      expect(parse).toHaveBeenCalledTimes(1);
-      expect(parse).toHaveBeenCalledWith(req, expect.anything());
-
-      expect(result).toStrictEqual({
-        imageFiles: [
-          UploadedFile.fromFormidable(image1),
-          UploadedFile.fromFormidable(image2),
-        ],
-        ops: {
-          id1: ops1,
-          id2: ops2,
-        },
-      });
-    });
-
-    test('throws an error if parse returns an error', async () => {
-      const fileDataService = new InMemoryFileDataService();
-      const fc = new FileAPIController(
-        new ConfigService(),
-        fileDataService,
-        new LoggerService([]),
-      );
-
-      const req = {} as unknown as Request;
-
-      const image = {
-        newFilename: newFilename1,
-        originalFilename: originalFilename1,
-      } as formidable.File;
-      const file = { image } as formidable.Files;
-
-      const err = new Error('Error');
-
-      // Mocking console.error to keep it from polluting the terminal
-      const consoleSpy = jest.spyOn(console, 'error');
-      consoleSpy.mockImplementationOnce(() => {});
-
-      parse.mockImplementationOnce((a, b: FormidableParseCallback) => {
-        b(err, {}, file);
-      });
-
-      expect(() => fc.parseImageFilesAndFields(req, '')).rejects.toThrow(err);
     });
   });
 });
