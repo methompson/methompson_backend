@@ -7,12 +7,11 @@ import {
   FileDetailsBase,
   NewFileDetailsJSON,
   ParsedFilesAndFields,
-  ParsedImageFilesAndFields,
   UploadedFile,
 } from '@/src/models/file_models';
 import { FileDataService } from '@/src/file/file_data.service';
 import { FileSystemService } from '@/src/file/file_system_service';
-import { ImageWriter } from '@/src/image/image_writer';
+// import { ImageWriter } from '@/src/image/image_writer';
 import { isPromiseRejected } from '@/src/utils/type_guards';
 
 export class FileOpsService {
@@ -54,38 +53,6 @@ export class FileOpsService {
       throw e;
     }
   }
-
-  /**
-   * Main entry point for uploading image files. This function will do the following:
-   * - Take the parsed uploaded files and the respective image conversion ops:
-   * - Generate new image files for each conversion op
-   * - Save the image files to database
-   */
-  async saveUploadedImages(
-    parsedData: ParsedImageFilesAndFields,
-    userId: string,
-    imageWriter?: ImageWriter,
-  ): Promise<FileDetails[]> {
-    const iw = imageWriter ?? new ImageWriter(this.savedFilePath);
-    let newFiles: NewFileDetailsJSON[] = [];
-
-    try {
-      newFiles = await iw.convertImages(parsedData, userId);
-
-      const result = await this.saveFilesToService(newFiles);
-
-      return result;
-    } catch (e) {
-      // console.error(e);
-      const nf = newFiles ?? [];
-      if (nf.length > 0) {
-        await this.rollBackFSWrites(nf, parsedData.imageFiles);
-      }
-
-      throw e;
-    }
-  }
-
   makeNewFileDetails(
     data: ParsedFilesAndFields,
     userId: string,

@@ -93,11 +93,6 @@ export interface FileOps {
   filename: string;
 }
 
-export type ParsedImageFilesAndFields = {
-  imageFiles: UploadedFile[];
-  ops: Record<string, Record<string, unknown>>;
-};
-
 export type FileDetailsMetadata = Record<string, string | number | boolean>;
 
 function fileDetailsBaseTest(input: unknown): string[] {

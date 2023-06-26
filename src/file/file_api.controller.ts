@@ -26,7 +26,6 @@ import {
   FileDetailsJSON,
   FileOps,
   ParsedFilesAndFields,
-  ParsedImageFilesAndFields,
   UploadedFile,
 } from '@/src/models/file_models';
 import { FileSystemService } from '@/src/file/file_system_service';
@@ -220,55 +219,6 @@ export class FileAPIController {
     }
   }
 
-  // @Post('image_upload')
-  // @UseInterceptors(AuthRequiredIncerceptor)
-  // async uploadImages(@Req() request: Request, @UserId() userId: string) {
-  //   let parsedData: ParsedImageFilesAndFields;
-
-  //   // Step 1: Parse the image file and operations
-  //   try {
-  //     parsedData = await this.parseImageFilesAndFields(
-  //       request,
-  //       this._uploadFilePath,
-  //     );
-  //   } catch (e) {
-  //     if (e instanceof DatabaseNotAvailableException) {
-  //       throw new HttpException(
-  //         'Database Not Available',
-  //         HttpStatus.INTERNAL_SERVER_ERROR,
-  //       );
-  //     }
-
-  //     const msg = isString(e?.message) ? e.message : `${e}`;
-
-  //     this.loggerService.addErrorLog(`${msg}: ${e}`);
-
-  //     throw new HttpException('Error Uploading Files', HttpStatus.BAD_REQUEST);
-  //   }
-
-  //   const opsController = new FileOpsService(
-  //     this.savedFilePath,
-  //     this.uploadFilePath,
-  //     this.fileService,
-  //   );
-
-  //   try {
-  //     const savedFiles = await opsController.saveUploadedImages(
-  //       parsedData,
-  //       userId,
-  //     );
-
-  //     return savedFiles.map((f) => f.toJSON());
-  //   } catch (e) {
-  //     const msg = 'Error uploading image files';
-  //     this.loggerService.addErrorLog(`${msg}: ${e}`);
-  //     throw new HttpException(
-  //       'Error Uploading Files',
-  //       HttpStatus.INTERNAL_SERVER_ERROR,
-  //     );
-  //   }
-  // }
-
   @Post('delete')
   @HttpCode(200)
   @UseInterceptors(AuthRequiredIncerceptor)
@@ -375,9 +325,8 @@ export class FileAPIController {
 
           try {
             let opsRaw = '{}';
-            if (isString(fields.ops)) {
-              opsRaw = fields.ops;
-            } else if (Array.isArray(fields.ops) && isString(fields.ops[0])) {
+
+            if (Array.isArray(fields.ops) && isString(fields.ops[0])) {
               opsRaw = fields.ops[0];
             }
 
@@ -387,7 +336,7 @@ export class FileAPIController {
             const fileOps: Record<string, FileOps> = {};
 
             for (const [key, values] of Object.entries(
-              parsedOps.fileOps ?? [],
+              parsedOps.fileOps ?? {},
             )) {
               if (isRecord(values)) {
                 const isPrivate = !(values.isPrivate === false);
@@ -419,84 +368,4 @@ export class FileAPIController {
       );
     });
   }
-
-  /**
-   * Parses a web form from the Express object and returns parsed data. The function
-   * only parses some image types, specifically png, jpeg, gif, heic, bmp and tiff.
-   */
-  // async parseImageFilesAndFields(
-  //   req: Request,
-  //   uploadPath: string,
-  // ): Promise<ParsedImageFilesAndFields> {
-  //   const options: Partial<formidable.Options> = {
-  //     multiples: true,
-  //     filter: (opts) => {
-  //       if (
-  //         opts.mimetype == 'image/png' ||
-  //         opts.mimetype == 'image/jpeg' ||
-  //         opts.mimetype == 'image/gif' ||
-  //         opts.mimetype == 'image/heic' ||
-  //         opts.mimetype == 'image/bmp' ||
-  //         opts.mimetype == 'image/tiff'
-  //       ) {
-  //         return true;
-  //       }
-
-  //       return false;
-  //     },
-  //   };
-
-  //   if (uploadPath.length > 0) {
-  //     options.uploadDir = uploadPath;
-  //   }
-
-  //   const form = new Formidable(options);
-
-  //   return await new Promise<ParsedImageFilesAndFields>((resolve, reject) => {
-  //     form.parse(
-  //       req,
-  //       (err, fields: formidable.Fields, files: formidable.Files) => {
-  //         if (err) {
-  //           console.error(err);
-  //           reject(err);
-  //         }
-
-  //         try {
-  //           // Parse the operations passed
-  //           const opsRaw = isString(fields?.ops) ? fields.ops : '[]';
-  //           const parsedOps = JSON.parse(opsRaw);
-
-  //           if (!Array.isArray(parsedOps)) {
-  //             reject(new Error('Invalid Ops Input'));
-  //           }
-
-  //           const ops: Record<string, Record<string, unknown>> = {};
-
-  //           // Saves all ops to a Record. The key is the identifier.
-  //           parsedOps.forEach((op: unknown) => {
-  //             if (isRecord(op)) {
-  //               const id = isString(op?.identifier) ? op.identifier : '';
-
-  //               ops[id] = op;
-  //             }
-  //           });
-
-  //           const uploadedFiles: UploadedFile[] = [];
-
-  //           if (Array.isArray(files.image)) {
-  //             for (const image of files.image) {
-  //               uploadedFiles.push(UploadedFile.fromFormidable(image));
-  //             }
-  //           } else {
-  //             uploadedFiles.push(UploadedFile.fromFormidable(files.image));
-  //           }
-
-  //           resolve({ imageFiles: uploadedFiles, ops });
-  //         } catch (e) {
-  //           reject(e);
-  //         }
-  //       },
-  //     );
-  //   });
-  // }
 }
