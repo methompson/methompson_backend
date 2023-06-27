@@ -94,26 +94,6 @@ export interface FileOps {
 
 export type FileDetailsMetadata = Record<string, string | number | boolean>;
 
-function fileDetailsBaseTest(input: unknown): string[] {
-  if (!isRecord(input)) {
-    return ['root'];
-  }
-
-  const output: string[] = [];
-
-  if (!isFileDetailsMetadata(input.metadata)) output.push('metadata');
-
-  if (!isString(input.originalFilename)) output.push('originalFilename');
-  if (!isString(input.filename)) output.push('filename');
-  if (!isString(input.dateAdded)) output.push('dateAdded');
-  if (!isString(input.authorId)) output.push('authorId');
-  if (!isString(input.mimetype)) output.push('mimetype');
-  if (!isNumber(input.size)) output.push('size');
-  if (!isBoolean(input.isPrivate)) output.push('isPrivate');
-
-  return output;
-}
-
 function isFileDetailsMetadata(input: unknown): input is FileDetailsMetadata {
   if (!isRecord(input)) {
     return false;
@@ -131,8 +111,8 @@ function isFileDetailsMetadata(input: unknown): input is FileDetailsMetadata {
 // TODO change originalFilename and filename to different values
 // Probably change filename to id and originalFilename to filename
 export interface FileDetailsJSON {
-  originalFilename: string;
   filename: string;
+  id: string;
   dateAdded: string;
   authorId: string;
   mimetype: string;
@@ -143,8 +123,8 @@ export interface FileDetailsJSON {
 
 export class FileDetails {
   constructor(
-    protected _originalFilename: string,
     protected _filename: string,
+    protected _id: string,
     protected _dateAdded: Date,
     protected _authorId: string,
     protected _mimetype: string,
@@ -153,11 +133,11 @@ export class FileDetails {
     protected _metadata: FileDetailsMetadata,
   ) {}
 
-  get originalFilename(): string {
-    return this._originalFilename;
-  }
   get filename(): string {
     return this._filename;
+  }
+  get id(): string {
+    return this._id;
   }
   get dateAdded(): Date {
     return this._dateAdded;
@@ -178,10 +158,10 @@ export class FileDetails {
     return this._metadata;
   }
 
-  baseDetails(): FileDetailsJSON {
+  toJSON(): FileDetailsJSON {
     return {
-      originalFilename: this.originalFilename,
       filename: this.filename,
+      id: this.id,
       dateAdded: this.dateAdded.toISOString(),
       authorId: this.authorId,
       mimetype: this.mimetype,
@@ -191,28 +171,17 @@ export class FileDetails {
     };
   }
 
-  toJSON(): FileDetailsJSON {
-    return this.baseDetails();
-  }
-
-  toMongo(): Record<string, unknown> {
-    return {
-      ...this.toJSON(),
-      dateAdded: this.dateAdded,
-    };
-  }
-
   static fromJSON(input: unknown): FileDetails {
     if (!FileDetails.isFileDetailsBaseJSON(input)) {
-      const errors = fileDetailsBaseTest(input);
+      const errors = FileDetails.fileDetailsBaseTest(input);
       throw new InvalidInputError(`Invalid File Details Input: ${errors}`);
     }
 
     const dateAdded = new Date(input.dateAdded);
 
     return new FileDetails(
-      input.originalFilename,
       input.filename,
+      input.id,
       dateAdded,
       input.authorId,
       input.mimetype,
@@ -223,7 +192,27 @@ export class FileDetails {
   }
 
   static isFileDetailsBaseJSON(input: unknown): input is FileDetailsJSON {
-    return fileDetailsBaseTest(input).length === 0;
+    return FileDetails.fileDetailsBaseTest(input).length === 0;
+  }
+
+  static fileDetailsBaseTest(input: unknown): string[] {
+    if (!isRecord(input)) {
+      return ['root'];
+    }
+
+    const output: string[] = [];
+
+    if (!isFileDetailsMetadata(input.metadata)) output.push('metadata');
+
+    if (!isString(input.filename)) output.push('filename');
+    if (!isString(input.id)) output.push('id');
+    if (!isString(input.dateAdded)) output.push('dateAdded');
+    if (!isString(input.authorId)) output.push('authorId');
+    if (!isString(input.mimetype)) output.push('mimetype');
+    if (!isNumber(input.size)) output.push('size');
+    if (!isBoolean(input.isPrivate)) output.push('isPrivate');
+
+    return output;
   }
 }
 

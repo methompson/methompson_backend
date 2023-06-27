@@ -23,7 +23,7 @@ export class InMemoryFileDataService implements FileDataService {
     }
 
     for (const file of files) {
-      this._files[file.filename] = file;
+      this._files[file.id] = file;
     }
   }
 
@@ -37,7 +37,7 @@ export class InMemoryFileDataService implements FileDataService {
 
   get filesByName(): FileDetails[] {
     const sort = (a: FileDetails, b: FileDetails) =>
-      stringCompare(a.originalFilename, b.originalFilename);
+      stringCompare(a.filename, b.filename);
 
     const fileList = this.filesList;
     fileList.sort(sort);
@@ -47,7 +47,7 @@ export class InMemoryFileDataService implements FileDataService {
 
   get filesByReverseName(): FileDetails[] {
     const sort = (a: FileDetails, b: FileDetails) =>
-      stringCompare(b.originalFilename, a.originalFilename);
+      stringCompare(b.filename, a.filename);
 
     const fileList = this.filesList;
     fileList.sort(sort);
@@ -79,7 +79,7 @@ export class InMemoryFileDataService implements FileDataService {
     const files = newFileDetails.map((nfd) => {
       const { fileDetails } = nfd;
 
-      this._files[fileDetails.filename] = fileDetails;
+      this._files[fileDetails.id] = fileDetails;
 
       return fileDetails;
     });

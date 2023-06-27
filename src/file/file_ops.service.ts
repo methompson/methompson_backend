@@ -57,7 +57,7 @@ export class FileOpsService {
     userId: string,
   ): NewFileDetailsJSON[] {
     const newFileDetails = data.files.map((file) => {
-      const filename = uuidv4();
+      const id = uuidv4();
 
       const isPrivate =
         data.fileOps[file.originalFilename]?.isPrivate ??
@@ -66,8 +66,8 @@ export class FileOpsService {
 
       const fileDetails = FileDetails.fromJSON({
         filepath: file.filepath,
-        originalFilename: file.originalFilename,
-        filename,
+        filename: file.originalFilename,
+        id,
         dateAdded: new Date().toISOString(),
         authorId: userId,
         mimetype: file.mimetype,
@@ -92,10 +92,7 @@ export class FileOpsService {
     const fss = service ?? new FileSystemService();
     const ops = files.map((file) => {
       // const originalFilePath = path.join(this._uploadFilePath, file.filename);
-      const newFilePath = path.join(
-        this._savedFilePath,
-        file.fileDetails.filename,
-      );
+      const newFilePath = path.join(this._savedFilePath, file.fileDetails.id);
 
       return fss.moveFile(file.filepath, newFilePath);
     });
@@ -118,10 +115,7 @@ export class FileOpsService {
     const fss = service ?? new FileSystemService();
 
     const deleteOps1 = files.map(async (el) => {
-      const newFilePath = path.join(
-        this._savedFilePath,
-        el.fileDetails.filename,
-      );
+      const newFilePath = path.join(this._savedFilePath, el.fileDetails.id);
       try {
         await fss.deleteFile(newFilePath);
       } catch (e) {

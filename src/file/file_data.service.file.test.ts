@@ -170,9 +170,9 @@ describe('FileFileDataService', () => {
       const svc = new FileFileDataService(await open(''), 'path', [fd1, fd2]);
       expect(svc.filesList.length).toBe(2);
 
-      const result = await svc.deleteFiles([fd1.filename]);
+      const result = await svc.deleteFiles([fd1.id]);
       expect(svc.filesList.length).toBe(1);
-      expect(result[fd1.filename]?.fileDetails).toBe(fd1);
+      expect(result[fd1.id]?.fileDetails).toBe(fd1);
     });
 
     test('throws an error if the slug does not exist', async () => {
@@ -191,7 +191,7 @@ describe('FileFileDataService', () => {
       const writeToFileSpy = jest.spyOn(svc, 'writeToFile');
       writeToFileSpy.mockImplementationOnce(async () => {});
 
-      await svc.deleteFiles([fd1.filename]);
+      await svc.deleteFiles([fd1.id]);
 
       expect(writeToFileSpy).toHaveBeenCalledTimes(1);
     });
@@ -206,9 +206,7 @@ describe('FileFileDataService', () => {
         throw new Error(testError);
       });
 
-      await expect(() => svc.deleteFiles([fd1.filename])).rejects.toThrow(
-        testError,
-      );
+      await expect(() => svc.deleteFiles([fd1.id])).rejects.toThrow(testError);
 
       expect(writeToFileSpy).toHaveBeenCalledTimes(1);
     });
