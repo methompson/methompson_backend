@@ -3,12 +3,11 @@ import * as path from 'path';
 
 import {
   FileDetails,
-  FileDetailsJSON,
   FileDetailsMetadata,
   NewFileDetailsJSON,
-  FileDetailsBase,
   ParsedFilesAndFields,
   UploadedFile,
+  FileDetailsJSON,
 } from '@/src/models/file_models';
 import { FileOpsService } from '@/src/file/file_ops.service';
 import { InMemoryFileDataService } from '@/src/file/file_data.service.memory';
@@ -28,40 +27,29 @@ describe('FileOpsService', () => {
   const testError = 'testError aosdlkfsdf';
 
   const authorId = 'bd70a89c-b862-44ad-a980-a884ae9df5ad';
+  const filepath = '3d8ecf2d-7629-4132-8665-7f14d94b6887';
 
   const id1 = '9cc7ca64-5fa4-42ef-b790-67b640c76d28';
-  const newFilename1 = '3d8ecf2d-7629-4132-8665-7f14d94b6887';
-  const originalFilename1 = 'originalFileName1';
+  const filename1 = 'originalFileName1';
   const mimetype1 = 'image/jpeg';
   const size1 = 1024;
   const metadata1: FileDetailsMetadata = {};
 
   const id2 = '8c17b304-4fbf-477a-be84-05117ed4393e';
-  const newFilename2 = 'a993c59f-65fd-472f-b3c9-3501cb75272c';
-  const originalFilename2 = 'originalFileName2';
+  const filename2 = 'originalFileName2';
   const mimetype2 = 'application/json';
   const size2 = 512;
   const metadata2: FileDetailsMetadata = {};
 
-  const uploadedFile1 = new UploadedFile(
-    newFilename1,
-    originalFilename1,
-    mimetype1,
-    size1,
-  );
+  const uploadedFile1 = new UploadedFile(filepath, filename1, mimetype1, size1);
 
-  const uploadedFile2 = new UploadedFile(
-    newFilename2,
-    originalFilename2,
-    mimetype2,
-    size2,
-  );
+  const uploadedFile2 = new UploadedFile(filepath, filename2, mimetype2, size2);
 
   const newFileDetails1: NewFileDetailsJSON = {
-    filepath: newFilename1,
-    fileDetails: FileDetailsBase.fromJSON({
-      originalFilename: originalFilename1,
-      filename: '1234',
+    filepath,
+    fileDetails: FileDetails.fromJSON({
+      filename: filename1,
+      id: id1,
       dateAdded: new Date().toISOString(),
       authorId,
       mimetype: mimetype1,
@@ -72,10 +60,10 @@ describe('FileOpsService', () => {
   };
 
   const newFileDetails2: NewFileDetailsJSON = {
-    filepath: newFilename2,
-    fileDetails: FileDetailsBase.fromJSON({
-      originalFilename: originalFilename2,
-      filename: '5678',
+    filepath,
+    fileDetails: FileDetails.fromJSON({
+      filename: filename2,
+      id: id2,
       dateAdded: new Date().toISOString(),
       authorId,
       mimetype: mimetype2,
@@ -86,9 +74,8 @@ describe('FileOpsService', () => {
   };
 
   const fileDetailsJSON1: FileDetailsJSON = {
+    filename: filename1,
     id: id1,
-    originalFilename: originalFilename1,
-    filename: newFilename1,
     dateAdded: new Date(1).toISOString(),
     authorId: authorId,
     mimetype: mimetype1,
@@ -99,9 +86,8 @@ describe('FileOpsService', () => {
   const fileDetails1 = FileDetails.fromJSON(fileDetailsJSON1);
 
   const fileDetailsJSON2: FileDetailsJSON = {
+    filename: filename2,
     id: id2,
-    originalFilename: originalFilename2,
-    filename: newFilename2,
     dateAdded: new Date(2).toISOString(),
     authorId: authorId,
     mimetype: mimetype2,
@@ -133,9 +119,9 @@ describe('FileOpsService', () => {
       uuidv4.mockImplementation(() => {
         if (x === 0) {
           x++;
-          return newFilename1;
+          return id1;
         } else {
-          return newFilename2;
+          return id2;
         }
       });
 
@@ -156,10 +142,10 @@ describe('FileOpsService', () => {
 
       const result = await fos.saveUploadedFiles(parsedFiles, authorId);
 
-      const file1 = result.find((el) => el.filename === newFilename1);
+      const file1 = result.find((el) => el.id === id1);
       expect(file1?.toJSON()).toMatchObject({
-        originalFilename: uploadedFile1.originalFilename,
-        filename: newFilename1,
+        filename: uploadedFile1.originalFilename,
+        id: id1,
         authorId,
         mimetype: uploadedFile1.mimetype,
         size: uploadedFile1.size,
@@ -167,10 +153,10 @@ describe('FileOpsService', () => {
         metadata: {},
       });
 
-      const file2 = result.find((el) => el.filename === newFilename2);
+      const file2 = result.find((el) => el.id === id2);
       expect(file2?.toJSON()).toMatchObject({
-        originalFilename: uploadedFile2.originalFilename,
-        filename: newFilename2,
+        filename: uploadedFile2.originalFilename,
+        id: id2,
         authorId,
         mimetype: uploadedFile2.mimetype,
         size: uploadedFile2.size,
@@ -548,9 +534,9 @@ describe('FileOpsService', () => {
       uuidv4.mockImplementation(() => {
         if (x === 0) {
           x++;
-          return newFilename1;
+          return id1;
         } else {
-          return newFilename2;
+          return id2;
         }
       });
 
@@ -562,13 +548,11 @@ describe('FileOpsService', () => {
 
       const result = fos.makeNewFileDetails(parsedFiles, authorId);
 
-      const file1 = result.find(
-        (el) => el.fileDetails.filename === newFilename1,
-      );
+      const file1 = result.find((el) => el.fileDetails.id === id1);
       expect(file1?.filepath).toBe(uploadedFile1.filepath);
       expect(file1?.fileDetails.toJSON()).toMatchObject({
-        originalFilename: uploadedFile1.originalFilename,
-        filename: newFilename1,
+        filename: uploadedFile1.originalFilename,
+        id: id1,
         authorId,
         mimetype: uploadedFile1.mimetype,
         size: uploadedFile1.size,
@@ -576,13 +560,11 @@ describe('FileOpsService', () => {
         metadata: {},
       });
 
-      const file2 = result.find(
-        (el) => el.fileDetails.filename === newFilename2,
-      );
+      const file2 = result.find((el) => el.fileDetails.id === id2);
       expect(file2?.filepath).toBe(uploadedFile2.filepath);
       expect(file2?.fileDetails.toJSON()).toMatchObject({
-        originalFilename: uploadedFile2.originalFilename,
-        filename: newFilename2,
+        filename: uploadedFile2.originalFilename,
+        id: id2,
         authorId,
         mimetype: uploadedFile2.mimetype,
         size: uploadedFile2.size,
@@ -609,9 +591,9 @@ describe('FileOpsService', () => {
       uuidv4.mockImplementation(() => {
         if (x === 0) {
           x++;
-          return newFilename1;
+          return id1;
         } else {
-          return newFilename2;
+          return id2;
         }
       });
 
@@ -623,13 +605,11 @@ describe('FileOpsService', () => {
 
       const result = fos.makeNewFileDetails(parsedFiles, authorId);
 
-      const file1 = result.find(
-        (el) => el.fileDetails.filename === newFilename1,
-      );
+      const file1 = result.find((el) => el.fileDetails.id === id1);
       expect(file1?.filepath).toBe(uploadedFile1.filepath);
       expect(file1?.fileDetails.toJSON()).toMatchObject({
-        originalFilename: uploadedFile1.originalFilename,
-        filename: newFilename1,
+        filename: uploadedFile1.originalFilename,
+        id: id1,
         authorId,
         mimetype: uploadedFile1.mimetype,
         size: uploadedFile1.size,
@@ -637,13 +617,11 @@ describe('FileOpsService', () => {
         metadata: {},
       });
 
-      const file2 = result.find(
-        (el) => el.fileDetails.filename === newFilename2,
-      );
+      const file2 = result.find((el) => el.fileDetails.id === id2);
       expect(file2?.filepath).toBe(uploadedFile2.filepath);
       expect(file2?.fileDetails.toJSON()).toMatchObject({
-        originalFilename: uploadedFile2.originalFilename,
-        filename: newFilename2,
+        filename: uploadedFile2.originalFilename,
+        id: id2,
         authorId,
         mimetype: uploadedFile2.mimetype,
         size: uploadedFile2.size,
@@ -828,10 +806,10 @@ describe('FileOpsService', () => {
       expect(delSpy).toHaveBeenCalledTimes(4);
 
       expect(delSpy).toHaveBeenCalledWith(
-        path.join(savedFilePath, newFileDetails1.fileDetails.filename),
+        path.join(savedFilePath, newFileDetails1.fileDetails.id),
       );
       expect(delSpy).toHaveBeenCalledWith(
-        path.join(savedFilePath, newFileDetails2.fileDetails.filename),
+        path.join(savedFilePath, newFileDetails2.fileDetails.id),
       );
       expect(delSpy).toHaveBeenCalledWith(uploadedFile1.filepath);
       expect(delSpy).toHaveBeenCalledWith(uploadedFile2.filepath);
@@ -850,7 +828,7 @@ describe('FileOpsService', () => {
 
       const newFilePath = path.join(
         savedFilePath,
-        newFileDetails1.fileDetails.filename,
+        newFileDetails1.fileDetails.id,
       );
 
       const delSpy = jest.spyOn(fss, 'deleteFile');
@@ -871,10 +849,10 @@ describe('FileOpsService', () => {
       expect(delSpy).toHaveBeenCalledTimes(4);
 
       expect(delSpy).toHaveBeenCalledWith(
-        path.join(savedFilePath, newFileDetails1.fileDetails.filename),
+        path.join(savedFilePath, newFileDetails1.fileDetails.id),
       );
       expect(delSpy).toHaveBeenCalledWith(
-        path.join(savedFilePath, newFileDetails2.fileDetails.filename),
+        path.join(savedFilePath, newFileDetails2.fileDetails.id),
       );
       expect(delSpy).toHaveBeenCalledWith(uploadedFile1.filepath);
       expect(delSpy).toHaveBeenCalledWith(uploadedFile2.filepath);
@@ -893,11 +871,11 @@ describe('FileOpsService', () => {
 
       const newFile1Path = path.join(
         savedFilePath,
-        newFileDetails1.fileDetails.filename,
+        newFileDetails1.fileDetails.id,
       );
       const newFile2Path = path.join(
         savedFilePath,
-        newFileDetails2.fileDetails.filename,
+        newFileDetails2.fileDetails.id,
       );
 
       const delSpy = jest.spyOn(fss, 'deleteFile');
@@ -920,10 +898,10 @@ describe('FileOpsService', () => {
       expect(delSpy).toHaveBeenCalledTimes(4);
 
       expect(delSpy).toHaveBeenCalledWith(
-        path.join(savedFilePath, newFileDetails1.fileDetails.filename),
+        path.join(savedFilePath, newFileDetails1.fileDetails.id),
       );
       expect(delSpy).toHaveBeenCalledWith(
-        path.join(savedFilePath, newFileDetails2.fileDetails.filename),
+        path.join(savedFilePath, newFileDetails2.fileDetails.id),
       );
       expect(delSpy).toHaveBeenCalledWith(uploadedFile1.filepath);
       expect(delSpy).toHaveBeenCalledWith(uploadedFile2.filepath);
@@ -960,10 +938,10 @@ describe('FileOpsService', () => {
       expect(delSpy).toHaveBeenCalledTimes(4);
 
       expect(delSpy).toHaveBeenCalledWith(
-        path.join(savedFilePath, newFileDetails1.fileDetails.filename),
+        path.join(savedFilePath, newFileDetails1.fileDetails.id),
       );
       expect(delSpy).toHaveBeenCalledWith(
-        path.join(savedFilePath, newFileDetails2.fileDetails.filename),
+        path.join(savedFilePath, newFileDetails2.fileDetails.id),
       );
       expect(delSpy).toHaveBeenCalledWith(uploadedFile1.filepath);
       expect(delSpy).toHaveBeenCalledWith(uploadedFile2.filepath);
@@ -1005,10 +983,10 @@ describe('FileOpsService', () => {
       expect(delSpy).toHaveBeenCalledTimes(4);
 
       expect(delSpy).toHaveBeenCalledWith(
-        path.join(savedFilePath, newFileDetails1.fileDetails.filename),
+        path.join(savedFilePath, newFileDetails1.fileDetails.id),
       );
       expect(delSpy).toHaveBeenCalledWith(
-        path.join(savedFilePath, newFileDetails2.fileDetails.filename),
+        path.join(savedFilePath, newFileDetails2.fileDetails.id),
       );
       expect(delSpy).toHaveBeenCalledWith(uploadedFile1.filepath);
       expect(delSpy).toHaveBeenCalledWith(uploadedFile2.filepath);
@@ -1027,11 +1005,11 @@ describe('FileOpsService', () => {
 
       const newFile1Path = path.join(
         savedFilePath,
-        newFileDetails1.fileDetails.filename,
+        newFileDetails1.fileDetails.id,
       );
       const newFile2Path = path.join(
         savedFilePath,
-        newFileDetails2.fileDetails.filename,
+        newFileDetails2.fileDetails.id,
       );
 
       const delSpy = jest.spyOn(fss, 'deleteFile');
@@ -1054,10 +1032,10 @@ describe('FileOpsService', () => {
       expect(delSpy).toHaveBeenCalledTimes(4);
 
       expect(delSpy).toHaveBeenCalledWith(
-        path.join(savedFilePath, newFileDetails1.fileDetails.filename),
+        path.join(savedFilePath, newFileDetails1.fileDetails.id),
       );
       expect(delSpy).toHaveBeenCalledWith(
-        path.join(savedFilePath, newFileDetails2.fileDetails.filename),
+        path.join(savedFilePath, newFileDetails2.fileDetails.id),
       );
       expect(delSpy).toHaveBeenCalledWith(uploadedFile1.filepath);
       expect(delSpy).toHaveBeenCalledWith(uploadedFile2.filepath);

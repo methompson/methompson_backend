@@ -2,7 +2,7 @@ import { FileHandle, mkdir, open } from 'fs/promises';
 import { join } from 'path';
 import { Injectable } from '@nestjs/common';
 
-import { DeleteDetails } from '@/src/file/file_data.service';
+import { DeleteDetails, UpdateFileRequest } from '@/src/file/file_data.service';
 import { FileDetails, NewFileDetailsJSON } from '@/src/models/file_models';
 import { InMemoryFileDataService } from './file_data.service.memory';
 
@@ -30,6 +30,13 @@ export class FileFileDataService extends InMemoryFileDataService {
     await this.writeToFile();
 
     return details;
+  }
+
+  async updateFile(details: UpdateFileRequest): Promise<FileDetails> {
+    const result = await super.updateFile(details);
+    await this.writeToFile();
+
+    return result;
   }
 
   async deleteFiles(names: string[]): Promise<Record<string, DeleteDetails>> {

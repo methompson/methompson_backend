@@ -8,7 +8,6 @@ import {
 } from '@/src/file/file_data.service.file';
 import {
   FileDetailsMetadata,
-  FileDetailsBase,
   FileDetails,
   NewFileDetailsJSON,
 } from '@/src/models/file_models';
@@ -26,7 +25,7 @@ const metadata1: FileDetailsMetadata = {};
 
 const nfd1: NewFileDetailsJSON = {
   filepath,
-  fileDetails: new FileDetailsBase(
+  fileDetails: new FileDetails(
     originalFilename1,
     filename1,
     dateAdded1,
@@ -49,7 +48,7 @@ const metadata2: FileDetailsMetadata = {};
 
 const nfd2: NewFileDetailsJSON = {
   filepath,
-  fileDetails: new FileDetailsBase(
+  fileDetails: new FileDetails(
     originalFilename2,
     filename2,
     dateAdded2,
@@ -61,8 +60,8 @@ const nfd2: NewFileDetailsJSON = {
   ),
 };
 
-const fd1 = FileDetails.fromNewFileDetails('id1', nfd1);
-const fd2 = FileDetails.fromNewFileDetails('id2', nfd2);
+const fd1 = nfd1.fileDetails;
+const fd2 = nfd2.fileDetails;
 
 jest.mock('fs/promises', () => {
   const mkdir = jest.fn();
@@ -171,9 +170,9 @@ describe('FileFileDataService', () => {
       const svc = new FileFileDataService(await open(''), 'path', [fd1, fd2]);
       expect(svc.filesList.length).toBe(2);
 
-      const result = await svc.deleteFiles([fd1.filename]);
+      const result = await svc.deleteFiles([fd1.id]);
       expect(svc.filesList.length).toBe(1);
-      expect(result[fd1.filename]?.fileDetails).toBe(fd1);
+      expect(result[fd1.id]?.fileDetails).toBe(fd1);
     });
 
     test('throws an error if the slug does not exist', async () => {
@@ -192,7 +191,7 @@ describe('FileFileDataService', () => {
       const writeToFileSpy = jest.spyOn(svc, 'writeToFile');
       writeToFileSpy.mockImplementationOnce(async () => {});
 
-      await svc.deleteFiles([fd1.filename]);
+      await svc.deleteFiles([fd1.id]);
 
       expect(writeToFileSpy).toHaveBeenCalledTimes(1);
     });
@@ -207,9 +206,7 @@ describe('FileFileDataService', () => {
         throw new Error(testError);
       });
 
-      await expect(() => svc.deleteFiles([fd1.filename])).rejects.toThrow(
-        testError,
-      );
+      await expect(() => svc.deleteFiles([fd1.id])).rejects.toThrow(testError);
 
       expect(writeToFileSpy).toHaveBeenCalledTimes(1);
     });

@@ -15,7 +15,7 @@ import {
   BlogStatus,
   NewBlogPost,
 } from '@/src/models/blog_post_model';
-import { InvalidInputError, NotFoundError } from '@/src/errors';
+import { NotFoundError } from '@/src/errors';
 
 jest.mock('mongodb', () => {
   const originalModule = jest.requireActual('mongodb');

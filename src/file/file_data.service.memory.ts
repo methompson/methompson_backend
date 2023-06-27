@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { v4 as uuidv4 } from 'uuid';
 
 import {
   DeleteDetails,
   FileDataService,
   FileSortOption,
   GetFileListOptions,
+  UpdateFileRequest,
 } from '@/src/file/file_data.service';
 import { FileDetails, NewFileDetailsJSON } from '@/src/models/file_models';
 import { isNullOrUndefined } from '@/src/utils/type_guards';
@@ -23,7 +23,7 @@ export class InMemoryFileDataService implements FileDataService {
     }
 
     for (const file of files) {
-      this._files[file.filename] = file;
+      this._files[file.id] = file;
     }
   }
 
@@ -37,7 +37,7 @@ export class InMemoryFileDataService implements FileDataService {
 
   get filesByName(): FileDetails[] {
     const sort = (a: FileDetails, b: FileDetails) =>
-      stringCompare(a.originalFilename, b.originalFilename);
+      stringCompare(a.filename, b.filename);
 
     const fileList = this.filesList;
     fileList.sort(sort);
@@ -47,7 +47,7 @@ export class InMemoryFileDataService implements FileDataService {
 
   get filesByReverseName(): FileDetails[] {
     const sort = (a: FileDetails, b: FileDetails) =>
-      stringCompare(b.originalFilename, a.originalFilename);
+      stringCompare(b.filename, a.filename);
 
     const fileList = this.filesList;
     fileList.sort(sort);
@@ -77,10 +77,9 @@ export class InMemoryFileDataService implements FileDataService {
 
   async addFiles(newFileDetails: NewFileDetailsJSON[]): Promise<FileDetails[]> {
     const files = newFileDetails.map((nfd) => {
-      const id = uuidv4();
-      const fileDetails = FileDetails.fromNewFileDetails(id, nfd);
+      const { fileDetails } = nfd;
 
-      this._files[fileDetails.filename] = fileDetails;
+      this._files[fileDetails.id] = fileDetails;
 
       return fileDetails;
     });
@@ -122,6 +121,18 @@ export class InMemoryFileDataService implements FileDataService {
     if (isNullOrUndefined(file)) {
       throw new NotFoundError('File Not Found');
     }
+
+    return file;
+  }
+
+  async updateFile(details: UpdateFileRequest): Promise<FileDetails> {
+    const file = this._files[details.id];
+
+    if (isNullOrUndefined(file)) {
+      throw new NotFoundError('File Not Found');
+    }
+
+    file.update(details);
 
     return file;
   }

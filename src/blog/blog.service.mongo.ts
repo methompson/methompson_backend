@@ -21,7 +21,7 @@ export class MongoBlogService implements BlogService {
   protected _initialized = false;
 
   constructor(protected _mongoDBClient: MongoDBClient) {}
-  updateBlogPost(oldSlug: string, _updatedPost: BlogPost): Promise<BlogPost> {
+  updateBlogPost(_oldSlug: string, _updatedPost: BlogPost): Promise<BlogPost> {
     throw new UnimplementedError('Method not implemented.');
   }
 

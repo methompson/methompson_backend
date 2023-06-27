@@ -1,4 +1,7 @@
-import { mkdir, open } from 'fs/promises';
+import {
+  // mkdir,
+  open,
+} from 'fs/promises';
 
 import { FileNotesService } from '@/src/notes/notes.service.file';
 import { Note } from '@/src//models/notes_model';
@@ -14,7 +17,7 @@ jest.mock('fs/promises', () => {
 });
 
 const note1 = new Note('id1', 'title1', 'get milk', new Date(1), 'author1');
-const note2 = new Note('id2', 'title2', 'get bread', new Date(2), 'author2');
+// const note2 = new Note('id2', 'title2', 'get bread', new Date(2), 'author2');
 
 describe('FileNotesService', () => {
   describe('noteString', () => {

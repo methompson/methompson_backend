@@ -61,7 +61,6 @@ const parse = Formidable.prototype.parse as jest.Mock<unknown, unknown[]>;
 const testError = 'Test Error ;oasdfkln';
 
 describe('FileController', () => {
-  const id1 = '9cc7ca64-5fa4-42ef-b790-67b640c76d28';
   const newFilename1 = 'newFileName1';
   const originalFilename1 = 'originalFileName1';
   const authorId1 = 'bd70a89c-b862-44ad-a980-a884ae9df5ad';
@@ -69,7 +68,6 @@ describe('FileController', () => {
   const size1 = 1024;
   const metadata1: FileDetailsMetadata = {};
 
-  const id2 = '8c17b304-4fbf-477a-be84-05117ed4393e';
   const newFilename2 = 'newFileName2';
   const originalFilename2 = 'originalFileName2';
   const authorId2 = '32ea27be-c5b4-425b-b6ba-c5b67ecf9c63';
@@ -78,9 +76,8 @@ describe('FileController', () => {
   const metadata2: FileDetailsMetadata = {};
 
   const fileDetailsJSON1: FileDetailsJSON = {
-    id: id1,
-    originalFilename: originalFilename1,
-    filename: newFilename1,
+    filename: originalFilename1,
+    id: newFilename1,
     dateAdded: new Date(1).toISOString(),
     authorId: authorId1,
     mimetype: mimetype1,
@@ -91,9 +88,8 @@ describe('FileController', () => {
   const fileDetails1 = FileDetails.fromJSON(fileDetailsJSON1);
 
   const fileDetailsJSON2: FileDetailsJSON = {
-    id: id2,
-    originalFilename: originalFilename2,
-    filename: newFilename2,
+    filename: originalFilename2,
+    id: newFilename2,
     dateAdded: new Date(2).toISOString(),
     authorId: authorId2,
     mimetype: mimetype2,
@@ -138,7 +134,7 @@ describe('FileController', () => {
       const req = {
         authModel: new AuthModel({}),
         params: {
-          filename: fileDetails2.filename,
+          filename: fileDetails2.id,
         },
       } as unknown as Request;
 
@@ -151,9 +147,9 @@ describe('FileController', () => {
       await fc.getFileByName(req, res);
 
       expect(getFileSpy).toHaveBeenCalledTimes(1);
-      expect(getFileSpy).toHaveBeenCalledWith(fileDetails2.filename);
+      expect(getFileSpy).toHaveBeenCalledWith(fileDetails2.id);
 
-      const filepath = path.join(fc.savedFilePath, fileDetails2.filename);
+      const filepath = path.join(fc.savedFilePath, fileDetails2.id);
 
       expect(pathExists).toHaveBeenCalledTimes(1);
       expect(pathExists).toHaveBeenCalledWith(filepath);
@@ -181,7 +177,7 @@ describe('FileController', () => {
       const req = {
         authModel: am,
         params: {
-          filename: fileDetails2.filename,
+          filename: fileDetails2.id,
         },
       } as unknown as Request;
 
@@ -194,9 +190,9 @@ describe('FileController', () => {
       await fc.getFileByName(req, res);
 
       expect(getFileSpy).toHaveBeenCalledTimes(1);
-      expect(getFileSpy).toHaveBeenCalledWith(fileDetails2.filename);
+      expect(getFileSpy).toHaveBeenCalledWith(fileDetails2.id);
 
-      const filepath = path.join(fc.savedFilePath, fileDetails2.filename);
+      const filepath = path.join(fc.savedFilePath, fileDetails2.id);
 
       expect(pathExists).toHaveBeenCalledTimes(1);
       expect(pathExists).toHaveBeenCalledWith(filepath);
@@ -224,7 +220,7 @@ describe('FileController', () => {
       const req = {
         authModel: am,
         params: {
-          filename: fileDetails1.filename,
+          filename: fileDetails1.id,
         },
       } as unknown as Request;
 
@@ -237,9 +233,9 @@ describe('FileController', () => {
       await fc.getFileByName(req, res);
 
       expect(getFileSpy).toHaveBeenCalledTimes(1);
-      expect(getFileSpy).toHaveBeenCalledWith(fileDetails1.filename);
+      expect(getFileSpy).toHaveBeenCalledWith(fileDetails1.id);
 
-      const filepath = path.join(fc.savedFilePath, fileDetails1.filename);
+      const filepath = path.join(fc.savedFilePath, fileDetails1.id);
 
       expect(pathExists).toHaveBeenCalledTimes(1);
       expect(pathExists).toHaveBeenCalledWith(filepath);
@@ -264,7 +260,7 @@ describe('FileController', () => {
       const req = {
         authModel: new AuthModel({}),
         params: {
-          filename: fileDetails1.filename,
+          filename: fileDetails1.id,
         },
       } as unknown as Request;
 
@@ -278,9 +274,9 @@ describe('FileController', () => {
       );
 
       expect(getFileSpy).toHaveBeenCalledTimes(1);
-      expect(getFileSpy).toHaveBeenCalledWith(fileDetails1.filename);
+      expect(getFileSpy).toHaveBeenCalledWith(fileDetails1.id);
 
-      const filepath = path.join(fc.savedFilePath, fileDetails1.filename);
+      const filepath = path.join(fc.savedFilePath, fileDetails1.id);
 
       expect(pathExists).toHaveBeenCalledTimes(1);
       expect(pathExists).toHaveBeenCalledWith(filepath);
@@ -384,7 +380,7 @@ describe('FileController', () => {
       const req = {
         authModel: new AuthModel({}),
         params: {
-          filename: fileDetails1.filename,
+          filename: fileDetails1.id,
         },
       } as unknown as Request;
 
@@ -398,9 +394,9 @@ describe('FileController', () => {
       );
 
       expect(getFileSpy).toHaveBeenCalledTimes(1);
-      expect(getFileSpy).toHaveBeenCalledWith(fileDetails1.filename);
+      expect(getFileSpy).toHaveBeenCalledWith(fileDetails1.id);
 
-      const filepath = path.join(fc.savedFilePath, fileDetails1.filename);
+      const filepath = path.join(fc.savedFilePath, fileDetails1.id);
 
       expect(pathExists).toHaveBeenCalledTimes(1);
       expect(pathExists).toHaveBeenCalledWith(filepath);
@@ -426,7 +422,7 @@ describe('FileController', () => {
       const req = {
         authModel: am,
         params: {
-          filename: fileDetails1.filename,
+          filename: fileDetails1.id,
         },
       } as unknown as Request;
 
@@ -440,9 +436,9 @@ describe('FileController', () => {
       );
 
       expect(getFileSpy).toHaveBeenCalledTimes(1);
-      expect(getFileSpy).toHaveBeenCalledWith(fileDetails1.filename);
+      expect(getFileSpy).toHaveBeenCalledWith(fileDetails1.id);
 
-      const filepath = path.join(fc.savedFilePath, fileDetails1.filename);
+      const filepath = path.join(fc.savedFilePath, fileDetails1.id);
 
       expect(pathExists).toHaveBeenCalledTimes(1);
       expect(pathExists).toHaveBeenCalledWith(filepath);

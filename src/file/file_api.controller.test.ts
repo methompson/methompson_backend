@@ -82,7 +82,6 @@ const parse = Formidable.prototype.parse as jest.Mock<unknown, unknown[]>;
 const testError = 'Test Error ;oasdfkln';
 
 describe('FileController', () => {
-  const id1 = '9cc7ca64-5fa4-42ef-b790-67b640c76d28';
   const newFilename1 = 'newFileName1';
   const originalFilename1 = 'originalFileName1';
   const authorId1 = 'bd70a89c-b862-44ad-a980-a884ae9df5ad';
@@ -90,7 +89,6 @@ describe('FileController', () => {
   const size1 = 1024;
   const metadata1: FileDetailsMetadata = {};
 
-  const id2 = '8c17b304-4fbf-477a-be84-05117ed4393e';
   const newFilename2 = 'newFileName2';
   const originalFilename2 = 'originalFileName2';
   const authorId2 = '32ea27be-c5b4-425b-b6ba-c5b67ecf9c63';
@@ -113,9 +111,8 @@ describe('FileController', () => {
   } as formidable.File;
 
   const fileDetailsJSON1: FileDetailsJSON = {
-    id: id1,
-    originalFilename: originalFilename1,
-    filename: newFilename1,
+    filename: originalFilename1,
+    id: newFilename1,
     dateAdded: new Date(1).toISOString(),
     authorId: authorId1,
     mimetype: mimetype1,
@@ -126,9 +123,8 @@ describe('FileController', () => {
   const fileDetails1 = FileDetails.fromJSON(fileDetailsJSON1);
 
   const fileDetailsJSON2: FileDetailsJSON = {
-    id: id2,
-    originalFilename: originalFilename2,
-    filename: newFilename2,
+    filename: originalFilename2,
+    id: newFilename2,
     dateAdded: new Date(2).toISOString(),
     authorId: authorId2,
     mimetype: mimetype2,
@@ -415,7 +411,7 @@ describe('FileController', () => {
 
       expect(result).toMatchObject([
         {
-          originalFilename: file1.originalFilename,
+          filename: file1.originalFilename,
           size: file1.size,
           isPrivate: true,
         },
@@ -446,12 +442,12 @@ describe('FileController', () => {
 
       expect(result).toMatchObject([
         {
-          originalFilename: file1.originalFilename,
+          filename: file1.originalFilename,
           size: file1.size,
           isPrivate: true,
         },
         {
-          originalFilename: file2.originalFilename,
+          filename: file2.originalFilename,
           size: file2.size,
           isPrivate: false,
         },
@@ -526,6 +522,35 @@ describe('FileController', () => {
     });
   });
 
+  describe('updateFile', () => {
+    test('Returns a JSON object with update data', async () => {
+      const file1 = FileDetails.fromJSON(fileDetails1.toJSON());
+      const fileDataService = new InMemoryFileDataService([file1]);
+
+      const fc = new FileAPIController(
+        new ConfigService(),
+        fileDataService,
+        new LoggerService([]),
+      );
+
+      const newIsPrivate = !file1.isPrivate;
+
+      const req = {
+        body: {
+          id: file1.id,
+          isPrivate: newIsPrivate,
+        },
+      } as unknown as Request;
+
+      const result = await fc.updateFile(req);
+
+      expect(result).toMatchObject({
+        ...file1.toJSON(),
+        isPrivate: newIsPrivate,
+      });
+    });
+  });
+
   describe('deleteFiles', () => {
     test('Returns a JSON object of data about the deletion', async () => {
       const fds = new InMemoryFileDataService([fileDetails1, fileDetails2]);
@@ -537,32 +562,28 @@ describe('FileController', () => {
 
       deleteFiles.mockImplementationOnce(async () => {
         const output: Record<string, DeleteFilesJSON> = {};
-        output[fileDetails1.filename] = { filename: fileDetails1.filename };
-        output[fileDetails2.filename] = { filename: fileDetails2.filename };
+        output[fileDetails1.id] = { filename: fileDetails1.id };
+        output[fileDetails2.id] = { filename: fileDetails2.id };
         return output;
       });
 
       const req = {
-        body: [fileDetails1.filename, fileDetails2.filename],
+        body: [fileDetails1.id, fileDetails2.id],
       } as unknown as Request;
 
       const result = await fc.deleteFiles(req);
       expect(result.length).toBe(2);
 
-      const result1 = result.find(
-        (el) => el.filename === fileDetails1.filename,
-      );
-      const result2 = result.find(
-        (el) => el.filename === fileDetails2.filename,
-      );
+      const result1 = result.find((el) => el.filename === fileDetails1.id);
+      const result2 = result.find((el) => el.filename === fileDetails2.id);
 
       expect(result1?.fileDetails).toStrictEqual(fileDetails1.toJSON());
       expect(result1?.errors).toStrictEqual([]);
-      expect(result1?.filename).toBe(fileDetails1.filename);
+      expect(result1?.filename).toBe(fileDetails1.id);
 
       expect(result2?.fileDetails).toStrictEqual(fileDetails2.toJSON());
       expect(result2?.errors).toStrictEqual([]);
-      expect(result2?.filename).toBe(fileDetails2.filename);
+      expect(result2?.filename).toBe(fileDetails2.id);
     });
 
     test('Returns error details from fileService.delete files', async () => {
@@ -576,26 +597,24 @@ describe('FileController', () => {
 
       deleteFiles.mockImplementationOnce(async () => {
         const output: Record<string, DeleteFilesJSON> = {};
-        output[fileDetails1.filename] = { filename: fileDetails1.filename };
+        output[fileDetails1.id] = { filename: fileDetails1.id };
         output[badFilename] = { filename: badFilename };
         return output;
       });
 
       const req = {
-        body: [fileDetails1.filename, badFilename],
+        body: [fileDetails1.id, badFilename],
       } as unknown as Request;
 
       const result = await fc.deleteFiles(req);
       expect(result.length).toBe(2);
 
-      const result1 = result.find(
-        (el) => el.filename === fileDetails1.filename,
-      );
+      const result1 = result.find((el) => el.filename === fileDetails1.id);
       const result2 = result.find((el) => el.filename === badFilename);
 
       expect(result1?.fileDetails).toStrictEqual(fileDetails1.toJSON());
       expect(result1?.errors).toStrictEqual([]);
-      expect(result1?.filename).toBe(fileDetails1.filename);
+      expect(result1?.filename).toBe(fileDetails1.id);
 
       expect(result2?.fileDetails).toBeUndefined();
       expect(result2?.errors.length).toBe(1);
@@ -613,41 +632,37 @@ describe('FileController', () => {
 
       deleteFiles.mockImplementationOnce(async () => {
         const output: Record<string, DeleteFilesJSON> = {};
-        output[fileDetails1.filename] = { filename: fileDetails1.filename };
-        output[fileDetails2.filename] = {
-          filename: fileDetails2.filename,
+        output[fileDetails1.id] = { filename: fileDetails1.id };
+        output[fileDetails2.id] = {
+          filename: fileDetails2.id,
           error: testError,
         };
         return output;
       });
 
       const req = {
-        body: [fileDetails1.filename, fileDetails2.filename],
+        body: [fileDetails1.id, fileDetails2.id],
       } as unknown as Request;
 
       const result = await fc.deleteFiles(req);
       expect(result.length).toBe(2);
 
-      const result1 = result.find(
-        (el) => el.filename === fileDetails1.filename,
-      );
-      const result2 = result.find(
-        (el) => el.filename === fileDetails2.filename,
-      );
+      const result1 = result.find((el) => el.filename === fileDetails1.id);
+      const result2 = result.find((el) => el.filename === fileDetails2.id);
 
       expect(deleteFiles).toHaveBeenCalledWith(fc.savedFilePath, [
-        fileDetails1.filename,
-        fileDetails2.filename,
+        fileDetails1.id,
+        fileDetails2.id,
       ]);
 
       expect(result1?.fileDetails).toStrictEqual(fileDetails1.toJSON());
       expect(result1?.errors).toStrictEqual([]);
-      expect(result1?.filename).toBe(fileDetails1.filename);
+      expect(result1?.filename).toBe(fileDetails1.id);
 
       expect(result2?.fileDetails).toStrictEqual(fileDetails2.toJSON());
       expect(result2?.errors.length).toBe(1);
       expect(result2?.errors[0]).toContain(testError);
-      expect(result2?.filename).toBe(fileDetails2.filename);
+      expect(result2?.filename).toBe(fileDetails2.id);
     });
 
     test('Runs several functions with specific inputs', async () => {
@@ -660,12 +675,12 @@ describe('FileController', () => {
 
       deleteFiles.mockImplementationOnce(async () => {
         const output: Record<string, DeleteFilesJSON> = {};
-        output[fileDetails1.filename] = { filename: fileDetails1.filename };
-        output[fileDetails2.filename] = { filename: fileDetails2.filename };
+        output[fileDetails1.id] = { filename: fileDetails1.id };
+        output[fileDetails2.id] = { filename: fileDetails2.id };
         return output;
       });
 
-      const body = [fileDetails1.filename, fileDetails2.filename];
+      const body = [fileDetails1.id, fileDetails2.id];
 
       const req = { body } as unknown as Request;
 
@@ -679,8 +694,8 @@ describe('FileController', () => {
       expect(deleteFiles).toHaveBeenCalledTimes(1);
 
       expect(deleteFiles).toHaveBeenCalledWith(fc.savedFilePath, [
-        fileDetails1.filename,
-        fileDetails2.filename,
+        fileDetails1.id,
+        fileDetails2.id,
       ]);
     });
 
@@ -694,12 +709,12 @@ describe('FileController', () => {
 
       deleteFiles.mockImplementationOnce(async () => {
         const output: Record<string, DeleteFilesJSON> = {};
-        output[fileDetails1.filename] = { filename: fileDetails1.filename };
-        output[fileDetails2.filename] = { filename: fileDetails2.filename };
+        output[fileDetails1.id] = { filename: fileDetails1.id };
+        output[fileDetails2.id] = { filename: fileDetails2.id };
         return output;
       });
 
-      const body = [fileDetails1.filename, fileDetails2.filename];
+      const body = [fileDetails1.id, fileDetails2.id];
 
       const req = { body } as unknown as Request;
 
@@ -718,8 +733,8 @@ describe('FileController', () => {
       expect(deleteFiles).toHaveBeenCalledTimes(1);
 
       expect(deleteFiles).toHaveBeenCalledWith(fc.savedFilePath, [
-        fileDetails1.filename,
-        fileDetails2.filename,
+        fileDetails1.id,
+        fileDetails2.id,
       ]);
     });
 
@@ -733,12 +748,12 @@ describe('FileController', () => {
 
       deleteFiles.mockImplementationOnce(async () => {
         const output: Record<string, DeleteFilesJSON> = {};
-        output[fileDetails1.filename] = { filename: fileDetails1.filename };
-        output[fileDetails2.filename] = { filename: fileDetails2.filename };
+        output[fileDetails1.id] = { filename: fileDetails1.id };
+        output[fileDetails2.id] = { filename: fileDetails2.id };
         return output;
       });
 
-      const body = [fileDetails1.filename, fileDetails2.filename];
+      const body = [fileDetails1.id, fileDetails2.id];
 
       const req = { body } as unknown as Request;
 
@@ -757,8 +772,8 @@ describe('FileController', () => {
       expect(deleteFiles).toHaveBeenCalledTimes(1);
 
       expect(deleteFiles).toHaveBeenCalledWith(fc.savedFilePath, [
-        fileDetails1.filename,
-        fileDetails2.filename,
+        fileDetails1.id,
+        fileDetails2.id,
       ]);
     });
   });

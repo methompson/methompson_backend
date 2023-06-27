@@ -1,24 +1,19 @@
 import { InvalidInputError } from '@/src/errors';
 import {
   UploadedFile,
-  FileDetails,
-  FileDetailsBaseJSON,
-  NewFileDetailsJSON,
+  FileDetailsJSON,
   FileDetailsMetadata,
-  FileDetailsBase,
+  FileDetails,
 } from '@/src/models/file_models';
 
-const originalFilename = 'originalFilename';
-const filename = '5d0b2e97-870e-4184-8f10-08d5d7dd1e2b.ext';
+const filename = 'originalFilename';
+const id = '5d0b2e97-870e-4184-8f10-08d5d7dd1e2b.ext';
 const dateAdded = '2022-06-26T11:42:56.673Z';
 
 describe('file_models', () => {
-  const filepath = 'path/to/file';
-
-  let validBaseFileDetails: FileDetailsBaseJSON;
+  let validBaseFileDetails: FileDetailsJSON;
 
   const authorId = '023ueiowjfaknldsm';
-  const id = '04oiejwakdscm,';
   const isPrivate = false;
   const size = 1024;
   const mimetype = 'image/jpeg';
@@ -26,8 +21,8 @@ describe('file_models', () => {
 
   beforeEach(() => {
     validBaseFileDetails = {
-      originalFilename,
       filename,
+      id,
       dateAdded,
       authorId,
       mimetype,
@@ -154,7 +149,6 @@ describe('file_models', () => {
     beforeEach(() => {
       validFileDetails = {
         ...validBaseFileDetails,
-        id,
       };
     });
 
@@ -163,31 +157,8 @@ describe('file_models', () => {
         const details = FileDetails.fromJSON(validFileDetails);
 
         expect(details.toJSON()).toStrictEqual({
-          id,
-          originalFilename,
           filename,
-          dateAdded,
-          authorId,
-          mimetype,
-          size,
-          isPrivate,
-          metadata,
-        });
-      });
-    });
-
-    describe('fromNewFileDetails', () => {
-      test('returns a FileDetails object when passed valid inputs', () => {
-        const input: NewFileDetailsJSON = {
-          filepath,
-          fileDetails: FileDetailsBase.fromJSON(validBaseFileDetails),
-        };
-        const details = FileDetails.fromNewFileDetails(id, input);
-
-        expect(details.toJSON()).toStrictEqual({
           id,
-          originalFilename,
-          filename,
           dateAdded,
           authorId,
           mimetype,
@@ -199,19 +170,17 @@ describe('file_models', () => {
     });
 
     describe('fromJSON', () => {
-      test('Returns an FileDetails object when the input is valid', () => {
+      test('Returns a FileDetails object when the input is valid', () => {
         const details = FileDetails.fromJSON(validFileDetails);
 
         expect(details.id).toBe(validFileDetails.id);
-        expect(details.originalFilename).toBe(
-          validFileDetails.originalFilename,
-        );
+        expect(details.filename).toBe(validFileDetails.filename);
         expect(details.dateAdded.toISOString()).toBe(
           validFileDetails.dateAdded,
         );
       });
 
-      test('Returns an FileDetails object when the input is valid, including extras', () => {
+      test('Returns a FileDetails object when the input is valid, including extras', () => {
         const input = {
           ...validFileDetails,
           test: 'tests',
@@ -219,35 +188,10 @@ describe('file_models', () => {
         const details = FileDetails.fromJSON(input);
 
         expect(details.id).toBe(validFileDetails.id);
-        expect(details.originalFilename).toBe(
-          validFileDetails.originalFilename,
-        );
+        expect(details.filename).toBe(validFileDetails.filename);
         expect(details.dateAdded.toISOString()).toBe(
           validFileDetails.dateAdded,
         );
-      });
-
-      test('Throws an error when the id input is invalid', () => {
-        let input = { ...validFileDetails };
-        expect(() => FileDetails.fromJSON(input)).not.toThrow();
-
-        const idErr = new InvalidInputError('Invalid File Details Input: id');
-
-        input = { ...validFileDetails };
-        delete input.id;
-        expect(() => FileDetails.fromJSON(input)).toThrow(idErr);
-
-        input = { ...validFileDetails };
-        input.id = 0;
-        expect(() => FileDetails.fromJSON(input)).toThrow(idErr);
-
-        input = { ...validFileDetails };
-        input.id = null;
-        expect(() => FileDetails.fromJSON(input)).toThrow(idErr);
-
-        input = { ...validFileDetails };
-        input.id = [];
-        expect(() => FileDetails.fromJSON(input)).toThrow(idErr);
       });
 
       test('Throws an error when the isPrivate input is invalid', () => {
@@ -279,28 +223,28 @@ describe('file_models', () => {
         expect(() => FileDetails.fromJSON(input)).toThrow(pErr);
       });
 
-      test('Throws an error when the originalFilename input is invalid', () => {
+      test('Throws an error when the filename input is invalid', () => {
         let input = { ...validFileDetails };
         expect(() => FileDetails.fromJSON(input)).not.toThrow();
 
         const ofErr = new InvalidInputError(
-          'Invalid File Details Input: originalFilename',
+          'Invalid File Details Input: filename',
         );
 
         input = { ...validFileDetails };
-        delete input.originalFilename;
+        delete input.filename;
         expect(() => FileDetails.fromJSON(input)).toThrow(ofErr);
 
         input = { ...validFileDetails };
-        input.originalFilename = 0;
+        input.filename = 0;
         expect(() => FileDetails.fromJSON(input)).toThrow(ofErr);
 
         input = { ...validFileDetails };
-        input.originalFilename = null;
+        input.filename = null;
         expect(() => FileDetails.fromJSON(input)).toThrow(ofErr);
 
         input = { ...validFileDetails };
-        input.originalFilename = [];
+        input.filename = [];
         expect(() => FileDetails.fromJSON(input)).toThrow(ofErr);
       });
 
@@ -352,58 +296,6 @@ describe('file_models', () => {
         input = { ...validFileDetails };
         input.dateAdded = [];
         expect(() => FileDetails.fromJSON(input)).toThrow(dErr);
-      });
-    });
-
-    describe('isFileDetailsJSON', () => {
-      test('Returns true if a valid FileDetailsInterface is passed as an argument', () => {
-        expect(FileDetails.isFileDetailsJSON(validFileDetails)).toBe(true);
-
-        const moreDetails = { ...validFileDetails };
-        moreDetails.files = [];
-
-        expect(FileDetails.isFileDetailsJSON(moreDetails)).toBe(true);
-      });
-
-      test('Returns true if a valid FileDetailsInterface with extra data is passed as an argument', () => {
-        const fileDetails = {
-          ...validFileDetails,
-          test: 'test',
-        };
-
-        expect(FileDetails.isFileDetailsJSON(fileDetails)).toBe(true);
-      });
-
-      test('Returns false if the input is invalid', () => {
-        let fileDetails = { ...validFileDetails };
-        expect(FileDetails.isFileDetailsJSON(fileDetails)).toBe(true);
-
-        fileDetails = { ...validFileDetails };
-        delete fileDetails.id;
-        expect(FileDetails.isFileDetailsJSON(fileDetails)).toBe(false);
-
-        fileDetails = { ...validFileDetails };
-        delete fileDetails.size;
-        expect(FileDetails.isFileDetailsJSON(fileDetails)).toBe(false);
-
-        fileDetails = { ...validFileDetails };
-        delete fileDetails.isPrivate;
-        expect(FileDetails.isFileDetailsJSON(fileDetails)).toBe(false);
-
-        fileDetails = { ...validFileDetails };
-        delete fileDetails.originalFilename;
-        expect(FileDetails.isFileDetailsJSON(fileDetails)).toBe(false);
-
-        fileDetails = { ...validFileDetails };
-        delete fileDetails.dateAdded;
-        expect(FileDetails.isFileDetailsJSON(fileDetails)).toBe(false);
-
-        expect(FileDetails.isFileDetailsJSON(1)).toBe(false);
-        expect(FileDetails.isFileDetailsJSON('1')).toBe(false);
-        expect(FileDetails.isFileDetailsJSON(true)).toBe(false);
-        expect(FileDetails.isFileDetailsJSON([])).toBe(false);
-        expect(FileDetails.isFileDetailsJSON({})).toBe(false);
-        expect(FileDetails.isFileDetailsJSON(null)).toBe(false);
       });
     });
   });
