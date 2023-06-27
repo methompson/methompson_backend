@@ -82,7 +82,6 @@ const parse = Formidable.prototype.parse as jest.Mock<unknown, unknown[]>;
 const testError = 'Test Error ;oasdfkln';
 
 describe('FileController', () => {
-  const id1 = '9cc7ca64-5fa4-42ef-b790-67b640c76d28';
   const newFilename1 = 'newFileName1';
   const originalFilename1 = 'originalFileName1';
   const authorId1 = 'bd70a89c-b862-44ad-a980-a884ae9df5ad';
@@ -90,7 +89,6 @@ describe('FileController', () => {
   const size1 = 1024;
   const metadata1: FileDetailsMetadata = {};
 
-  const id2 = '8c17b304-4fbf-477a-be84-05117ed4393e';
   const newFilename2 = 'newFileName2';
   const originalFilename2 = 'originalFileName2';
   const authorId2 = '32ea27be-c5b4-425b-b6ba-c5b67ecf9c63';

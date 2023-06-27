@@ -114,17 +114,6 @@ function fileDetailsBaseTest(input: unknown): string[] {
   return output;
 }
 
-function newFileDetailsTest(input: unknown): string[] {
-  if (!isRecord(input)) {
-    return ['root'];
-  }
-
-  const baseTest = fileDetailsBaseTest(input);
-  if (!isString(input.filepath)) baseTest.push('filepath');
-
-  return baseTest;
-}
-
 function isFileDetailsMetadata(input: unknown): input is FileDetailsMetadata {
   if (!isRecord(input)) {
     return false;
