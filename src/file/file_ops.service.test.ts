@@ -3,12 +3,11 @@ import * as path from 'path';
 
 import {
   FileDetails,
-  FileDetailsJSON,
   FileDetailsMetadata,
   NewFileDetailsJSON,
-  FileDetailsBase,
   ParsedFilesAndFields,
   UploadedFile,
+  FileDetailsJSON,
 } from '@/src/models/file_models';
 import { FileOpsService } from '@/src/file/file_ops.service';
 import { InMemoryFileDataService } from '@/src/file/file_data.service.memory';
@@ -59,7 +58,7 @@ describe('FileOpsService', () => {
 
   const newFileDetails1: NewFileDetailsJSON = {
     filepath: newFilename1,
-    fileDetails: FileDetailsBase.fromJSON({
+    fileDetails: FileDetails.fromJSON({
       originalFilename: originalFilename1,
       filename: '1234',
       dateAdded: new Date().toISOString(),
@@ -73,7 +72,7 @@ describe('FileOpsService', () => {
 
   const newFileDetails2: NewFileDetailsJSON = {
     filepath: newFilename2,
-    fileDetails: FileDetailsBase.fromJSON({
+    fileDetails: FileDetails.fromJSON({
       originalFilename: originalFilename2,
       filename: '5678',
       dateAdded: new Date().toISOString(),
@@ -86,7 +85,6 @@ describe('FileOpsService', () => {
   };
 
   const fileDetailsJSON1: FileDetailsJSON = {
-    id: id1,
     originalFilename: originalFilename1,
     filename: newFilename1,
     dateAdded: new Date(1).toISOString(),
@@ -99,7 +97,6 @@ describe('FileOpsService', () => {
   const fileDetails1 = FileDetails.fromJSON(fileDetailsJSON1);
 
   const fileDetailsJSON2: FileDetailsJSON = {
-    id: id2,
     originalFilename: originalFilename2,
     filename: newFilename2,
     dateAdded: new Date(2).toISOString(),

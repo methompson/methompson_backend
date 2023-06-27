@@ -4,7 +4,6 @@ import { v4 as uuidv4 } from 'uuid';
 
 import {
   FileDetails,
-  FileDetailsBase,
   NewFileDetailsJSON,
   ParsedFilesAndFields,
   UploadedFile,
@@ -65,7 +64,7 @@ export class FileOpsService {
         data.ops.isPrivate ??
         true;
 
-      const fileDetails = FileDetailsBase.fromJSON({
+      const fileDetails = FileDetails.fromJSON({
         filepath: file.filepath,
         originalFilename: file.originalFilename,
         filename,

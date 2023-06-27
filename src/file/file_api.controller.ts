@@ -39,7 +39,10 @@ import {
   isStringArray,
 } from '@/src/utils/type_guards';
 import { getIntFromString } from '@/src/utils/get_number_from_string';
-import { DatabaseNotAvailableException } from '@/src/errors';
+import {
+  DatabaseNotAvailableException,
+  UnimplementedError,
+} from '@/src/errors';
 
 interface FileListResponse {
   files: FileDetailsJSON[];
@@ -217,6 +220,23 @@ export class FileAPIController {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  /**
+   * Expects a request with a body that is an object. Each key is a file id and
+   * the value is the respective new metadata for the file including. Currently
+   * we will expect the filename and isPrivate values to be editable.
+   */
+  @Post('update')
+  @UseInterceptors(AuthRequiredIncerceptor)
+  async updateFile(@Req() request: Request): Promise<FileDetailsJSON> {
+    const body = request.body;
+
+    if (!isRecord(body)) {
+      throw new HttpException('Invalid Input', HttpStatus.BAD_REQUEST);
+    }
+
+    throw new UnimplementedError();
   }
 
   @Post('delete')

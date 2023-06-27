@@ -7,7 +7,6 @@ import { FileController } from '@/src/file/file.controller';
 import { FileAPIController } from '@/src/file/file_api.controller';
 import { FileBackupService } from '@/src/file/file_backup_service';
 import { InMemoryFileDataService } from '@/src/file/file_data.service.memory';
-import { MongoFileDataService } from '@/src/file/file_data.service.mongo';
 import { FileFileDataService } from '@/src/file/file_data.service.file';
 
 import { isString } from '@/src/utils/type_guards';
@@ -17,12 +16,7 @@ const fileServiceFactory = {
   useFactory: async (configService: ConfigService) => {
     const type = configService.get('fileServerType');
 
-    if (type === 'mongo_db') {
-      const service = MongoFileDataService.makeFromConfig(configService);
-      service.initialize();
-
-      return service;
-    } else if (type === 'file') {
+    if (type === 'file') {
       const path = configService.get('fileServerDataPath');
 
       if (isString(path)) {

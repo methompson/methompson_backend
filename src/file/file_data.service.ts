@@ -43,6 +43,12 @@ export interface DeleteResultJSON {
   errors: string[];
 }
 
+export interface UpdateFileRequest {
+  id: string;
+  filename?: string;
+  isPrivate?: boolean;
+}
+
 @Injectable()
 export abstract class FileDataService implements Backupable {
   abstract addFiles(fileDetails: NewFileDetailsJSON[]): Promise<FileDetails[]>;
@@ -52,6 +58,8 @@ export abstract class FileDataService implements Backupable {
   abstract getTotalFiles(): Promise<number>;
 
   abstract getFileByName(name: string): Promise<FileDetails>;
+
+  abstract updateFile(details: UpdateFileRequest): Promise<FileDetails>;
 
   abstract deleteFiles(names: string[]): Promise<Record<string, DeleteDetails>>;
 

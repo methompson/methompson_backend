@@ -1,5 +1,4 @@
 import formidable from 'formidable';
-import { WithId, Document } from 'mongodb';
 
 import {
   isBoolean,
@@ -126,17 +125,6 @@ function newFileDetailsTest(input: unknown): string[] {
   return baseTest;
 }
 
-function fileDetailsTest(input: unknown): string[] {
-  if (!isRecord(input)) {
-    return ['root'];
-  }
-
-  const baseTest = fileDetailsBaseTest(input);
-  if (!isString(input.id)) baseTest.push('id');
-
-  return baseTest;
-}
-
 function isFileDetailsMetadata(input: unknown): input is FileDetailsMetadata {
   if (!isRecord(input)) {
     return false;
@@ -151,7 +139,9 @@ function isFileDetailsMetadata(input: unknown): input is FileDetailsMetadata {
   return true;
 }
 
-export interface FileDetailsBaseJSON {
+// TODO change originalFilename and filename to different values
+// Probably change filename to id and originalFilename to filename
+export interface FileDetailsJSON {
   originalFilename: string;
   filename: string;
   dateAdded: string;
@@ -162,7 +152,7 @@ export interface FileDetailsBaseJSON {
   metadata: FileDetailsMetadata;
 }
 
-export class FileDetailsBase {
+export class FileDetails {
   constructor(
     protected _originalFilename: string,
     protected _filename: string,
@@ -199,7 +189,7 @@ export class FileDetailsBase {
     return this._metadata;
   }
 
-  baseDetails(): FileDetailsBaseJSON {
+  baseDetails(): FileDetailsJSON {
     return {
       originalFilename: this.originalFilename,
       filename: this.filename,
@@ -212,7 +202,7 @@ export class FileDetailsBase {
     };
   }
 
-  toJSON(): FileDetailsBaseJSON {
+  toJSON(): FileDetailsJSON {
     return this.baseDetails();
   }
 
@@ -223,171 +213,15 @@ export class FileDetailsBase {
     };
   }
 
-  static fromJSON(input: unknown): FileDetailsBase {
-    if (!FileDetailsBase.isFileDetailsBaseJSON(input)) {
-      const errors = newFileDetailsTest(input);
-      throw new InvalidInputError(`Invalid File Details: ${errors}`);
-    }
-
-    const dateAdded = new Date(input.dateAdded);
-
-    return new FileDetailsBase(
-      input.originalFilename,
-      input.filename,
-      dateAdded,
-      input.authorId,
-      input.mimetype,
-      input.size,
-      input.isPrivate,
-      input.metadata,
-    );
-  }
-
-  static isFileDetailsBaseJSON(input: unknown): input is FileDetailsBaseJSON {
-    return fileDetailsBaseTest(input).length === 0;
-  }
-}
-
-export interface NewFileDetailsJSON {
-  filepath: string;
-  fileDetails: FileDetailsBase;
-}
-
-// export class NewFileDetails extends FileDetailsBase {
-//   constructor(
-//     // protected _filepath: string,
-//     originalFilename: string,
-//     filename: string,
-//     dateAdded: Date,
-//     authorId: string,
-//     mimetype: string,
-//     size: number,
-//     isPrivate: boolean,
-//     metadata: FileDetailsMetadata,
-//   ) {
-//     super(
-//       originalFilename,
-//       filename,
-//       dateAdded,
-//       authorId,
-//       mimetype,
-//       size,
-//       isPrivate,
-//       metadata,
-//     );
-//   }
-
-//   // get filepath(): string {
-//   //   return this._filepath;
-//   // }
-
-//   // toJSON(): NewFileDetailsJSON {
-//   //   return {
-//   //     ...super.toJSON(),
-//   //     filepath: this._filepath,
-//   //   };
-//   // }
-
-//   toMongo(): Record<string, unknown> {
-//     return {
-//       ...this.toJSON(),
-//       dateAdded: this.dateAdded,
-//     };
-//   }
-
-//   static fromJSON(input: unknown): NewFileDetails {
-//     if (!NewFileDetails.isNewFileDetailsJSON(input)) {
-//       const errors = newFileDetailsTest(input);
-//       throw new InvalidInputError(`Invalid File Details: ${errors}`);
-//     }
-
-//     const dateAdded = new Date(input.dateAdded);
-
-//     return new NewFileDetails(
-//       // input.filepath,
-//       input.originalFilename,
-//       input.filename,
-//       dateAdded,
-//       input.authorId,
-//       input.mimetype,
-//       input.size,
-//       input.isPrivate,
-//       input.metadata,
-//     );
-//   }
-
-//   static isNewFileDetailsJSON(input: unknown): input is NewFileDetailsJSON {
-//     return newFileDetailsTest(input).length === 0;
-//   }
-// }
-
-export interface FileDetailsJSON extends FileDetailsBaseJSON {
-  id: string;
-}
-
-export class FileDetails extends FileDetailsBase {
-  constructor(
-    protected _id: string,
-    originalFilename: string,
-    filename: string,
-    dateAdded: Date,
-    authorId: string,
-    mimetype: string,
-    size: number,
-    isPrivate: boolean,
-    metadata: FileDetailsMetadata,
-  ) {
-    super(
-      originalFilename,
-      filename,
-      dateAdded,
-      authorId,
-      mimetype,
-      size,
-      isPrivate,
-      metadata,
-    );
-  }
-
-  get id(): string {
-    return this._id;
-  }
-
-  toJSON(): FileDetailsJSON {
-    return {
-      ...super.toJSON(),
-      id: this.id,
-    };
-  }
-
-  static fromNewFileDetails(
-    id: string,
-    newFileDetails: NewFileDetailsJSON,
-  ): FileDetails {
-    const { fileDetails } = newFileDetails;
-    return new FileDetails(
-      id,
-      fileDetails.originalFilename,
-      fileDetails.filename,
-      new Date(fileDetails.dateAdded),
-      fileDetails.authorId,
-      fileDetails.mimetype,
-      fileDetails.size,
-      fileDetails.isPrivate,
-      fileDetails.metadata,
-    );
-  }
-
   static fromJSON(input: unknown): FileDetails {
-    if (!FileDetails.isFileDetailsJSON(input)) {
-      const errors = fileDetailsTest(input);
+    if (!FileDetails.isFileDetailsBaseJSON(input)) {
+      const errors = fileDetailsBaseTest(input);
       throw new InvalidInputError(`Invalid File Details Input: ${errors}`);
     }
 
     const dateAdded = new Date(input.dateAdded);
 
     return new FileDetails(
-      input.id,
       input.originalFilename,
       input.filename,
       dateAdded,
@@ -399,19 +233,12 @@ export class FileDetails extends FileDetailsBase {
     );
   }
 
-  static fromMongoDB(input: WithId<Document> | Document): FileDetails {
-    // console.log(JSON.stringify(input));
-    const dateAdded = input?.dateAdded?.toISOString();
-    const id = input?._id?.toString();
-
-    return FileDetails.fromJSON({
-      ...input,
-      id,
-      dateAdded,
-    });
+  static isFileDetailsBaseJSON(input: unknown): input is FileDetailsJSON {
+    return fileDetailsBaseTest(input).length === 0;
   }
+}
 
-  static isFileDetailsJSON(input: unknown): input is FileDetailsJSON {
-    return fileDetailsTest(input).length === 0;
-  }
+export interface NewFileDetailsJSON {
+  filepath: string;
+  fileDetails: FileDetails;
 }

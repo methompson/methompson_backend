@@ -113,7 +113,6 @@ describe('FileController', () => {
   } as formidable.File;
 
   const fileDetailsJSON1: FileDetailsJSON = {
-    id: id1,
     originalFilename: originalFilename1,
     filename: newFilename1,
     dateAdded: new Date(1).toISOString(),
@@ -126,7 +125,6 @@ describe('FileController', () => {
   const fileDetails1 = FileDetails.fromJSON(fileDetailsJSON1);
 
   const fileDetailsJSON2: FileDetailsJSON = {
-    id: id2,
     originalFilename: originalFilename2,
     filename: newFilename2,
     dateAdded: new Date(2).toISOString(),

@@ -8,7 +8,6 @@ import {
 } from '@/src/file/file_data.service.file';
 import {
   FileDetailsMetadata,
-  FileDetailsBase,
   FileDetails,
   NewFileDetailsJSON,
 } from '@/src/models/file_models';
@@ -26,7 +25,7 @@ const metadata1: FileDetailsMetadata = {};
 
 const nfd1: NewFileDetailsJSON = {
   filepath,
-  fileDetails: new FileDetailsBase(
+  fileDetails: new FileDetails(
     originalFilename1,
     filename1,
     dateAdded1,
@@ -49,7 +48,7 @@ const metadata2: FileDetailsMetadata = {};
 
 const nfd2: NewFileDetailsJSON = {
   filepath,
-  fileDetails: new FileDetailsBase(
+  fileDetails: new FileDetails(
     originalFilename2,
     filename2,
     dateAdded2,
@@ -61,8 +60,8 @@ const nfd2: NewFileDetailsJSON = {
   ),
 };
 
-const fd1 = FileDetails.fromNewFileDetails('id1', nfd1);
-const fd2 = FileDetails.fromNewFileDetails('id2', nfd2);
+const fd1 = nfd1.fileDetails;
+const fd2 = nfd2.fileDetails;
 
 jest.mock('fs/promises', () => {
   const mkdir = jest.fn();

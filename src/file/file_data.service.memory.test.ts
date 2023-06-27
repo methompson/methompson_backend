@@ -3,7 +3,6 @@ import { FileSortOption } from '@/src/file/file_data.service';
 import {
   FileDetails,
   FileDetailsMetadata,
-  FileDetailsBase,
   NewFileDetailsJSON,
 } from '@/src/models/file_models';
 
@@ -20,7 +19,7 @@ const metadata1: FileDetailsMetadata = {};
 
 const newFile1: NewFileDetailsJSON = {
   filepath,
-  fileDetails: new FileDetailsBase(
+  fileDetails: new FileDetails(
     originalFileName1,
     filename1,
     dateAdded1,
@@ -43,7 +42,7 @@ const metadata2: FileDetailsMetadata = {};
 
 const newFile2: NewFileDetailsJSON = {
   filepath,
-  fileDetails: new FileDetailsBase(
+  fileDetails: new FileDetails(
     originalFileName2,
     filename2,
     dateAdded2,
@@ -54,9 +53,6 @@ const newFile2: NewFileDetailsJSON = {
     metadata2,
   ),
 };
-
-const id1 = 'ca1fafe9-7fab-4401-82dc-2b3f3f8cd1e1';
-const id2 = 'f829b909-0b29-401f-9a77-fb3a6e19e012';
 
 describe('InMemoryFileDataService', () => {
   describe('addFiles', () => {
@@ -159,8 +155,8 @@ describe('InMemoryFileDataService', () => {
 
   describe('getFileByName', () => {
     test('Returns the file if its filename exists', async () => {
-      const file1 = FileDetails.fromNewFileDetails(id1, newFile1);
-      const file2 = FileDetails.fromNewFileDetails(id2, newFile2);
+      const file1 = newFile1.fileDetails;
+      const file2 = newFile2.fileDetails;
 
       const fds = new InMemoryFileDataService([file1, file2]);
 
@@ -172,8 +168,8 @@ describe('InMemoryFileDataService', () => {
     });
 
     test('Throws an error if its id does not exist', async () => {
-      const file1 = FileDetails.fromNewFileDetails(id1, newFile1);
-      const file2 = FileDetails.fromNewFileDetails(id2, newFile2);
+      const file1 = newFile1.fileDetails;
+      const file2 = newFile2.fileDetails;
 
       const fds = new InMemoryFileDataService([file1, file2]);
 
@@ -183,8 +179,8 @@ describe('InMemoryFileDataService', () => {
 
   describe('deleteFile', () => {
     test('Deletes a file form the files object', async () => {
-      const file1 = FileDetails.fromNewFileDetails(id1, newFile1);
-      const file2 = FileDetails.fromNewFileDetails(id2, newFile2);
+      const file1 = newFile1.fileDetails;
+      const file2 = newFile2.fileDetails;
 
       const fds = new InMemoryFileDataService([file1, file2]);
       expect(fds.filesList.length).toBe(2);
@@ -201,8 +197,8 @@ describe('InMemoryFileDataService', () => {
     });
 
     test('Deletes multiple files from the files object', async () => {
-      const file1 = FileDetails.fromNewFileDetails(id1, newFile1);
-      const file2 = FileDetails.fromNewFileDetails(id2, newFile2);
+      const file1 = newFile1.fileDetails;
+      const file2 = newFile2.fileDetails;
 
       const fds = new InMemoryFileDataService([file1, file2]);
       expect(fds.filesList.length).toBe(2);
@@ -224,8 +220,8 @@ describe('InMemoryFileDataService', () => {
     });
 
     test('Provides error information for all files not deleted', async () => {
-      const file1 = FileDetails.fromNewFileDetails(id1, newFile1);
-      const file2 = FileDetails.fromNewFileDetails(id2, newFile2);
+      const file1 = newFile1.fileDetails;
+      const file2 = newFile2.fileDetails;
 
       const fds = new InMemoryFileDataService([file1, file2]);
       expect(fds.filesList.length).toBe(2);
