@@ -21,6 +21,7 @@ import { LoggerService } from '@/src/logger/logger.service';
 import {
   DeleteResultJSON,
   FileDataService,
+  UpdateFileRequest,
 } from '@/src/file/file_data.service';
 import {
   FileDetailsJSON,
@@ -32,6 +33,7 @@ import { FileSystemService } from '@/src/file/file_system_service';
 import { FileOpsService } from '@/src/file/file_ops.service';
 
 import {
+  isBoolean,
   isNullOrUndefined,
   isPromiseRejected,
   isRecord,
@@ -41,6 +43,7 @@ import {
 import { getIntFromString } from '@/src/utils/get_number_from_string';
 import {
   DatabaseNotAvailableException,
+  InvalidInputError,
   UnimplementedError,
 } from '@/src/errors';
 
@@ -223,9 +226,8 @@ export class FileAPIController {
   }
 
   /**
-   * Expects a request with a body that is an object. Each key is a file id and
-   * the value is the respective new metadata for the file including. Currently
-   * we will expect the filename and isPrivate values to be editable.
+   * Expects a request with a body that is an object. Currently we will expect the
+   * filename and isPrivate values to be editable. We expect an id to be provided.
    */
   @Post('update')
   @UseInterceptors(AuthRequiredIncerceptor)
@@ -234,6 +236,15 @@ export class FileAPIController {
 
     if (!isRecord(body)) {
       throw new HttpException('Invalid Input', HttpStatus.BAD_REQUEST);
+    }
+
+    try {
+      const updateBody = this.parseUpdateBody(body);
+      const result = await this.fileService.updateFile(updateBody);
+
+      return result.toJSON();
+    } catch (e) {
+      throw new HttpException('', HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     throw new UnimplementedError();
@@ -268,7 +279,7 @@ export class FileAPIController {
         `Error Deleting File: ${deleteFilesDBResult.reason}`,
       );
 
-      throw new HttpException('', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException('', HttpStatus.BAD_REQUEST);
     }
 
     // If there's an error from the file system
@@ -387,5 +398,29 @@ export class FileAPIController {
         },
       );
     });
+  }
+
+  parseUpdateBody(body: unknown): UpdateFileRequest {
+    if (!isRecord(body)) {
+      throw new InvalidInputError('Invalid Body');
+    }
+
+    if (!isString(body.id)) {
+      throw new InvalidInputError('No id Provided');
+    }
+
+    const updateRequest: UpdateFileRequest = {
+      id: body.id,
+    };
+
+    if (isString(body.filename)) {
+      updateRequest.filename = body.filename;
+    }
+
+    if (isBoolean(body.isPrivate)) {
+      updateRequest.isPrivate = body.isPrivate;
+    }
+
+    return updateRequest;
   }
 }

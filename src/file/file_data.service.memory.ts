@@ -132,7 +132,7 @@ export class InMemoryFileDataService implements FileDataService {
       throw new NotFoundError('File Not Found');
     }
 
-    // file.update(details);
+    file.update(details);
 
     return file;
   }

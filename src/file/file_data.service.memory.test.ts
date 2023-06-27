@@ -14,21 +14,23 @@ const dateAdded1 = new Date(1);
 const authorId1 = 'authorId1 ;aoidsl';
 const mimetype1 = 'image/jpeg';
 const size1 = 1024;
-const isPriave1 = true;
+const isPrivate1 = true;
 const metadata1: FileDetailsMetadata = {};
+
+const file1 = new FileDetails(
+  originalFileName1,
+  filename1,
+  dateAdded1,
+  authorId1,
+  mimetype1,
+  size1,
+  isPrivate1,
+  metadata1,
+);
 
 const newFile1: NewFileDetailsJSON = {
   filepath,
-  fileDetails: new FileDetails(
-    originalFileName1,
-    filename1,
-    dateAdded1,
-    authorId1,
-    mimetype1,
-    size1,
-    isPriave1,
-    metadata1,
-  ),
+  fileDetails: file1,
 };
 
 const originalFileName2 = 'abc originalFileName2 aspdfiln';
@@ -37,21 +39,23 @@ const dateAdded2 = new Date(2);
 const authorId2 = 'authorId2 awosdln';
 const mimetype2 = 'application/json';
 const size2 = 2048;
-const isPriave2 = false;
+const isPrivate2 = false;
 const metadata2: FileDetailsMetadata = {};
+
+const file2 = new FileDetails(
+  originalFileName2,
+  filename2,
+  dateAdded2,
+  authorId2,
+  mimetype2,
+  size2,
+  isPrivate2,
+  metadata2,
+);
 
 const newFile2: NewFileDetailsJSON = {
   filepath,
-  fileDetails: new FileDetails(
-    originalFileName2,
-    filename2,
-    dateAdded2,
-    authorId2,
-    mimetype2,
-    size2,
-    isPriave2,
-    metadata2,
-  ),
+  fileDetails: file2,
 };
 
 describe('InMemoryFileDataService', () => {
@@ -137,9 +141,6 @@ describe('InMemoryFileDataService', () => {
 
   describe('getFileByName', () => {
     test('Returns the file if its filename exists', async () => {
-      const file1 = newFile1.fileDetails;
-      const file2 = newFile2.fileDetails;
-
       const fds = new InMemoryFileDataService([file1, file2]);
 
       const result1 = await fds.getFileByName(file1.id);
@@ -150,12 +151,66 @@ describe('InMemoryFileDataService', () => {
     });
 
     test('Throws an error if its id does not exist', async () => {
-      const file1 = newFile1.fileDetails;
-      const file2 = newFile2.fileDetails;
-
       const fds = new InMemoryFileDataService([file1, file2]);
 
       expect(() => fds.getFileByName('abc')).rejects.toThrow();
+    });
+  });
+
+  describe('updateFile', () => {
+    test('Updates a filename in the files object', async () => {
+      const file1Copy = FileDetails.fromJSON(file1.toJSON());
+      const fds = new InMemoryFileDataService([file1Copy]);
+
+      expect(fds.files[file1Copy.id].filename).toBe(originalFileName1);
+
+      const newFilename = 'new filename';
+
+      await fds.updateFile({
+        id: file1Copy.id,
+        filename: newFilename,
+      });
+
+      expect(fds.files[file1Copy.id].filename).toBe(newFilename);
+    });
+
+    test('Updates isPrivate in the files object', async () => {
+      const file1Copy = FileDetails.fromJSON(file1.toJSON());
+      const fds = new InMemoryFileDataService([file1Copy]);
+
+      expect(fds.files[file1Copy.id].isPrivate).toBe(isPrivate1);
+
+      const newIsPrivate = !isPrivate1;
+
+      await fds.updateFile({
+        id: file1Copy.id,
+        isPrivate: newIsPrivate,
+      });
+
+      expect(fds.files[file1Copy.id].isPrivate).toBe(newIsPrivate);
+    });
+
+    test('Returns the result', async () => {
+      const file1Copy = FileDetails.fromJSON(file1.toJSON());
+      const fds = new InMemoryFileDataService([file1Copy]);
+
+      expect(fds.files[file1Copy.id].isPrivate).toBe(isPrivate1);
+      expect(fds.files[file1Copy.id].filename).toBe(originalFileName1);
+
+      const newFilename = 'new filename';
+      const newIsPrivate = !isPrivate1;
+
+      const result = await fds.updateFile({
+        id: file1Copy.id,
+        filename: newFilename,
+        isPrivate: newIsPrivate,
+      });
+
+      expect(result.toJSON()).toStrictEqual({
+        ...file1Copy.toJSON(),
+        filename: newFilename,
+        isPrivate: newIsPrivate,
+      });
     });
   });
 

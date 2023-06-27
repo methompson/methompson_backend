@@ -7,6 +7,7 @@ import {
   isString,
 } from '@/src/utils/type_guards';
 import { InvalidInputError } from '@/src/errors';
+import { UpdateFileRequest } from '../file/file_data.service';
 
 interface FilenameComponents {
   name: string;
@@ -169,6 +170,11 @@ export class FileDetails {
       isPrivate: this.isPrivate,
       metadata: this.metadata,
     };
+  }
+
+  update(details: UpdateFileRequest) {
+    this._filename = details.filename ?? this.filename;
+    this._isPrivate = details.isPrivate ?? this.isPrivate;
   }
 
   static fromJSON(input: unknown): FileDetails {

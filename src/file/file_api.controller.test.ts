@@ -522,6 +522,35 @@ describe('FileController', () => {
     });
   });
 
+  describe('updateFile', () => {
+    test('Returns a JSON object with update data', async () => {
+      const file1 = FileDetails.fromJSON(fileDetails1.toJSON());
+      const fileDataService = new InMemoryFileDataService([file1]);
+
+      const fc = new FileAPIController(
+        new ConfigService(),
+        fileDataService,
+        new LoggerService([]),
+      );
+
+      const newIsPrivate = !file1.isPrivate;
+
+      const req = {
+        body: {
+          id: file1.id,
+          isPrivate: newIsPrivate,
+        },
+      } as unknown as Request;
+
+      const result = await fc.updateFile(req);
+
+      expect(result).toMatchObject({
+        ...file1.toJSON(),
+        isPrivate: newIsPrivate,
+      });
+    });
+  });
+
   describe('deleteFiles', () => {
     test('Returns a JSON object of data about the deletion', async () => {
       const fds = new InMemoryFileDataService([fileDetails1, fileDetails2]);
