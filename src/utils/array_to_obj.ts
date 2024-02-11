@@ -13,3 +13,17 @@ export function arrayToObject<T>(
 
   return output;
 }
+
+export function arrayToMappedObject<T, U>(
+  input: T[],
+  keygen: (input: T) => string | number,
+  map: (input: T) => U,
+): Record<string | number, U> {
+  const output: Record<string | number, U> = {};
+
+  for (const i of input) {
+    output[keygen(i)] = map(i);
+  }
+
+  return output;
+}
