@@ -1,3 +1,5 @@
+import { DateTime } from 'luxon';
+
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return (
     !isNullOrUndefined(value) &&
@@ -67,4 +69,34 @@ export function isPromiseFulfilled<T>(
 
 export function isError(input: unknown): input is Error {
   return isRecord(input) && input instanceof Error;
+}
+
+export type ValidDateTime = DateTime;
+export type ValidDateTimeString = string;
+export type ValidTimeString = string;
+
+export function isValidDateTime(input: unknown): input is ValidDateTime {
+  if (!DateTime.isDateTime(input)) return false;
+
+  return !Number.isNaN(input.toMillis());
+}
+
+export function isValidTime(input: unknown): boolean {
+  if (!isString(input)) return false;
+
+  return DateTime.fromFormat(input, 'H:mm').isValid;
+}
+
+export function isValidTimeString(input: unknown): input is ValidTimeString {
+  return isValidTime(input);
+}
+
+export function isValidDateTimeString(
+  input: unknown,
+): input is ValidDateTimeString {
+  if (!isString(input)) return false;
+
+  const date = DateTime.fromISO(input);
+
+  return isValidDateTime(date);
 }
