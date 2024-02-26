@@ -222,4 +222,22 @@ describe('DepositConversion', () => {
       ]);
     });
   });
+
+  describe('fromNewDepositConversion', () => {
+    test('returns a new DepositConversion based on valid input', () => {
+      const input = DepositConversion.fromJSON(validInput);
+      const newId = 'newId';
+      const result = DepositConversion.fromNewDepositConversion(newId, input);
+
+      expect(result instanceof DepositConversion).toBe(true);
+      expect(result.id).toBe(newId);
+      expect(result.userId).toBe(input.userId);
+      expect(result.name).toBe(input.name);
+      expect(result.rateName).toBe(input.rateName);
+      expect(result.depositsPer).toBe(input.depositsPer);
+      expect(result.tokensPer).toBe(input.tokensPer);
+      expect(result.minDeposit).toBe(input.minDeposit);
+      expect(result.maxDeposit).toBe(input.maxDeposit);
+    });
+  });
 });

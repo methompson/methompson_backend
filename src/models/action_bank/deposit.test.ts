@@ -6,6 +6,8 @@ describe('Deposit', () => {
     userId: 'userId',
     date: '2023-02-25T00:00:00.000-06:00',
     depositQuantity: 1,
+    conversionRate: 1,
+    depositConversionName: 'depositConversionName',
   };
 
   describe('toJSON', () => {
@@ -22,10 +24,14 @@ describe('Deposit', () => {
     test('returns a new Deposit based on valid input', () => {
       const result = Deposit.fromJSON(validInput);
       expect(result instanceof Deposit).toBe(true);
-      expect(result.id).toBe('id');
-      expect(result.userId).toBe('userId');
-      expect(result.date.toISO()).toBe('2023-02-25T00:00:00.000-06:00');
-      expect(result.depositQuantity).toBe(1);
+      expect(result.id).toBe(validInput.id);
+      expect(result.userId).toBe(validInput.userId);
+      expect(result.date.toISO()).toBe(validInput.date);
+      expect(result.depositQuantity).toBe(validInput.depositQuantity);
+      expect(result.conversionRate).toBe(validInput.conversionRate);
+      expect(result.depositConversionName).toBe(
+        validInput.depositConversionName,
+      );
     });
 
     test('throws an error if values are missing from the input', () => {
@@ -45,6 +51,14 @@ describe('Deposit', () => {
 
       invalidInput = { ...validInput };
       delete invalidInput.depositQuantity;
+      expect(() => Deposit.fromJSON(invalidInput)).toThrow();
+
+      invalidInput = { ...validInput };
+      delete invalidInput.conversionRate;
+      expect(() => Deposit.fromJSON(invalidInput)).toThrow();
+
+      invalidInput = { ...validInput };
+      delete invalidInput.depositConversionName;
       expect(() => Deposit.fromJSON(invalidInput)).toThrow();
     });
 
@@ -116,6 +130,16 @@ describe('Deposit', () => {
       expect(Deposit.DepositJSONTest(invalidInput)).toEqual([
         'depositQuantity',
       ]);
+
+      invalidInput = { ...validInput };
+      delete invalidInput.conversionRate;
+      expect(Deposit.DepositJSONTest(invalidInput)).toEqual(['conversionRate']);
+
+      invalidInput = { ...validInput };
+      delete invalidInput.depositConversionName;
+      expect(Deposit.DepositJSONTest(invalidInput)).toEqual([
+        'depositConversionName',
+      ]);
     });
 
     test('returns root if the input is not an object', () => {
@@ -124,6 +148,24 @@ describe('Deposit', () => {
       expect(Deposit.DepositJSONTest(true)).toEqual(['root']);
       expect(Deposit.DepositJSONTest([])).toEqual(['root']);
       expect(Deposit.DepositJSONTest(null)).toEqual(['root']);
+    });
+  });
+
+  describe('fromNewDeposit', () => {
+    test('returns a new Deposit based on valid input', () => {
+      const depositInput = Deposit.fromJSON(validInput);
+      const newId = 'newId';
+      const result = Deposit.fromNewDeposit(newId, depositInput);
+
+      expect(result instanceof Deposit).toBe(true);
+      expect(result.id).toBe(newId);
+      expect(result.userId).toBe(depositInput.userId);
+      expect(result.date.toISO()).toBe(depositInput.date.toISO());
+      expect(result.depositQuantity).toBe(depositInput.depositQuantity);
+      expect(result.conversionRate).toBe(depositInput.conversionRate);
+      expect(result.depositConversionName).toBe(
+        depositInput.depositConversionName,
+      );
     });
   });
 });

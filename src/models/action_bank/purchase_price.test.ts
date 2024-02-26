@@ -132,4 +132,18 @@ describe('PurchasePrice', () => {
       expect(PurchasePrice.PurchasePriceJSONTest(null)).toEqual(['root']);
     });
   });
+
+  describe('fromNewPurchasePrice', () => {
+    test('returns a new PurchasePrice based on valid input', () => {
+      const input = PurchasePrice.fromJSON(validInput);
+      const newId = 'newId';
+      const result = PurchasePrice.fromNewPurchasePrice(newId, input);
+
+      expect(result instanceof PurchasePrice).toBe(true);
+      expect(result.id).toBe(newId);
+      expect(result.userId).toBe(input.userId);
+      expect(result.name).toBe(input.name);
+      expect(result.price).toBe(input.price);
+    });
+  });
 });
