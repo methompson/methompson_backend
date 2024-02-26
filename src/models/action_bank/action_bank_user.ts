@@ -61,4 +61,14 @@ export class ActionBankUser {
 
     return output;
   }
+
+  static fromNewActionBankUser(
+    id: string,
+    input: ActionBankUser,
+  ): ActionBankUser {
+    return ActionBankUser.fromJSON({
+      ...input.toJSON(),
+      id,
+    });
+  }
 }

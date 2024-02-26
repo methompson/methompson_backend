@@ -69,4 +69,14 @@ export class PurchasePrice {
 
     return output;
   }
+
+  static fromNewPurchasePrice(
+    id: string,
+    purchasePrice: PurchasePrice,
+  ): PurchasePrice {
+    return PurchasePrice.fromJSON({
+      ...purchasePrice.toJSON(),
+      id,
+    });
+  }
 }

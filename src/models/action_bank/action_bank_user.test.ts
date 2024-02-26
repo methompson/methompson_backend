@@ -118,4 +118,17 @@ describe('ActionBankUser', () => {
       expect(ActionBankUser.ActionBankUserJSONTest(null)).toEqual(['root']);
     });
   });
+
+  describe('fromNewActionBankUser', () => {
+    test('returns a new ActionBankUser based on valid input', () => {
+      const userInput = ActionBankUser.fromJSON(validInput);
+      const newId = 'newId';
+      const result = ActionBankUser.fromNewActionBankUser(newId, userInput);
+
+      expect(result instanceof ActionBankUser).toBe(true);
+      expect(result.id).toBe(newId);
+      expect(result.name).toBe(userInput.name);
+      expect(result.currentTokens).toBe(userInput.currentTokens);
+    });
+  });
 });

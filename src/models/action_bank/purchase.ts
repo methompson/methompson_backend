@@ -95,4 +95,11 @@ export class Purchase {
 
     return output;
   }
+
+  static fromNewPurchase(id: string, purchase: Purchase): Purchase {
+    return Purchase.fromJSON({
+      ...purchase.toJSON(),
+      id,
+    });
+  }
 }

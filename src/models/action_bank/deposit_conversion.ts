@@ -123,4 +123,14 @@ export class DepositConversion {
 
     return output;
   }
+
+  static fromNewDepositConversion(
+    id: string,
+    input: DepositConversion,
+  ): DepositConversion {
+    return DepositConversion.fromJSON({
+      ...input.toJSON(),
+      id,
+    });
+  }
 }

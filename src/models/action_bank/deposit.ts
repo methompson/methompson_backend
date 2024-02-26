@@ -12,6 +12,8 @@ export interface DepositJSON {
   userId: string;
   date: string;
   depositQuantity: number;
+  conversionRate: number;
+  depositConversionName: string;
 }
 
 export class Deposit {
@@ -20,6 +22,8 @@ export class Deposit {
     protected _userId: string,
     protected _date: DateTime<true>,
     protected _depositQuantity: number,
+    protected _conversionRate: number,
+    protected _depositeConversionName: string,
   ) {}
 
   get id(): string {
@@ -38,12 +42,22 @@ export class Deposit {
     return this._depositQuantity;
   }
 
+  get conversionRate(): number {
+    return this._conversionRate;
+  }
+
+  get depositConversionName(): string {
+    return this._depositeConversionName;
+  }
+
   toJSON(): DepositJSON {
     return {
       id: this.id,
       userId: this.userId,
       date: this.date.toISO(),
       depositQuantity: this.depositQuantity,
+      conversionRate: this.conversionRate,
+      depositConversionName: this.depositConversionName,
     };
   }
 
@@ -58,7 +72,14 @@ export class Deposit {
       throw new Error('Invalid date');
     }
 
-    return new Deposit(input.id, input.userId, dateTime, input.depositQuantity);
+    return new Deposit(
+      input.id,
+      input.userId,
+      dateTime,
+      input.depositQuantity,
+      input.conversionRate,
+      input.depositConversionName,
+    );
   }
 
   static isDepositJSON(input: unknown): input is DepositJSON {
@@ -78,7 +99,17 @@ export class Deposit {
     if (!isString(input.userId)) output.push('userId');
     if (!isValidDateTimeString(input.date)) output.push('date');
     if (!isNumber(input.depositQuantity)) output.push('depositQuantity');
+    if (!isNumber(input.conversionRate)) output.push('conversionRate');
+    if (!isString(input.depositConversionName))
+      output.push('depositConversionName');
 
     return output;
+  }
+
+  static fromNewDeposit(id: string, input: Deposit): Deposit {
+    return Deposit.fromJSON({
+      ...input.toJSON(),
+      id,
+    });
   }
 }
