@@ -185,6 +185,7 @@ describe('InMemoryDepositService', () => {
 
       expect(deposit4).toBeDefined();
       expect(deposit5).toBeDefined();
+      expect(deposit6).toBeDefined();
 
       const result = await service.getDeposits({
         userId: 'userId1',

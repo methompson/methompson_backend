@@ -77,7 +77,7 @@ export class InMemoryPurchaseService extends PurchaseService {
 
     this._purchases[id] = purchase;
 
-    return purchase;
+    return existingPurchase;
   }
 
   async deletePurchase(purchaseId: string): Promise<Purchase> {
