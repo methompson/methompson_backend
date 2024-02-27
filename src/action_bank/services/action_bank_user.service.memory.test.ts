@@ -51,7 +51,14 @@ describe('InMemoryActionBankService', () => {
       });
     });
 
-    test('if there are no users, it returns an empty object', () => {});
+    test('if there are no users, it returns an empty object', () => {
+      const service = new InMemoryActionBankService();
+
+      const actionBankUsers = service.actionBankUsers;
+
+      expect(actionBankUsers).toEqual({});
+      expect(Object.values(actionBankUsers).length).toBe(0);
+    });
 
     test('revising the actionBankUsers object does not revise the stored version', () => {
       const service = new InMemoryActionBankService([user1, user2, user3]);
@@ -95,11 +102,13 @@ describe('InMemoryActionBankService', () => {
 
       list.push(user3);
 
+      expect(list.length).toBe(3);
       expect(Object.values(service.actionBankUsers).length).toBe(2);
 
       list.pop();
       list.pop();
 
+      expect(list.length).toBe(1);
       expect(Object.values(service.actionBankUsers).length).toBe(2);
     });
   });
@@ -116,7 +125,7 @@ describe('InMemoryActionBankService', () => {
       expect(result.includes(user3));
     });
 
-    test('returns paginated users if there are more users than pages', async () => {
+    test('returns paginated users if there are more users than the pagination', async () => {
       const users: ActionBankUser[] = [];
 
       for (let i = 4; i < 10; i++) {
@@ -196,11 +205,15 @@ describe('InMemoryActionBankService', () => {
     test('returns an empty array if the page is beyond the range of users', async () => {
       const service = new InMemoryActionBankService([user1, user2, user3]);
 
-      const result = await service.getActionBankUsers({
+      const resultA = await service.getActionBankUsers({
+        page: 1,
+      });
+      expect(resultA.length).toBe(3);
+
+      const resultB = await service.getActionBankUsers({
         page: 2,
       });
-
-      expect(result.length).toBe(0);
+      expect(resultB.length).toBe(0);
     });
 
     test('returns a single user if an id is provided', async () => {
@@ -262,7 +275,7 @@ describe('InMemoryActionBankService', () => {
 
       const result = await service.updateActionBankUser(newUser);
 
-      expect(result).toBe(newUser);
+      expect(result).toBe(user1);
       expect(service.actionBankUsersList.length).toBe(3);
     });
 

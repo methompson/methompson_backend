@@ -26,7 +26,7 @@ export class InMemoryDepositService extends DepositService {
   }
 
   get depositsList(): Deposit[] {
-    const list = Object.values(this.depositsList);
+    const list = Object.values(this.deposits);
 
     list.sort((a, b) => a.date.toMillis() - b.date.toMillis());
 
@@ -78,7 +78,7 @@ export class InMemoryDepositService extends DepositService {
 
     this._deposits[id] = deposit;
 
-    return deposit;
+    return existingDeposit;
   }
 
   async deleteDeposit(depositId: string): Promise<Deposit> {

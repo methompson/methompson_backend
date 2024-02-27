@@ -75,7 +75,7 @@ export class InMemoryActionBankService extends ActionBankUserService {
 
     this._actionBankUsers[id] = user;
 
-    return user;
+    return existingUser;
   }
 
   async deleteActionBankUser(userId: string): Promise<ActionBankUser> {

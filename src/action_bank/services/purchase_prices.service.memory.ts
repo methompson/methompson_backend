@@ -70,12 +70,12 @@ export class InMemoryPurchasePricesService extends PurchasePricesService {
     const existing = this._purchasePrices[id];
 
     if (isNullOrUndefined(existing)) {
-      throw new Error(`User with ID ${id} not found`);
+      throw new Error(`Purchase Price with ID ${id} not found`);
     }
 
     this._purchasePrices[id] = purchasePrice;
 
-    return purchasePrice;
+    return existing;
   }
 
   async deletePurchasePrice(purchasePriceId: string): Promise<PurchasePrice> {

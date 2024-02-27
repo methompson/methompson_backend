@@ -22,7 +22,7 @@ export interface PurchaseInputOptions extends GetPageOptions {
 
 export interface DepositInputOptions extends GetPageOptions {
   userId: string;
-  startDate: DateTime;
+  startDate?: DateTime;
   endDate?: DateTime;
   depositConversionId?: string;
 }

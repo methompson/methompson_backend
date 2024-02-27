@@ -77,7 +77,7 @@ export class InMemoryDepositConversionsService extends DepositConversionsService
 
     this._depositConversions[id] = depositConversion;
 
-    return depositConversion;
+    return existingDeposit;
   }
 
   async deleteDepositConversion(
@@ -86,7 +86,9 @@ export class InMemoryDepositConversionsService extends DepositConversionsService
     const depositConversion = this._depositConversions[depositConversionId];
 
     if (isNullOrUndefined(depositConversion)) {
-      throw new Error(`User with ID ${depositConversionId} not found`);
+      throw new Error(
+        `Deposit Conversion with ID ${depositConversionId} not found`,
+      );
     }
 
     delete this._depositConversions[depositConversionId];
