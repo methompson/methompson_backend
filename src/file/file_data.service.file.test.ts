@@ -129,7 +129,7 @@ describe('FileFileDataService', () => {
       expect(svc.filesList.length).toBe(1);
 
       const post = svc.filesList[0];
-      expect(post.toJSON()).toStrictEqual(
+      expect(post?.toJSON()).toStrictEqual(
         expect.objectContaining(nfd1.fileDetails.toJSON()),
       );
     });

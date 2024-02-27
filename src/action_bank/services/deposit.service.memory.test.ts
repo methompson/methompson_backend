@@ -187,6 +187,10 @@ describe('InMemoryDepositService', () => {
       expect(deposit5).toBeDefined();
       expect(deposit6).toBeDefined();
 
+      if (!deposit4 || !deposit5 || !deposit6) {
+        throw new Error('Invalid deposits');
+      }
+
       const result = await service.getDeposits({
         userId: 'userId1',
         page: 1,
@@ -240,6 +244,10 @@ describe('InMemoryDepositService', () => {
         page: 2,
         pagination: 5,
       });
+
+      if (!deposit7 || !deposit8 || !deposit9 || !deposit10 || !deposit11) {
+        throw new Error('Invalid deposits');
+      }
 
       expect(result.length).toBe(5);
       expect(result.includes(deposit7)).toBeTruthy();

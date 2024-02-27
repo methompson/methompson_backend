@@ -388,6 +388,9 @@ export class FileAPIController {
                 uploadedFiles.push(UploadedFile.fromFormidable(file));
               }
             } else {
+              if (isNullOrUndefined(files.file)) {
+                throw new Error('No Files Uploaded');
+              }
               uploadedFiles.push(UploadedFile.fromFormidable(files.file));
             }
 

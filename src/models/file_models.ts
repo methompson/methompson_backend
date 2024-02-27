@@ -48,7 +48,7 @@ export class UploadedFile {
 
     return {
       name: split.slice(0, splitPoint).join('.'),
-      extension: split[splitPoint],
+      extension: split[splitPoint] ?? '',
     };
   }
 

@@ -5,9 +5,10 @@ import { ActionBankUser } from '@/src/models/action_bank/action_bank_user';
 import { isNullOrUndefined, isString } from '@/src/utils/type_guards';
 import { ActionBankUserService } from './action_bank_user.service';
 import { GetActionBankUsersOptions } from '@/src/action_bank/types';
+import { NotFoundError } from '@/src/errors';
 
 @Injectable()
-export class InMemoryActionBankService extends ActionBankUserService {
+export class InMemoryActionBankUserService extends ActionBankUserService {
   // Key is the ID
   protected _actionBankUsers: Record<string, ActionBankUser> = {};
 
@@ -42,7 +43,7 @@ export class InMemoryActionBankService extends ActionBankUserService {
       const user = this._actionBankUsers[userId];
 
       if (isNullOrUndefined(user)) {
-        throw new Error(`User with ID ${userId} not found`);
+        throw new NotFoundError(`User with ID ${userId} not found`);
       }
 
       return [user];

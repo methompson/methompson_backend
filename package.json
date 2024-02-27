@@ -14,7 +14,8 @@
     "compile_bundle": "tsup ./src/main.ts",
     "dev": "tsup ./src/main.ts --watch --env.NODE_ENV development --onSuccess \"node dist/main.js\"",
     "dev_noauth": "tsup ./src/main.ts --watch --env.NODE_ENV development  --onSuccess \"node dist/main.js noauth\"",
-    "typescript_errors": "tsc --noEmit"
+    "tsLint": "eslint --fix-dry-run --ext .ts src",
+    "typescriptErrorCheck": "tsc --noEmit"
   },
   "dependencies": {
     "@nestjs/common": "^9.0.0",

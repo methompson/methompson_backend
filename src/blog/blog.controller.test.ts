@@ -79,10 +79,10 @@ describe('BlogController', () => {
       expect(result.morePages).toBe(false);
 
       const resultPost1 = result.posts[0];
-      expect(resultPost1.toJSON()).toStrictEqual(post1.toJSON());
+      expect(resultPost1?.toJSON()).toStrictEqual(post1.toJSON());
 
       const resultPost2 = result.posts[1];
-      expect(resultPost2.toJSON()).toStrictEqual(post2.toJSON());
+      expect(resultPost2?.toJSON()).toStrictEqual(post2.toJSON());
     });
 
     test('returns an empty array if the blogService returns an empty array', async () => {
@@ -221,10 +221,10 @@ describe('BlogController', () => {
       expect(result.morePages).toBe(false);
 
       const resultPost1 = result.posts[0];
-      expect(resultPost1.toJSON()).toStrictEqual(post1.toJSON());
+      expect(resultPost1?.toJSON()).toStrictEqual(post1.toJSON());
 
       const resultPost2 = result.posts[1];
-      expect(resultPost2.toJSON()).toStrictEqual(post2.toJSON());
+      expect(resultPost2?.toJSON()).toStrictEqual(post2.toJSON());
     });
 
     test('returns an empty array if the blogService returns an empty array', async () => {

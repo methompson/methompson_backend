@@ -70,7 +70,7 @@ describe('InMemoryFileDataService', () => {
 
       const result = fds.filesList[0];
 
-      expect(result.toJSON()).toMatchObject(newFile1.fileDetails.toJSON());
+      expect(result?.toJSON()).toMatchObject(newFile1.fileDetails.toJSON());
     });
 
     test('adds multiple files to the files record', async () => {
@@ -107,8 +107,8 @@ describe('InMemoryFileDataService', () => {
       const result1 = files[0];
       const result2 = files[1];
 
-      expect(result1.toJSON()).toMatchObject(newFile2.fileDetails.toJSON());
-      expect(result2.toJSON()).toMatchObject(newFile1.fileDetails.toJSON());
+      expect(result1?.toJSON()).toMatchObject(newFile2.fileDetails.toJSON());
+      expect(result2?.toJSON()).toMatchObject(newFile1.fileDetails.toJSON());
     });
 
     test('Returns a list of files sorted by dateAdded when dateAdded option is added', async () => {
@@ -162,7 +162,7 @@ describe('InMemoryFileDataService', () => {
       const file1Copy = FileDetails.fromJSON(file1.toJSON());
       const fds = new InMemoryFileDataService([file1Copy]);
 
-      expect(fds.files[file1Copy.id].filename).toBe(originalFileName1);
+      expect(fds.files[file1Copy.id]?.filename).toBe(originalFileName1);
 
       const newFilename = 'new filename';
 
@@ -171,14 +171,14 @@ describe('InMemoryFileDataService', () => {
         filename: newFilename,
       });
 
-      expect(fds.files[file1Copy.id].filename).toBe(newFilename);
+      expect(fds.files[file1Copy.id]?.filename).toBe(newFilename);
     });
 
     test('Updates isPrivate in the files object', async () => {
       const file1Copy = FileDetails.fromJSON(file1.toJSON());
       const fds = new InMemoryFileDataService([file1Copy]);
 
-      expect(fds.files[file1Copy.id].isPrivate).toBe(isPrivate1);
+      expect(fds.files[file1Copy.id]?.isPrivate).toBe(isPrivate1);
 
       const newIsPrivate = !isPrivate1;
 
@@ -187,15 +187,15 @@ describe('InMemoryFileDataService', () => {
         isPrivate: newIsPrivate,
       });
 
-      expect(fds.files[file1Copy.id].isPrivate).toBe(newIsPrivate);
+      expect(fds.files[file1Copy.id]?.isPrivate).toBe(newIsPrivate);
     });
 
     test('Returns the result', async () => {
       const file1Copy = FileDetails.fromJSON(file1.toJSON());
       const fds = new InMemoryFileDataService([file1Copy]);
 
-      expect(fds.files[file1Copy.id].isPrivate).toBe(isPrivate1);
-      expect(fds.files[file1Copy.id].filename).toBe(originalFileName1);
+      expect(fds.files[file1Copy.id]?.isPrivate).toBe(isPrivate1);
+      expect(fds.files[file1Copy.id]?.filename).toBe(originalFileName1);
 
       const newFilename = 'new filename';
       const newIsPrivate = !isPrivate1;
@@ -226,11 +226,11 @@ describe('InMemoryFileDataService', () => {
 
       expect(fds.filesList.length).toBe(1);
 
-      expect(result[file1.id].fileDetails?.toJSON()).toStrictEqual(
+      expect(result[file1.id]?.fileDetails?.toJSON()).toStrictEqual(
         file1.toJSON(),
       );
-      expect(result[file1.id].filename).toBe(file1.id);
-      expect(result[file1.id].error).toBeUndefined();
+      expect(result[file1.id]?.filename).toBe(file1.id);
+      expect(result[file1.id]?.error).toBeUndefined();
     });
 
     test('Deletes multiple files from the files object', async () => {
@@ -244,16 +244,16 @@ describe('InMemoryFileDataService', () => {
 
       expect(fds.filesList.length).toBe(0);
 
-      expect(result[file1.id].fileDetails?.toJSON()).toStrictEqual(
+      expect(result[file1.id]?.fileDetails?.toJSON()).toStrictEqual(
         file1.toJSON(),
       );
-      expect(result[file1.id].filename).toBe(file1.id);
-      expect(result[file1.id].error).toBeUndefined();
-      expect(result[file2.id].fileDetails?.toJSON()).toStrictEqual(
+      expect(result[file1.id]?.filename).toBe(file1.id);
+      expect(result[file1.id]?.error).toBeUndefined();
+      expect(result[file2.id]?.fileDetails?.toJSON()).toStrictEqual(
         file2.toJSON(),
       );
-      expect(result[file2.id].filename).toBe(file2.id);
-      expect(result[file2.id].error).toBeUndefined();
+      expect(result[file2.id]?.filename).toBe(file2.id);
+      expect(result[file2.id]?.error).toBeUndefined();
     });
 
     test('Provides error information for all files not deleted', async () => {
@@ -265,9 +265,9 @@ describe('InMemoryFileDataService', () => {
 
       const filename = 'test filename';
       const result = await fds.deleteFiles([filename]);
-      expect(result[filename].filename).toBe(filename);
-      expect(result[filename].fileDetails).toBeUndefined();
-      expect(result[filename].error).toBe('File Does Not Exist In Database');
+      expect(result[filename]?.filename).toBe(filename);
+      expect(result[filename]?.fileDetails).toBeUndefined();
+      expect(result[filename]?.error).toBe('File Does Not Exist In Database');
     });
   });
 });

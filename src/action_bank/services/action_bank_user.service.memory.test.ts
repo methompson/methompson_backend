@@ -4,7 +4,7 @@ import {
   ActionBankUser,
   ActionBankUserJSON,
 } from '@/src/models/action_bank/action_bank_user';
-import { InMemoryActionBankService } from './action_bank_user.service.memory';
+import { InMemoryActionBankUserService } from './action_bank_user.service.memory';
 import { isNullOrUndefined } from '@/src/utils/type_guards';
 
 jest.mock('uuid', () => {
@@ -37,10 +37,10 @@ const user1 = ActionBankUser.fromJSON(user1JSON);
 const user2 = ActionBankUser.fromJSON(user2JSON);
 const user3 = ActionBankUser.fromJSON(user3JSON);
 
-describe('InMemoryActionBankService', () => {
+describe('InMemoryActionBankUserService', () => {
   describe('actionBankUsers', () => {
     test('returns a copy of the actionBankUsers', () => {
-      const service = new InMemoryActionBankService([user1, user2, user3]);
+      const service = new InMemoryActionBankUserService([user1, user2, user3]);
 
       const actionBankUsers = service.actionBankUsers;
 
@@ -52,7 +52,7 @@ describe('InMemoryActionBankService', () => {
     });
 
     test('if there are no users, it returns an empty object', () => {
-      const service = new InMemoryActionBankService();
+      const service = new InMemoryActionBankUserService();
 
       const actionBankUsers = service.actionBankUsers;
 
@@ -61,7 +61,7 @@ describe('InMemoryActionBankService', () => {
     });
 
     test('revising the actionBankUsers object does not revise the stored version', () => {
-      const service = new InMemoryActionBankService([user1, user2, user3]);
+      const service = new InMemoryActionBankUserService([user1, user2, user3]);
 
       const actionBankUsers = service.actionBankUsers;
 
@@ -80,7 +80,7 @@ describe('InMemoryActionBankService', () => {
 
   describe('actionBankUsersList', () => {
     test('returns an array of actionBankUsers sorted by name', () => {
-      const service = new InMemoryActionBankService([user3, user2, user1]);
+      const service = new InMemoryActionBankUserService([user3, user2, user1]);
 
       const list = service.actionBankUsersList;
 
@@ -88,7 +88,7 @@ describe('InMemoryActionBankService', () => {
     });
 
     test('if there are no users, it returns an empty array', () => {
-      const service = new InMemoryActionBankService();
+      const service = new InMemoryActionBankUserService();
 
       const list = service.actionBankUsersList;
 
@@ -96,7 +96,7 @@ describe('InMemoryActionBankService', () => {
     });
 
     test('revising the actionBankUsersList array does not revise the stored version', () => {
-      const service = new InMemoryActionBankService([user1, user2]);
+      const service = new InMemoryActionBankUserService([user1, user2]);
 
       const list = service.actionBankUsersList;
 
@@ -115,7 +115,7 @@ describe('InMemoryActionBankService', () => {
 
   describe('getActionBankUsers', () => {
     test('returns an array of all users if the pagination / page is less than total users', async () => {
-      const service = new InMemoryActionBankService([user1, user2, user3]);
+      const service = new InMemoryActionBankUserService([user1, user2, user3]);
 
       const result = await service.getActionBankUsers();
 
@@ -138,7 +138,7 @@ describe('InMemoryActionBankService', () => {
         users.push(user);
       }
 
-      const service = new InMemoryActionBankService([
+      const service = new InMemoryActionBankUserService([
         user1,
         user2,
         user3,
@@ -152,6 +152,10 @@ describe('InMemoryActionBankService', () => {
       expect(isNullOrUndefined(user5)).toBeFalsy();
 
       const result = await service.getActionBankUsers({ pagination: 5 });
+
+      if (!user4 || !user5) {
+        throw new Error('This should never happen');
+      }
 
       expect(result.length).toBe(5);
       expect(result.includes(user1)).toBeTruthy();
@@ -174,7 +178,7 @@ describe('InMemoryActionBankService', () => {
         users.push(user);
       }
 
-      const service = new InMemoryActionBankService([
+      const service = new InMemoryActionBankUserService([
         user1,
         user2,
         user3,
@@ -196,6 +200,10 @@ describe('InMemoryActionBankService', () => {
         page: 2,
       });
 
+      if (!user6 || !user7 || !user8 || !user9) {
+        throw new Error('This should never happen');
+      }
+
       expect(result.includes(user6)).toBeTruthy();
       expect(result.includes(user7)).toBeTruthy();
       expect(result.includes(user8)).toBeTruthy();
@@ -203,7 +211,7 @@ describe('InMemoryActionBankService', () => {
     });
 
     test('returns an empty array if the page is beyond the range of users', async () => {
-      const service = new InMemoryActionBankService([user1, user2, user3]);
+      const service = new InMemoryActionBankUserService([user1, user2, user3]);
 
       const resultA = await service.getActionBankUsers({
         page: 1,
@@ -217,7 +225,7 @@ describe('InMemoryActionBankService', () => {
     });
 
     test('returns a single user if an id is provided', async () => {
-      const service = new InMemoryActionBankService([user1, user2, user3]);
+      const service = new InMemoryActionBankUserService([user1, user2, user3]);
 
       const result = await service.getActionBankUsers({
         userId: user1.id,
@@ -229,7 +237,7 @@ describe('InMemoryActionBankService', () => {
     });
 
     test('throws an error if the single user does not exist', async () => {
-      const service = new InMemoryActionBankService([user1, user2, user3]);
+      const service = new InMemoryActionBankUserService([user1, user2, user3]);
 
       const invalidId = 'invalid id';
 
@@ -246,7 +254,7 @@ describe('InMemoryActionBankService', () => {
       const someId = 'someId';
       uuidv4.mockImplementationOnce(() => someId);
 
-      const service = new InMemoryActionBankService([]);
+      const service = new InMemoryActionBankUserService([]);
 
       expect(service.actionBankUsersList.length).toBe(0);
 
@@ -264,7 +272,7 @@ describe('InMemoryActionBankService', () => {
 
   describe('updateActionBankUser', () => {
     test('replaces the user with a new user that is passed in and returns the old user', async () => {
-      const service = new InMemoryActionBankService([user1, user2, user3]);
+      const service = new InMemoryActionBankUserService([user1, user2, user3]);
 
       expect(service.actionBankUsersList.length).toBe(3);
 
@@ -280,7 +288,7 @@ describe('InMemoryActionBankService', () => {
     });
 
     test('if the existing user does not exist, we throw an error', async () => {
-      const service = new InMemoryActionBankService([user1, user2, user3]);
+      const service = new InMemoryActionBankUserService([user1, user2, user3]);
 
       const newId = 'some invalid user Id';
 
@@ -297,7 +305,7 @@ describe('InMemoryActionBankService', () => {
 
   describe('deleteActionBankUser', () => {
     test('deletes the user from the service and returns the old user', async () => {
-      const service = new InMemoryActionBankService([user1, user2, user3]);
+      const service = new InMemoryActionBankUserService([user1, user2, user3]);
 
       expect(service.actionBankUsersList.length).toBe(3);
       expect(service.actionBankUsersList.includes(user1)).toBeTruthy();
@@ -310,7 +318,7 @@ describe('InMemoryActionBankService', () => {
     });
 
     test('throws an error if the id does not exist in the list of users', async () => {
-      const service = new InMemoryActionBankService([user1, user2, user3]);
+      const service = new InMemoryActionBankUserService([user1, user2, user3]);
       expect(service.actionBankUsersList.length).toBe(3);
 
       const badId = 'bad id';

@@ -23,7 +23,7 @@ import { BlogService, BlogPostRequestOutput } from '@/src/blog/blog.service';
 import { LoggerService } from '@/src/logger/logger.service';
 import { RequestLogInterceptor } from '@/src/middleware/request_log.interceptor';
 import { AuthRequiredIncerceptor } from '@/src/middleware/auth_interceptor';
-import { getIntFromString } from '@/src/utils/get_number_from_string';
+import { pageAndPagination } from '@/src/utils/page_and_pagination';
 
 @UseInterceptors(RequestLogInterceptor)
 @Controller({ path: 'api/blog' })
@@ -37,13 +37,7 @@ export class BlogController {
 
   @Get()
   async getPosts(@Req() request: Request): Promise<BlogPostRequestOutput> {
-    const pageQP = request.query?.page;
-    const paginationQP = request.query?.pagination;
-
-    const page = isString(pageQP) ? getIntFromString(pageQP, 1) : 1;
-    const pagination = isString(paginationQP)
-      ? getIntFromString(paginationQP, 10)
-      : 10;
+    const { page, pagination } = pageAndPagination(request);
 
     try {
       const posts = await this.blogService.getPosts(page, pagination);
@@ -63,13 +57,7 @@ export class BlogController {
   @Get('allPosts')
   @UseInterceptors(AuthRequiredIncerceptor)
   async getAllPosts(@Req() request: Request): Promise<BlogPostRequestOutput> {
-    const pageQP = request.query?.page;
-    const paginationQP = request.query?.pagination;
-
-    const page = isString(pageQP) ? getIntFromString(pageQP, 1) : 1;
-    const pagination = isString(paginationQP)
-      ? getIntFromString(paginationQP, 10)
-      : 10;
+    const { page, pagination } = pageAndPagination(request);
 
     try {
       const posts = await this.blogService.getAllPosts(page, pagination);
@@ -105,8 +93,6 @@ export class BlogController {
           HttpStatus.INTERNAL_SERVER_ERROR,
         );
       }
-
-      console.error(e);
 
       throw new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
     }

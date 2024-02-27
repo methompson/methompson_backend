@@ -15,6 +15,7 @@ import { authCheckMiddlewareFactory } from '@/src/middleware/auth_check.middlewa
 import { FileUploadModule } from '@/src/file/file.module';
 import { NotesModule } from '@/src/notes/notes.module';
 import { noteConfiguration } from '@/src/config/note_configuration';
+import { ActionBankModule } from './action_bank/action_bank.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { noteConfiguration } from '@/src/config/note_configuration';
     BlogModule,
     FileUploadModule,
     NotesModule,
+    ActionBankModule,
     ScheduleModule.forRoot(),
   ],
 })

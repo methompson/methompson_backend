@@ -172,7 +172,7 @@ describe('InMemoryBlogService', () => {
       expect(svc.blogPostsByDate.length).toBe(1);
 
       const post = svc.blogPostsByDate[0];
-      expect(post.toJSON()).toStrictEqual(expect.objectContaining(input));
+      expect(post?.toJSON()).toStrictEqual(expect.objectContaining(input));
     });
   });
 

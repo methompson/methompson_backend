@@ -19,7 +19,7 @@ import { RequestLogInterceptor } from '@/src/middleware/request_log.interceptor'
 import { AuthModel } from '@/src/models/auth_model';
 import { FileDataService } from '@/src/file/file_data.service';
 import { FileSystemService } from '@/src/file/file_system_service';
-import { isPromiseRejected } from '@/src/utils/type_guards';
+import { isPromiseRejected, isString } from '@/src/utils/type_guards';
 
 @UseInterceptors(RequestLogInterceptor)
 @Controller({ path: 'files' })
@@ -60,6 +60,10 @@ export class FileController {
     }
 
     const filename = request.params?.filename;
+    if (!isString(filename)) {
+      throw new HttpException('Invalid Filename', HttpStatus.BAD_REQUEST);
+    }
+
     const pathToFile = path.join(this._savedFilePath, filename);
 
     const [statResult, fileDetailsResult] = await Promise.allSettled([

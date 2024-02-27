@@ -169,6 +169,10 @@ describe('InMemoryPurchaseService', () => {
 
       expect(result.length).toBe(5);
 
+      if (!p4 || !p5 || !p6) {
+        throw new Error('Invalid purchases');
+      }
+
       expect(result.includes(p1)).toBeTruthy();
       expect(result.includes(p2)).toBeTruthy();
       expect(result.includes(p4)).toBeTruthy();
@@ -211,6 +215,10 @@ describe('InMemoryPurchaseService', () => {
         page: 2,
         pagination: 5,
       });
+
+      if (!p7 || !p8 || !p9) {
+        throw new Error('Invalid purchases');
+      }
 
       expect(result.length).toBe(3);
       expect(result.includes(p7)).toBeTruthy();

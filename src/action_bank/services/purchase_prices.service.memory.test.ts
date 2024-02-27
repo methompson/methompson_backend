@@ -170,6 +170,10 @@ describe('InMemoryPurchasePricesService', () => {
         pagination: 5,
       });
 
+      if (!pp4 || !pp5 || !pp6) {
+        throw new Error('Invalid purchase prices');
+      }
+
       expect(result.length).toBe(5);
       expect(result.includes(pp1)).toBeTruthy();
       expect(result.includes(pp2)).toBeTruthy();
@@ -210,6 +214,10 @@ describe('InMemoryPurchasePricesService', () => {
         pagination: 5,
         page: 2,
       });
+
+      if (!pp7 || !pp8 || !pp9) {
+        throw new Error('Invalid purchase prices');
+      }
 
       expect(result.length).toBe(3);
       expect(result.includes(pp7)).toBeTruthy();
