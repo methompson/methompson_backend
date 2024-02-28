@@ -32,13 +32,18 @@ export class PurchaseController {
     const { page, pagination } = pageAndPagination(request);
 
     try {
-      const { userId, startDate, endDate, purchasePriceId } = request.params;
+      const { userId } = request.query;
+      let { startDate, endDate, purchasePriceId } = request.query;
+
+      startDate = isString(startDate) ? startDate : undefined;
+      endDate = isString(endDate) ? endDate : undefined;
+      purchasePriceId = isString(purchasePriceId) ? purchasePriceId : undefined;
 
       if (!isString(userId)) {
         throw new InvalidInputError('Invalid User Id');
       }
 
-      return this.purchesService.getPurchases({
+      return await this.purchesService.getPurchases({
         page,
         pagination,
         userId,
@@ -62,7 +67,7 @@ export class PurchaseController {
 
       const purchase = Purchase.fromJSON(body.purchase);
 
-      return this.purchesService.addPurchase(purchase);
+      return await this.purchesService.addPurchase(purchase);
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
@@ -79,7 +84,7 @@ export class PurchaseController {
 
       const purchase = Purchase.fromJSON(body.purchase);
 
-      return this.purchesService.updatePurchase(purchase);
+      return await this.purchesService.updatePurchase(purchase);
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
@@ -94,7 +99,7 @@ export class PurchaseController {
         throw new InvalidInputError('Invalid Purchase Id');
       }
 
-      return this.purchesService.deletePurchase(body.purchaseId);
+      return await this.purchesService.deletePurchase(body.purchaseId);
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }

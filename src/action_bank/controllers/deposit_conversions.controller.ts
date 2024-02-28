@@ -33,14 +33,14 @@ export class DepositConversionsController {
   ): Promise<DepositConversion[]> {
     const { page, pagination } = pageAndPagination(request);
 
-    const userId = request.params?.userId;
+    const userId = request.query?.userId;
 
     try {
       if (!isString(userId)) {
         throw new InvalidInputError('Invalid User Id');
       }
 
-      return this.depositConversionsService.getDepositConversions({
+      return await this.depositConversionsService.getDepositConversions({
         page,
         pagination,
         userId,

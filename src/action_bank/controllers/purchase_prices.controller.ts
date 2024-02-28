@@ -31,14 +31,14 @@ export class PurchasePricesController {
   async getPurchasePrices(@Req() request: Request): Promise<PurchasePrice[]> {
     const { page, pagination } = pageAndPagination(request);
 
-    const userId = request.params?.userId;
+    const userId = request.query?.userId;
 
     try {
       if (!isString(userId)) {
         throw new InvalidInputError('Invalid User Id');
       }
 
-      return this.purchasePricesService.getPurchasePrices({
+      return await this.purchasePricesService.getPurchasePrices({
         page,
         pagination,
         userId,
@@ -59,7 +59,7 @@ export class PurchasePricesController {
 
       const purchasePrice = PurchasePrice.fromJSON(body.purchasePrice);
 
-      return this.purchasePricesService.addPurchasePrice(purchasePrice);
+      return await this.purchasePricesService.addPurchasePrice(purchasePrice);
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
@@ -76,7 +76,9 @@ export class PurchasePricesController {
 
       const purchasePrice = PurchasePrice.fromJSON(body.purchasePrice);
 
-      return this.purchasePricesService.updatePurchasePrice(purchasePrice);
+      return await this.purchasePricesService.updatePurchasePrice(
+        purchasePrice,
+      );
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
@@ -91,7 +93,7 @@ export class PurchasePricesController {
         throw new InvalidInputError('Invalid Purchase Price Input');
       }
 
-      return this.purchasePricesService.deletePurchasePrice(
+      return await this.purchasePricesService.deletePurchasePrice(
         body.purchasePriceId,
       );
     } catch (e) {

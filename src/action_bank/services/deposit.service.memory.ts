@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
+import { DateTime } from 'luxon';
 
 import { DepositInputOptions } from '@/src/action_bank/types';
 import { DepositService } from './deposit.service';
 import { Deposit } from '@/src/models/action_bank/deposit';
 import { isNullOrUndefined } from '@/src/utils/type_guards';
-import { DateTime } from 'luxon';
 
 @Injectable()
 export class InMemoryDepositService extends DepositService {
@@ -52,6 +52,13 @@ export class InMemoryDepositService extends DepositService {
 
     const deposits = this.depositsList
       .filter((d) => {
+        console.log({
+          d,
+          test1: d.userId !== userId,
+          test2: startDate.isValid && d.date < startDate,
+          test3: endDate.isValid && d.date > endDate,
+        });
+
         if (d.userId !== userId) return false;
         if (startDate.isValid && d.date < startDate) return false;
         if (endDate.isValid && d.date > endDate) return false;

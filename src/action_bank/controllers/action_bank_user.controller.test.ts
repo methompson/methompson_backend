@@ -1,12 +1,13 @@
+import { Request } from 'express';
+
 import {
   ActionBankUser,
   ActionBankUserJSON,
 } from '@/src/models/action_bank/action_bank_user';
 import { InMemoryActionBankUserService } from '@/src/action_bank/services/action_bank_user.service.memory';
 import { ActionBankUserController } from './action_bank_user.controller';
-import { ConsoleLoggerInstanceService } from '@/src/logger/logger.console.service';
 import { LoggerService } from '@/src/logger/logger.service';
-import { Request } from 'express';
+import { HttpException, HttpStatus } from '@nestjs/common';
 
 const user1JSON: ActionBankUserJSON = {
   id: 'id1',
@@ -32,9 +33,7 @@ describe('ActionBankUserController', () => {
   describe('getUsers', () => {
     test('gets users from the actionBankUserService', async () => {
       const service = new InMemoryActionBankUserService([user1, user2, user3]);
-      const loggerService = new LoggerService([
-        new ConsoleLoggerInstanceService(),
-      ]);
+      const loggerService = new LoggerService();
 
       const controller = new ActionBankUserController(service, loggerService);
 
@@ -51,9 +50,7 @@ describe('ActionBankUserController', () => {
 
     test("uses page and pagination if it's in the request", async () => {
       const service = new InMemoryActionBankUserService([user1, user2, user3]);
-      const loggerService = new LoggerService([
-        new ConsoleLoggerInstanceService(),
-      ]);
+      const loggerService = new LoggerService();
 
       const controller = new ActionBankUserController(service, loggerService);
 
@@ -90,9 +87,7 @@ describe('ActionBankUserController', () => {
 
     test('throws an error if the actionBankUserService throws an error', async () => {
       const service = new InMemoryActionBankUserService([user1, user2, user3]);
-      const loggerService = new LoggerService([
-        new ConsoleLoggerInstanceService(),
-      ]);
+      const loggerService = new LoggerService();
 
       const controller = new ActionBankUserController(service, loggerService);
 
@@ -108,7 +103,7 @@ describe('ActionBankUserController', () => {
         .mockRejectedValue(new Error('testError'));
 
       await expect(() => controller.getUsers(req)).rejects.toThrow(
-        'Server Error',
+        new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
       );
     });
   });
@@ -116,9 +111,7 @@ describe('ActionBankUserController', () => {
   describe('getUser', () => {
     test('gets a user from the actionBankUserService', async () => {
       const service = new InMemoryActionBankUserService([user1, user2, user3]);
-      const loggerService = new LoggerService([
-        new ConsoleLoggerInstanceService(),
-      ]);
+      const loggerService = new LoggerService();
 
       const controller = new ActionBankUserController(service, loggerService);
 
@@ -134,9 +127,7 @@ describe('ActionBankUserController', () => {
 
     test('throws an error if the actionBankUserService throws an error', async () => {
       const service = new InMemoryActionBankUserService([user1, user2, user3]);
-      const loggerService = new LoggerService([
-        new ConsoleLoggerInstanceService(),
-      ]);
+      const loggerService = new LoggerService();
 
       const controller = new ActionBankUserController(service, loggerService);
 
@@ -151,15 +142,13 @@ describe('ActionBankUserController', () => {
         .mockRejectedValue(new Error('testError'));
 
       await expect(() => controller.getUser(req)).rejects.toThrow(
-        'Server Error',
+        new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
       );
     });
 
     test('throws an error if more than one user is found', async () => {
       const service = new InMemoryActionBankUserService([user1, user2, user3]);
-      const loggerService = new LoggerService([
-        new ConsoleLoggerInstanceService(),
-      ]);
+      const loggerService = new LoggerService();
 
       const controller = new ActionBankUserController(service, loggerService);
 
@@ -174,15 +163,13 @@ describe('ActionBankUserController', () => {
         .mockResolvedValue([user1, user2]);
 
       await expect(() => controller.getUser(req)).rejects.toThrow(
-        'Server Error',
+        new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
       );
     });
 
     test('throws an error if the user is not found', async () => {
       const service = new InMemoryActionBankUserService([]);
-      const loggerService = new LoggerService([
-        new ConsoleLoggerInstanceService(),
-      ]);
+      const loggerService = new LoggerService();
 
       const controller = new ActionBankUserController(service, loggerService);
 
@@ -199,9 +186,7 @@ describe('ActionBankUserController', () => {
   describe('addUser', () => {
     test('adds a user and returns the user with the new id', async () => {
       const service = new InMemoryActionBankUserService([]);
-      const loggerService = new LoggerService([
-        new ConsoleLoggerInstanceService(),
-      ]);
+      const loggerService = new LoggerService();
 
       const controller = new ActionBankUserController(service, loggerService);
 
@@ -219,9 +204,7 @@ describe('ActionBankUserController', () => {
 
     test('throws an error if the actionBankUserService throws an error', async () => {
       const service = new InMemoryActionBankUserService([]);
-      const loggerService = new LoggerService([
-        new ConsoleLoggerInstanceService(),
-      ]);
+      const loggerService = new LoggerService();
 
       const controller = new ActionBankUserController(service, loggerService);
 
@@ -235,29 +218,27 @@ describe('ActionBankUserController', () => {
         .spyOn(service, 'addActionBankUser')
         .mockRejectedValue(new Error('testError'));
 
-      expect(() => controller.addUser(req)).rejects.toThrow('Server Error');
+      expect(() => controller.addUser(req)).rejects.toThrow(
+        new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+      );
     });
 
     test('throws an error if the body is invalid', async () => {
       const service = new InMemoryActionBankUserService([]);
-      const loggerService = new LoggerService([
-        new ConsoleLoggerInstanceService(),
-      ]);
+      const loggerService = new LoggerService();
 
       const controller = new ActionBankUserController(service, loggerService);
 
       const req = {} as unknown as Request;
 
       await expect(() => controller.addUser(req)).rejects.toThrow(
-        'Invalid Input',
+        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
     });
 
     test('throws an error if the user input is invalid', async () => {
       const service = new InMemoryActionBankUserService([]);
-      const loggerService = new LoggerService([
-        new ConsoleLoggerInstanceService(),
-      ]);
+      const loggerService = new LoggerService();
 
       const controller = new ActionBankUserController(service, loggerService);
 
@@ -268,7 +249,7 @@ describe('ActionBankUserController', () => {
       } as unknown as Request;
 
       await expect(() => controller.addUser(req)).rejects.toThrow(
-        'Invalid Input',
+        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
     });
   });
@@ -276,9 +257,7 @@ describe('ActionBankUserController', () => {
   describe('updateUser', () => {
     test('updates a user and returns the old user', async () => {
       const service = new InMemoryActionBankUserService([user1]);
-      const loggerService = new LoggerService([
-        new ConsoleLoggerInstanceService(),
-      ]);
+      const loggerService = new LoggerService();
 
       const controller = new ActionBankUserController(service, loggerService);
 
@@ -301,9 +280,7 @@ describe('ActionBankUserController', () => {
 
     test('throws an error if the actionBankUserService throws an error', async () => {
       const service = new InMemoryActionBankUserService([user1]);
-      const loggerService = new LoggerService([
-        new ConsoleLoggerInstanceService(),
-      ]);
+      const loggerService = new LoggerService();
 
       const controller = new ActionBankUserController(service, loggerService);
 
@@ -322,29 +299,27 @@ describe('ActionBankUserController', () => {
         .spyOn(service, 'updateActionBankUser')
         .mockRejectedValue(new Error('testError'));
 
-      expect(() => controller.updateUser(req)).rejects.toThrow('Server Error');
+      expect(() => controller.updateUser(req)).rejects.toThrow(
+        new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+      );
     });
 
     test('throws an error if the body is invalid', async () => {
       const service = new InMemoryActionBankUserService([user1]);
-      const loggerService = new LoggerService([
-        new ConsoleLoggerInstanceService(),
-      ]);
+      const loggerService = new LoggerService();
 
       const controller = new ActionBankUserController(service, loggerService);
 
       const req = {} as unknown as Request;
 
       await expect(() => controller.updateUser(req)).rejects.toThrow(
-        'Invalid Input',
+        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
     });
 
     test('throws an error if the user input is invalid', async () => {
       const service = new InMemoryActionBankUserService([user1]);
-      const loggerService = new LoggerService([
-        new ConsoleLoggerInstanceService(),
-      ]);
+      const loggerService = new LoggerService();
 
       const controller = new ActionBankUserController(service, loggerService);
 
@@ -355,7 +330,7 @@ describe('ActionBankUserController', () => {
       } as unknown as Request;
 
       await expect(() => controller.updateUser(req)).rejects.toThrow(
-        'Invalid Input',
+        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
     });
   });
@@ -363,9 +338,7 @@ describe('ActionBankUserController', () => {
   describe('deleteUser', () => {
     test('deletes a user and returns the deleted user', async () => {
       const service = new InMemoryActionBankUserService([user1]);
-      const loggerService = new LoggerService([
-        new ConsoleLoggerInstanceService(),
-      ]);
+      const loggerService = new LoggerService();
 
       const controller = new ActionBankUserController(service, loggerService);
 
@@ -382,9 +355,7 @@ describe('ActionBankUserController', () => {
 
     test('throws an error if the actionBankUserService throws an error', async () => {
       const service = new InMemoryActionBankUserService([user1]);
-      const loggerService = new LoggerService([
-        new ConsoleLoggerInstanceService(),
-      ]);
+      const loggerService = new LoggerService();
 
       const controller = new ActionBankUserController(service, loggerService);
 
@@ -398,14 +369,14 @@ describe('ActionBankUserController', () => {
         .spyOn(service, 'deleteActionBankUser')
         .mockRejectedValue(new Error('testError'));
 
-      expect(() => controller.deleteUser(req)).rejects.toThrow('Server Error');
+      expect(() => controller.deleteUser(req)).rejects.toThrow(
+        new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+      );
     });
 
     test('throws an error if the user is not found', async () => {
       const service = new InMemoryActionBankUserService([]);
-      const loggerService = new LoggerService([
-        new ConsoleLoggerInstanceService(),
-      ]);
+      const loggerService = new LoggerService();
 
       const controller = new ActionBankUserController(service, loggerService);
 
@@ -416,22 +387,20 @@ describe('ActionBankUserController', () => {
       } as unknown as Request;
 
       await expect(() => controller.deleteUser(req)).rejects.toThrow(
-        'Server Error',
+        new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
       );
     });
 
     test('throws an error if the body is invalid', async () => {
       const service = new InMemoryActionBankUserService([]);
-      const loggerService = new LoggerService([
-        new ConsoleLoggerInstanceService(),
-      ]);
+      const loggerService = new LoggerService();
 
       const controller = new ActionBankUserController(service, loggerService);
 
       const req = {} as unknown as Request;
 
       await expect(() => controller.deleteUser(req)).rejects.toThrow(
-        'Invalid Input',
+        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
     });
   });

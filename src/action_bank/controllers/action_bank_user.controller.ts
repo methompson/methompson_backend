@@ -112,14 +112,13 @@ export class ActionBankUserController {
   @UseInterceptors(AuthRequiredIncerceptor)
   async deleteUser(@Req() request: Request): Promise<ActionBankUser> {
     try {
-      const userId = request.body?.userId;
-
-      if (!isString(userId)) {
+      const { body } = request;
+      if (!isRecord(body) || !isString(body.userId)) {
         throw new InvalidInputError('Invalid User ID');
       }
 
       const user = await this.actionBankUserService.deleteActionBankUser(
-        userId,
+        body.userId,
       );
 
       return user;

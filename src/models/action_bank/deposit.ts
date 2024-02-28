@@ -68,7 +68,7 @@ export class Deposit {
       throw new InvalidInputError(`Invalid JSON ${errors.join(', ')}`);
     }
 
-    const dateTime = DateTime.fromISO(input.date);
+    const dateTime = DateTime.fromISO(input.date, { zone: 'America/Chicago' });
     if (!dateTime.isValid) {
       throw new InvalidInputError('Invalid date');
     }

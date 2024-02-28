@@ -17,21 +17,21 @@ const p1JSON: PurchaseJSON = {
   id: 'id1',
   userId: 'userId1',
   purchasePriceId: 'purchasePriceId1',
-  date: '2021-01-01T00:00:00.000Z',
+  date: '2021-01-01T00:00:00.000-06:00',
   purchasedQuantity: 1,
 };
 const p2JSON: PurchaseJSON = {
   id: 'id2',
   userId: 'userId1',
   purchasePriceId: 'purchasePriceId2',
-  date: '2021-01-12T00:00:00.000Z',
+  date: '2021-01-12T00:00:00.000-06:00',
   purchasedQuantity: 2,
 };
 const p3JSON: PurchaseJSON = {
   id: 'id3',
   userId: 'userId2',
   purchasePriceId: 'purchasePriceId3',
-  date: '2021-01-25T00:00:00.000Z',
+  date: '2021-01-25T00:00:00.000-06:00',
   purchasedQuantity: 3,
 };
 
@@ -298,7 +298,7 @@ describe('InMemoryPurchaseService', () => {
 
     test('returns a date constrained array of Purchases', async () => {
       const purchases: Purchase[] = [];
-      const baseDate = DateTime.fromISO('2021-02-05T00:00:00.000Z', {
+      const baseDate = DateTime.fromISO('2021-02-05T00:00:00.000-06:00', {
         zone: 'America/Chicago',
       });
 
@@ -336,7 +336,7 @@ describe('InMemoryPurchaseService', () => {
 
       const result1 = await service.getPurchases({
         userId: 'userId1',
-        startDate: '2021-01-01T00:00:00.000Z',
+        startDate: '2021-01-01T00:00:00.000-06:00',
       });
 
       expect(result1).toEqual([
@@ -350,22 +350,22 @@ describe('InMemoryPurchaseService', () => {
 
       const result2 = await service.getPurchases({
         userId: 'userId1',
-        startDate: '2021-01-13T00:00:00.000Z',
+        startDate: '2021-01-13T00:00:00.000-06:00',
       });
 
       expect(result2).toEqual([purchase4, purchase5, purchase6, purchase7]);
 
       const result3 = await service.getPurchases({
         userId: 'userId1',
-        endDate: '2021-01-30T00:00:00.000Z',
+        endDate: '2021-01-30T00:00:00.000-06:00',
       });
 
       expect(result3).toEqual([purchase1, purchase2]);
 
       const result4 = await service.getPurchases({
         userId: 'userId1',
-        startDate: '2021-01-08T00:00:00.000Z',
-        endDate: '2021-02-09T00:00:00.000Z',
+        startDate: '2021-01-08T00:00:00.000-06:00',
+        endDate: '2021-02-09T00:00:00.000-06:00',
       });
 
       expect(result4).toEqual([purchase2, purchase4]);

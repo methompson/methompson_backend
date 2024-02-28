@@ -31,17 +31,25 @@ export class DepositController {
   async getDeposits(@Req() request: Request): Promise<Deposit[]> {
     const { page, pagination } = pageAndPagination(request);
 
-    const userId = request.params?.userId;
-    const startDate = request.params?.startDate;
-    const endDate = request.params?.endDate;
-    const depositConversionId = request.params?.depositConversionId;
-
     try {
+      if (!isRecord(request.query)) {
+        throw new InvalidInputError('Invalid Query');
+      }
+
+      let { startDate, endDate, depositConversionId } = request.query;
+      const { userId } = request.query;
+
       if (!isString(userId)) {
         throw new InvalidInputError('Invalid User Id');
       }
 
-      return this.depositService.getDeposits({
+      startDate = isString(startDate) ? startDate : undefined;
+      endDate = isString(endDate) ? endDate : undefined;
+      depositConversionId = isString(depositConversionId)
+        ? depositConversionId
+        : undefined;
+
+      return await this.depositService.getDeposits({
         page,
         pagination,
         userId,
@@ -65,7 +73,7 @@ export class DepositController {
 
       const newDeposit = Deposit.fromJSON(body.deposit);
 
-      return this.depositService.addDeposit(newDeposit);
+      return await this.depositService.addDeposit(newDeposit);
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
@@ -82,7 +90,7 @@ export class DepositController {
 
       const updatedDeposit = Deposit.fromJSON(body.deposit);
 
-      return this.depositService.updateDeposit(updatedDeposit);
+      return await this.depositService.updateDeposit(updatedDeposit);
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
@@ -97,7 +105,7 @@ export class DepositController {
         throw new InvalidInputError('Invalid Deposit Id');
       }
 
-      return this.depositService.deleteDeposit(body.depositId);
+      return await this.depositService.deleteDeposit(body.depositId);
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }

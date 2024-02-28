@@ -16,7 +16,7 @@ const uuidv4 = uuid.v4 as jest.Mock<unknown, unknown[]>;
 const deposit1JSON: DepositJSON = {
   id: 'id1',
   userId: 'userId1',
-  date: '2021-01-01T00:00:00.000Z',
+  date: '2021-01-01T00:00:00.000-06:00',
   depositQuantity: 1,
   conversionRate: 1,
   depositConversionName: 'name1',
@@ -24,7 +24,7 @@ const deposit1JSON: DepositJSON = {
 const deposit2JSON: DepositJSON = {
   id: 'id2',
   userId: 'userId1',
-  date: '2021-01-12T00:00:00.000Z',
+  date: '2021-01-12T00:00:00.000-06:00',
   depositQuantity: 1,
   conversionRate: 1,
   depositConversionName: 'name1',
@@ -32,7 +32,7 @@ const deposit2JSON: DepositJSON = {
 const deposit3JSON: DepositJSON = {
   id: 'id3',
   userId: 'userId2',
-  date: '2021-02-01T00:00:00.000Z',
+  date: '2021-02-01T00:00:00.000-06:00',
   depositQuantity: 1,
   conversionRate: 1,
   depositConversionName: 'name2',
@@ -209,7 +209,7 @@ describe('InMemoryDepositService', () => {
 
     test('goes to the proper page if a page and pagination are provided', async () => {
       const deposits: Deposit[] = [];
-      const baseDate = DateTime.fromISO('2021-02-05T00:00:00.000Z', {
+      const baseDate = DateTime.fromISO('2021-02-05T00:00:00.000-06:00', {
         zone: 'America/Chicago',
       });
 

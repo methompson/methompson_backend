@@ -5,7 +5,11 @@ import { LoggerInstanceService } from './loggerInstance.service';
 
 @Injectable()
 export class LoggerService {
-  constructor(protected loggerServices: LoggerInstanceService[]) {}
+  protected loggerServices: LoggerInstanceService[];
+
+  constructor(loggerServices?: LoggerInstanceService[]) {
+    this.loggerServices = loggerServices ?? [];
+  }
 
   async addRequestLog(req: Request, res: Response): Promise<void> {
     const promises: Promise<void>[] = [];
