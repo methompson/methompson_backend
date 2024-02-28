@@ -52,13 +52,6 @@ export class InMemoryDepositService extends DepositService {
 
     const deposits = this.depositsList
       .filter((d) => {
-        console.log({
-          d,
-          test1: d.userId !== userId,
-          test2: startDate.isValid && d.date < startDate,
-          test3: endDate.isValid && d.date > endDate,
-        });
-
         if (d.userId !== userId) return false;
         if (startDate.isValid && d.date < startDate) return false;
         if (endDate.isValid && d.date > endDate) return false;
