@@ -91,4 +91,39 @@ export class FileDepositService extends InMemoryDepositService {
     await fileHandle.write(rawData, 0);
     await fileHandle.close();
   }
+
+  static async init(actionBankPath: string): Promise<FileDepositService> {
+    const fileHandle = await FileDepositService.makeFileHandle(actionBankPath);
+    const buffer = await fileHandle.readFile();
+
+    const users: Deposit[] = [];
+    let rawData = '';
+
+    try {
+      rawData = buffer.toString();
+
+      const json = JSON.parse(rawData);
+
+      if (Array.isArray(json)) {
+        for (const val of json) {
+          try {
+            users.push(Deposit.fromJSON(val));
+          } catch (e) {
+            console.error('Invalid BlogPost: ', val, e);
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Invalid or no data when reading file data file', e);
+
+      if (rawData.length > 0) {
+        await FileDepositService.writeBackup(actionBankPath, rawData);
+      }
+
+      await fileHandle.truncate(0);
+      await fileHandle.write('[]', 0);
+    }
+
+    return new FileDepositService(fileHandle, actionBankPath, users);
+  }
 }

@@ -1,9 +1,9 @@
 import { FileHandle, mkdir, open } from 'fs/promises';
+import { join } from 'path';
 import { Injectable } from '@nestjs/common';
 
 import { InMemoryActionBankUserService } from './action_bank_user.service.memory';
 import { ActionBankUser } from '@/src/models/action_bank/action_bank_user';
-import { join } from 'path';
 
 const BASE_NAME = 'action_bank_user_data';
 const FILE_EXTENSION = 'json';
@@ -32,7 +32,7 @@ export class FileActionBankUserService extends InMemoryActionBankUserService {
   }
 
   async updateActionBankUser(user: ActionBankUser): Promise<ActionBankUser> {
-    const result = super.updateActionBankUser(user);
+    const result = await super.updateActionBankUser(user);
 
     await this.writeToFile();
 
@@ -40,7 +40,7 @@ export class FileActionBankUserService extends InMemoryActionBankUserService {
   }
 
   async deleteActionBankUser(userId: string): Promise<ActionBankUser> {
-    const result = super.deleteActionBankUser(userId);
+    const result = await super.deleteActionBankUser(userId);
 
     await this.writeToFile();
 
@@ -93,5 +93,44 @@ export class FileActionBankUserService extends InMemoryActionBankUserService {
     await fileHandle.truncate(0);
     await fileHandle.write(rawData, 0);
     await fileHandle.close();
+  }
+
+  static async init(
+    actionBankPath: string,
+  ): Promise<FileActionBankUserService> {
+    const fileHandle = await FileActionBankUserService.makeFileHandle(
+      actionBankPath,
+    );
+    const buffer = await fileHandle.readFile();
+
+    const users: ActionBankUser[] = [];
+    let rawData = '';
+
+    try {
+      rawData = buffer.toString();
+
+      const json = JSON.parse(rawData);
+
+      if (Array.isArray(json)) {
+        for (const val of json) {
+          try {
+            users.push(ActionBankUser.fromJSON(val));
+          } catch (e) {
+            console.error('Invalid BlogPost: ', val, e);
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Invalid or no data when reading file data file', e);
+
+      if (rawData.length > 0) {
+        await FileActionBankUserService.writeBackup(actionBankPath, rawData);
+      }
+
+      await fileHandle.truncate(0);
+      await fileHandle.write('[]', 0);
+    }
+
+    return new FileActionBankUserService(fileHandle, actionBankPath, users);
   }
 }

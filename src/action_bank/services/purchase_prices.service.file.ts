@@ -96,4 +96,43 @@ export class FilePurchasePricesService extends InMemoryPurchasePricesService {
     await fileHandle.write(rawData, 0);
     await fileHandle.close();
   }
+
+  static async init(
+    actionBankPath: string,
+  ): Promise<FilePurchasePricesService> {
+    const fileHandle = await FilePurchasePricesService.makeFileHandle(
+      actionBankPath,
+    );
+    const buffer = await fileHandle.readFile();
+
+    const users: PurchasePrice[] = [];
+    let rawData = '';
+
+    try {
+      rawData = buffer.toString();
+
+      const json = JSON.parse(rawData);
+
+      if (Array.isArray(json)) {
+        for (const val of json) {
+          try {
+            users.push(PurchasePrice.fromJSON(val));
+          } catch (e) {
+            console.error('Invalid BlogPost: ', val, e);
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Invalid or no data when reading file data file', e);
+
+      if (rawData.length > 0) {
+        await FilePurchasePricesService.writeBackup(actionBankPath, rawData);
+      }
+
+      await fileHandle.truncate(0);
+      await fileHandle.write('[]', 0);
+    }
+
+    return new FilePurchasePricesService(fileHandle, actionBankPath, users);
+  }
 }
