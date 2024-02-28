@@ -12,11 +12,11 @@ export class InMemoryDepositService extends DepositService {
   // Key is the ID
   protected _deposits: Record<string, Deposit> = {};
 
-  constructor(input?: Deposit[]) {
+  constructor(deposits?: Deposit[]) {
     super();
 
-    if (input) {
-      for (const i of input) {
+    if (deposits) {
+      for (const i of deposits) {
         this._deposits[i.id] = i;
       }
     }

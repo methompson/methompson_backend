@@ -1,5 +1,3 @@
-/* eslint-disable brace-style */
-
 import { FileHandle, mkdir, open } from 'fs/promises';
 import { join } from 'path';
 import { Injectable } from '@nestjs/common';
