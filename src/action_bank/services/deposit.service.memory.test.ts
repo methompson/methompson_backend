@@ -153,7 +153,9 @@ describe('InMemoryDepositService', () => {
 
     test('returns paginated Deposits if there are more Deposits than the pagination', async () => {
       const deposits: Deposit[] = [];
-      const baseDate = DateTime.fromISO('2021-02-05T00:00:00.000Z');
+      const baseDate = DateTime.fromISO('2021-02-05T00:00:00.000Z', {
+        zone: 'America/Chicago',
+      });
 
       if (!baseDate.isValid) {
         throw new Error('Invalid date');
@@ -207,7 +209,9 @@ describe('InMemoryDepositService', () => {
 
     test('goes to the proper page if a page and pagination are provided', async () => {
       const deposits: Deposit[] = [];
-      const baseDate = DateTime.fromISO('2021-02-05T00:00:00.000Z');
+      const baseDate = DateTime.fromISO('2021-02-05T00:00:00.000Z', {
+        zone: 'America/Chicago',
+      });
 
       if (!baseDate.isValid) {
         throw new Error('Invalid date');
@@ -259,7 +263,9 @@ describe('InMemoryDepositService', () => {
 
     test('returns an empty array if the page is beyond the range of Deposits', async () => {
       const deposits: Deposit[] = [];
-      const baseDate = DateTime.fromISO('2021-02-05T00:00:00.000Z');
+      const baseDate = DateTime.fromISO('2021-02-05T00:00:00.000Z', {
+        zone: 'America/Chicago',
+      });
 
       if (!baseDate.isValid) {
         throw new Error('Invalid date');
@@ -315,6 +321,130 @@ describe('InMemoryDepositService', () => {
       });
 
       expect(result.length).toBe(0);
+    });
+
+    test('returns a date constrained array of Deposits', async () => {
+      const deposits: Deposit[] = [];
+      const baseDate = DateTime.fromISO('2021-02-05T00:00:00.000Z', {
+        zone: 'America/Chicago',
+      });
+
+      if (!baseDate.isValid) {
+        throw new Error('Invalid date');
+      }
+
+      for (let i = 4; i < 8; i++) {
+        const deposit: DepositJSON = {
+          id: `id${i}`,
+          userId: 'userId1',
+          date: baseDate.plus({ days: i }).toISO(),
+          depositQuantity: i,
+          conversionRate: i,
+          depositConversionName: `name${i}`,
+        };
+
+        deposits.push(Deposit.fromJSON(deposit));
+      }
+
+      const service = new InMemoryDepositService([
+        deposit1,
+        deposit2,
+        deposit3,
+        ...deposits,
+      ]);
+
+      const deposit4 = deposits[0];
+      const deposit5 = deposits[1];
+      const deposit6 = deposits[2];
+      const deposit7 = deposits[3];
+
+      if (!deposit4 || !deposit5 || !deposit6 || !deposit7) {
+        throw new Error('Invalid deposits');
+      }
+
+      const result1 = await service.getDeposits({
+        userId: 'userId1',
+        startDate: '2021-01-01T00:00:00.000Z',
+      });
+
+      expect(result1).toEqual([
+        deposit1,
+        deposit2,
+        deposit4,
+        deposit5,
+        deposit6,
+        deposit7,
+      ]);
+
+      const result2 = await service.getDeposits({
+        userId: 'userId1',
+        startDate: '2021-01-13T00:00:00.000Z',
+      });
+
+      expect(result2).toEqual([deposit4, deposit5, deposit6, deposit7]);
+
+      const result3 = await service.getDeposits({
+        userId: 'userId1',
+        endDate: '2021-01-30T00:00:00.000Z',
+      });
+
+      expect(result3).toEqual([deposit1, deposit2]);
+
+      const result4 = await service.getDeposits({
+        userId: 'userId1',
+        startDate: '2021-01-08T00:00:00.000Z',
+        endDate: '2021-02-09T00:00:00.000Z',
+      });
+
+      expect(result4).toEqual([deposit2, deposit4]);
+    });
+
+    test('dates are ignored if they are invalid', async () => {
+      const service = new InMemoryDepositService([
+        deposit1,
+        deposit2,
+        deposit3,
+      ]);
+
+      const result1 = await service.getDeposits({
+        userId: 'userId1',
+        startDate: 'bad',
+      });
+
+      expect(result1).toEqual([deposit1, deposit2]);
+
+      const result2 = await service.getDeposits({
+        userId: 'userId1',
+        endDate: 'bad',
+      });
+
+      expect(result2).toEqual([deposit1, deposit2]);
+    });
+
+    test('A good date and a bad date returns the good date', async () => {
+      const service = new InMemoryDepositService([
+        deposit1,
+        deposit2,
+        deposit3,
+      ]);
+
+      // TODO Timezone issue. Reolve by setting the TZ in the DateTime objects
+
+      const result1 = await service.getDeposits({
+        userId: 'userId1',
+        startDate: '2021-01-10T00:00:00.000Z',
+        endDate: 'bad',
+      });
+
+      expect(result1).toEqual([deposit2]);
+
+      const result2 = await service.getDeposits({
+        userId: 'userId1',
+        startDate: 'bad',
+        endDate: '2021-01-10T00:00:00.000Z',
+      });
+
+      expect(result2).toEqual([deposit1]);
     });
   });
 

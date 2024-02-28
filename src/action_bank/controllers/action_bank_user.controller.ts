@@ -4,19 +4,19 @@ import {
   Inject,
   Req,
   UseInterceptors,
-  HttpStatus,
-  HttpException,
   Post,
 } from '@nestjs/common';
+import { Request } from 'express';
 
 import { RequestLogInterceptor } from '@/src/middleware/request_log.interceptor';
 import { ActionBankUserService } from '@/src/action_bank/services/action_bank_user.service';
 import { LoggerService } from '@/src/logger/logger.service';
-import { Request } from 'express';
 import { pageAndPagination } from '@/src/utils/page_and_pagination';
-import { ActionBankUserJSON } from '@/src/models/action_bank/action_bank_user';
-import { isNullOrUndefined } from '@/src/utils/type_guards';
-import { NotFoundError, UnimplementedError } from '@/src/errors';
+import { ActionBankUser } from '@/src/models/action_bank/action_bank_user';
+import { isNullOrUndefined, isRecord, isString } from '@/src/utils/type_guards';
+import { InvalidInputError } from '@/src/errors';
+import { AuthRequiredIncerceptor } from '@/src/middleware/auth_interceptor';
+import { commonErrorHandler } from '@/src/utils/common_error_handler';
 
 @UseInterceptors(RequestLogInterceptor)
 @Controller({ path: 'api/action_bank' })
@@ -29,7 +29,8 @@ export class ActionBankUserController {
   ) {}
 
   @Get('users')
-  async getUsers(@Req() request: Request): Promise<ActionBankUserJSON[]> {
+  @UseInterceptors(AuthRequiredIncerceptor)
+  async getUsers(@Req() request: Request): Promise<ActionBankUser[]> {
     const { page, pagination } = pageAndPagination(request);
 
     try {
@@ -38,17 +39,13 @@ export class ActionBankUserController {
         pagination,
       });
     } catch (e) {
-      if (e instanceof NotFoundError) {
-        throw new HttpException('No User Found', HttpStatus.NOT_FOUND);
-      }
-      await this.loggerService.addErrorLog(e);
-
-      throw new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw await commonErrorHandler(e, this.loggerService);
     }
   }
 
   @Get('user/:userId')
-  async getUser(@Req() request: Request): Promise<ActionBankUserJSON> {
+  @UseInterceptors(AuthRequiredIncerceptor)
+  async getUser(@Req() request: Request): Promise<ActionBankUser> {
     const userId = request.params?.userId;
 
     try {
@@ -68,27 +65,66 @@ export class ActionBankUserController {
 
       return user;
     } catch (e) {
-      if (e instanceof NotFoundError) {
-        throw new HttpException('No User Found', HttpStatus.NOT_FOUND);
-      }
-      await this.loggerService.addErrorLog(e);
-
-      throw new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw await commonErrorHandler(e, this.loggerService);
     }
   }
 
   @Post('addUser')
-  async addUser(@Req() request: Request): Promise<ActionBankUserJSON> {
-    throw new UnimplementedError('Not Implemented');
+  @UseInterceptors(AuthRequiredIncerceptor)
+  async addUser(@Req() request: Request): Promise<ActionBankUser> {
+    try {
+      const { body } = request;
+
+      if (!isRecord(body)) {
+        throw new InvalidInputError('Invalid User Input');
+      }
+
+      const newUser = ActionBankUser.fromJSON(body.user);
+      const user = await this.actionBankUserService.addActionBankUser(newUser);
+
+      return user;
+    } catch (e) {
+      throw await commonErrorHandler(e, this.loggerService);
+    }
   }
 
   @Post('updateUser')
-  async updateUser(@Req() request: Request): Promise<ActionBankUserJSON> {
-    throw new UnimplementedError('Not Implemented');
+  @UseInterceptors(AuthRequiredIncerceptor)
+  async updateUser(@Req() request: Request): Promise<ActionBankUser> {
+    try {
+      const { body } = request;
+
+      if (!isRecord(body)) {
+        throw new InvalidInputError('Invalid User Input');
+      }
+
+      const newUser = ActionBankUser.fromJSON(body.user);
+      const user = await this.actionBankUserService.updateActionBankUser(
+        newUser,
+      );
+      return user;
+    } catch (e) {
+      throw await commonErrorHandler(e, this.loggerService);
+    }
   }
 
   @Post('deleteUser')
-  async deleteUser(@Req() request: Request): Promise<ActionBankUserJSON> {
-    throw new UnimplementedError('Not Implemented');
+  @UseInterceptors(AuthRequiredIncerceptor)
+  async deleteUser(@Req() request: Request): Promise<ActionBankUser> {
+    try {
+      const userId = request.body?.userId;
+
+      if (!isString(userId)) {
+        throw new InvalidInputError('Invalid User ID');
+      }
+
+      const user = await this.actionBankUserService.deleteActionBankUser(
+        userId,
+      );
+
+      return user;
+    } catch (e) {
+      throw await commonErrorHandler(e, this.loggerService);
+    }
   }
 }

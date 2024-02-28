@@ -1,3 +1,4 @@
+import { InvalidInputError } from '@/src/errors';
 import { isNumber, isRecord, isString } from '@/src/utils/type_guards';
 
 export interface DepositConversionJSON {
@@ -82,7 +83,7 @@ export class DepositConversion {
   static fromJSON(input: unknown): DepositConversion {
     if (!DepositConversion.isDepositConversionJSON(input)) {
       const errors = DepositConversion.DepositConversionJSONTest(input);
-      throw new Error(`Invalid JSON ${errors.join(', ')}`);
+      throw new InvalidInputError(`Invalid JSON ${errors.join(', ')}`);
     }
 
     return new DepositConversion(

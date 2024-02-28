@@ -1,5 +1,3 @@
-import { DateTime } from 'luxon';
-
 export interface GetPageOptions {
   page?: number;
   pagination?: number;
@@ -15,14 +13,14 @@ export interface GetPageAndUserOptions extends GetPageOptions {
 
 export interface PurchaseInputOptions extends GetPageOptions {
   userId: string;
-  startDate?: DateTime;
-  endDate?: DateTime;
+  startDate?: string;
+  endDate?: string;
   purchasePriceId?: string;
 }
 
 export interface DepositInputOptions extends GetPageOptions {
   userId: string;
-  startDate?: DateTime;
-  endDate?: DateTime;
+  startDate?: string;
+  endDate?: string;
   depositConversionId?: string;
 }

@@ -94,6 +94,8 @@ export class BlogController {
         );
       }
 
+      await this.loggerService.addErrorLog(e);
+
       throw new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
@@ -119,7 +121,7 @@ export class BlogController {
         );
       }
 
-      console.error(e);
+      await this.loggerService.addErrorLog(e);
 
       throw new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -155,7 +157,6 @@ export class BlogController {
         );
       }
 
-      console.error(e);
       this.loggerService.addErrorLog(`Error Updating Post: ${e}`);
 
       throw new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
@@ -183,7 +184,7 @@ export class BlogController {
         );
       }
 
-      console.error(e);
+      await this.loggerService.addErrorLog(e);
 
       throw new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
     }

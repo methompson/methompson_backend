@@ -24,7 +24,7 @@ const p2JSON: PurchaseJSON = {
   id: 'id2',
   userId: 'userId1',
   purchasePriceId: 'purchasePriceId2',
-  date: '2021-01-16T00:00:00.000Z',
+  date: '2021-01-12T00:00:00.000Z',
   purchasedQuantity: 2,
 };
 const p3JSON: PurchaseJSON = {
@@ -35,21 +35,25 @@ const p3JSON: PurchaseJSON = {
   purchasedQuantity: 3,
 };
 
-const p1 = Purchase.fromJSON(p1JSON);
-const p2 = Purchase.fromJSON(p2JSON);
-const p3 = Purchase.fromJSON(p3JSON);
+const purchase1 = Purchase.fromJSON(p1JSON);
+const purchase2 = Purchase.fromJSON(p2JSON);
+const purchase3 = Purchase.fromJSON(p3JSON);
 
 describe('InMemoryPurchaseService', () => {
   describe('purchases', () => {
     test('returns a copy of the purchases', () => {
-      const service = new InMemoryPurchaseService([p1, p2, p3]);
+      const service = new InMemoryPurchaseService([
+        purchase1,
+        purchase2,
+        purchase3,
+      ]);
 
       const purchases = service.purchases;
 
       expect(purchases).toEqual({
-        id1: p1,
-        id2: p2,
-        id3: p3,
+        id1: purchase1,
+        id2: purchase2,
+        id3: purchase3,
       });
     });
 
@@ -63,7 +67,11 @@ describe('InMemoryPurchaseService', () => {
     });
 
     test('revising the purchases object does not revise the stored version', () => {
-      const service = new InMemoryPurchaseService([p1, p2, p3]);
+      const service = new InMemoryPurchaseService([
+        purchase1,
+        purchase2,
+        purchase3,
+      ]);
 
       const purchases = service.purchases;
 
@@ -72,9 +80,9 @@ describe('InMemoryPurchaseService', () => {
       expect(Object.values(purchases).length).toBe(2);
 
       expect(service.purchases).toEqual({
-        id1: p1,
-        id2: p2,
-        id3: p3,
+        id1: purchase1,
+        id2: purchase2,
+        id3: purchase3,
       });
       expect(Object.values(service.purchases).length).toBe(3);
     });
@@ -82,12 +90,16 @@ describe('InMemoryPurchaseService', () => {
 
   describe('purchasesList', () => {
     test('returns an array of purchases sorted by date', () => {
-      const service = new InMemoryPurchaseService([p3, p2, p1]);
+      const service = new InMemoryPurchaseService([
+        purchase3,
+        purchase2,
+        purchase1,
+      ]);
 
       const list = service.purchasesList;
 
       expect(list.length).toBe(3);
-      expect(list).toEqual([p1, p2, p3]);
+      expect(list).toEqual([purchase1, purchase2, purchase3]);
     });
 
     test('if there are no purchases, it returns an empty array', () => {
@@ -99,42 +111,48 @@ describe('InMemoryPurchaseService', () => {
     });
 
     test('revising the purchasesList array does not revise the stored version', () => {
-      const service = new InMemoryPurchaseService([p1, p2]);
+      const service = new InMemoryPurchaseService([purchase1, purchase2]);
 
       const list = service.purchasesList;
 
-      list.push(p3);
+      list.push(purchase3);
 
       expect(list.length).toBe(3);
-      expect(service.purchasesList).toEqual([p1, p2]);
+      expect(service.purchasesList).toEqual([purchase1, purchase2]);
       expect(service.purchasesList.length).toBe(2);
 
       list.pop();
       list.pop();
 
       expect(list.length).toBe(1);
-      expect(service.purchasesList).toEqual([p1, p2]);
+      expect(service.purchasesList).toEqual([purchase1, purchase2]);
       expect(service.purchasesList.length).toBe(2);
     });
   });
 
   describe('getPurchases', () => {
     test('returns an array of purchases', async () => {
-      const service = new InMemoryPurchaseService([p1, p2, p3]);
+      const service = new InMemoryPurchaseService([
+        purchase1,
+        purchase2,
+        purchase3,
+      ]);
 
       const result1 = await service.getPurchases({ userId: 'userId1' });
       expect(result1.length).toBe(2);
-      expect(result1).toEqual([p1, p2]);
+      expect(result1).toEqual([purchase1, purchase2]);
 
       const result2 = await service.getPurchases({ userId: 'userId2' });
       expect(result2.length).toBe(1);
-      expect(result2).toEqual([p3]);
+      expect(result2).toEqual([purchase3]);
     });
 
     test('returns paginated purchases if there are more purchases than the pagination', async () => {
       const purchases: Purchase[] = [];
 
-      const baseDate = DateTime.fromISO('2021-02-05T00:00:00.000Z');
+      const baseDate = DateTime.fromISO('2021-02-05T00:00:00.000Z', {
+        zone: 'America/Chicago',
+      });
 
       if (!baseDate.isValid) {
         throw new Error('Invalid date');
@@ -151,7 +169,12 @@ describe('InMemoryPurchaseService', () => {
         purchases.push(Purchase.fromJSON(pJSON));
       }
 
-      const service = new InMemoryPurchaseService([p1, p2, p3, ...purchases]);
+      const service = new InMemoryPurchaseService([
+        purchase1,
+        purchase2,
+        purchase3,
+        ...purchases,
+      ]);
 
       const p4 = purchases[0];
       const p5 = purchases[1];
@@ -173,8 +196,8 @@ describe('InMemoryPurchaseService', () => {
         throw new Error('Invalid purchases');
       }
 
-      expect(result.includes(p1)).toBeTruthy();
-      expect(result.includes(p2)).toBeTruthy();
+      expect(result.includes(purchase1)).toBeTruthy();
+      expect(result.includes(purchase2)).toBeTruthy();
       expect(result.includes(p4)).toBeTruthy();
       expect(result.includes(p5)).toBeTruthy();
       expect(result.includes(p6)).toBeTruthy();
@@ -183,7 +206,9 @@ describe('InMemoryPurchaseService', () => {
     test('goes to the proper page if a page and pagination are provided', async () => {
       const purchases: Purchase[] = [];
 
-      const baseDate = DateTime.fromISO('2021-02-05T00:00:00.000Z');
+      const baseDate = DateTime.fromISO('2021-02-05T00:00:00.000Z', {
+        zone: 'America/Chicago',
+      });
 
       if (!baseDate.isValid) {
         throw new Error('Invalid date');
@@ -200,7 +225,12 @@ describe('InMemoryPurchaseService', () => {
         purchases.push(Purchase.fromJSON(pJSON));
       }
 
-      const service = new InMemoryPurchaseService([p1, p2, p3, ...purchases]);
+      const service = new InMemoryPurchaseService([
+        purchase1,
+        purchase2,
+        purchase3,
+        ...purchases,
+      ]);
 
       const p7 = purchases[3];
       const p8 = purchases[4];
@@ -227,7 +257,11 @@ describe('InMemoryPurchaseService', () => {
     });
 
     test('returns an empty array if the page is beyond the range of purchases', async () => {
-      const service = new InMemoryPurchaseService([p1, p2, p3]);
+      const service = new InMemoryPurchaseService([
+        purchase1,
+        purchase2,
+        purchase3,
+      ]);
 
       const result = await service.getPurchases({
         userId: 'userId1',
@@ -249,13 +283,140 @@ describe('InMemoryPurchaseService', () => {
     });
 
     test('returns an empty array if the user has no purchases', async () => {
-      const service = new InMemoryPurchaseService([p1, p2, p3]);
+      const service = new InMemoryPurchaseService([
+        purchase1,
+        purchase2,
+        purchase3,
+      ]);
 
       const result = await service.getPurchases({
         userId: 'userId3',
       });
 
       expect(result.length).toBe(0);
+    });
+
+    test('returns a date constrained array of Purchases', async () => {
+      const purchases: Purchase[] = [];
+      const baseDate = DateTime.fromISO('2021-02-05T00:00:00.000Z', {
+        zone: 'America/Chicago',
+      });
+
+      if (!baseDate.isValid) {
+        throw new Error('Invalid date');
+      }
+
+      for (let i = 4; i < 8; i++) {
+        const purchase: PurchaseJSON = {
+          id: `id${i}`,
+          userId: 'userId1',
+          purchasePriceId: `purchasePriceId${i}`,
+          date: baseDate.plus({ days: i }).toISO(),
+          purchasedQuantity: i,
+        };
+
+        purchases.push(Purchase.fromJSON(purchase));
+      }
+
+      const service = new InMemoryPurchaseService([
+        purchase1,
+        purchase2,
+        purchase3,
+        ...purchases,
+      ]);
+
+      const purchase4 = purchases[0];
+      const purchase5 = purchases[1];
+      const purchase6 = purchases[2];
+      const purchase7 = purchases[3];
+
+      if (!purchase4 || !purchase5 || !purchase6 || !purchase7) {
+        throw new Error('Invalid purchases');
+      }
+
+      const result1 = await service.getPurchases({
+        userId: 'userId1',
+        startDate: '2021-01-01T00:00:00.000Z',
+      });
+
+      expect(result1).toEqual([
+        purchase1,
+        purchase2,
+        purchase4,
+        purchase5,
+        purchase6,
+        purchase7,
+      ]);
+
+      const result2 = await service.getPurchases({
+        userId: 'userId1',
+        startDate: '2021-01-13T00:00:00.000Z',
+      });
+
+      expect(result2).toEqual([purchase4, purchase5, purchase6, purchase7]);
+
+      const result3 = await service.getPurchases({
+        userId: 'userId1',
+        endDate: '2021-01-30T00:00:00.000Z',
+      });
+
+      expect(result3).toEqual([purchase1, purchase2]);
+
+      const result4 = await service.getPurchases({
+        userId: 'userId1',
+        startDate: '2021-01-08T00:00:00.000Z',
+        endDate: '2021-02-09T00:00:00.000Z',
+      });
+
+      expect(result4).toEqual([purchase2, purchase4]);
+    });
+
+    test('dates are ignored if they are invalid', async () => {
+      const service = new InMemoryPurchaseService([
+        purchase1,
+        purchase2,
+        purchase3,
+      ]);
+
+      const result1 = await service.getPurchases({
+        userId: 'userId1',
+        startDate: 'bad',
+      });
+
+      expect(result1).toEqual([purchase1, purchase2]);
+
+      const result2 = await service.getPurchases({
+        userId: 'userId1',
+        endDate: 'bad',
+      });
+
+      expect(result2).toEqual([purchase1, purchase2]);
+    });
+
+    test('A good date and a bad date returns the good date', async () => {
+      const service = new InMemoryPurchaseService([
+        purchase1,
+        purchase2,
+        purchase3,
+      ]);
+
+      // TODO Timezone issue. Reolve by setting the TZ in the DateTime objects
+
+      const result1 = await service.getPurchases({
+        userId: 'userId1',
+        startDate: '2021-01-10T00:00:00.000Z',
+        endDate: 'bad',
+      });
+
+      expect(result1).toEqual([purchase2]);
+
+      const result2 = await service.getPurchases({
+        userId: 'userId1',
+        startDate: 'bad',
+        endDate: '2021-01-10T00:00:00.000Z',
+      });
+
+      expect(result2).toEqual([purchase1]);
     });
   });
 
@@ -268,9 +429,9 @@ describe('InMemoryPurchaseService', () => {
 
       expect(service.purchasesList.length).toBe(0);
 
-      const result = await service.addPurchase(p1);
+      const result = await service.addPurchase(purchase1);
       expect(result.toJSON()).toEqual({
-        ...p1.toJSON(),
+        ...purchase1.toJSON(),
         id: someId,
       });
       expect(service.purchasesList.length).toBe(1);
@@ -280,24 +441,32 @@ describe('InMemoryPurchaseService', () => {
 
   describe('updatePurchase', () => {
     test('replaces the purchase with a new purchase and returns the old purchase', async () => {
-      const service = new InMemoryPurchaseService([p1, p2, p3]);
+      const service = new InMemoryPurchaseService([
+        purchase1,
+        purchase2,
+        purchase3,
+      ]);
 
       const newP1 = Purchase.fromJSON({
-        ...p1.toJSON(),
+        ...purchase1.toJSON(),
         purchasedQuantity: 10,
       });
 
       const result = await service.updatePurchase(newP1);
-      expect(result).toBe(p1);
+      expect(result).toBe(purchase1);
       expect(service.purchasesList.length).toBe(3);
       expect(service.purchasesList[0]).toBe(newP1);
     });
 
     test('throws an error if the purchase does not exist', async () => {
-      const service = new InMemoryPurchaseService([p1, p2, p3]);
+      const service = new InMemoryPurchaseService([
+        purchase1,
+        purchase2,
+        purchase3,
+      ]);
 
       const newP1 = Purchase.fromJSON({
-        ...p1.toJSON(),
+        ...purchase1.toJSON(),
         id: 'invalid id',
       });
 
@@ -309,19 +478,27 @@ describe('InMemoryPurchaseService', () => {
 
   describe('deletePurchase', () => {
     test('deletes the purchase and returns the deleted purchase', async () => {
-      const service = new InMemoryPurchaseService([p1, p2, p3]);
+      const service = new InMemoryPurchaseService([
+        purchase1,
+        purchase2,
+        purchase3,
+      ]);
 
       expect(service.purchasesList.length).toBe(3);
 
-      const result = await service.deletePurchase(p1.id);
+      const result = await service.deletePurchase(purchase1.id);
 
-      expect(result).toBe(p1);
+      expect(result).toBe(purchase1);
       expect(service.purchasesList.length).toBe(2);
-      expect(service.purchasesList.includes(p1)).toBeFalsy();
+      expect(service.purchasesList.includes(purchase1)).toBeFalsy();
     });
 
     test('throws an error if the purchase does not exist', async () => {
-      const service = new InMemoryPurchaseService([p1, p2, p3]);
+      const service = new InMemoryPurchaseService([
+        purchase1,
+        purchase2,
+        purchase3,
+      ]);
 
       await expect(service.deletePurchase('invalid id')).rejects.toThrow(
         'Purchase with ID invalid id not found',

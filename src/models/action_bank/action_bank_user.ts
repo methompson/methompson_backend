@@ -1,3 +1,4 @@
+import { InvalidInputError } from '@/src/errors';
 import { isNumber, isRecord, isString } from '@/src/utils/type_guards';
 
 export interface ActionBankUserJSON {
@@ -36,7 +37,7 @@ export class ActionBankUser {
   static fromJSON(input: unknown): ActionBankUser {
     if (!ActionBankUser.isActionBankUserJSON(input)) {
       const errors = ActionBankUser.ActionBankUserJSONTest(input);
-      throw new Error(`Invalid JSON ${errors.join(', ')}`);
+      throw new InvalidInputError(`Invalid JSON ${errors.join(', ')}`);
     }
 
     return new ActionBankUser(input.id, input.name, input.currentTokens);

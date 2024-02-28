@@ -5,6 +5,7 @@ import { DepositInputOptions } from '@/src/action_bank/types';
 import { DepositService } from './deposit.service';
 import { Deposit } from '@/src/models/action_bank/deposit';
 import { isNullOrUndefined } from '@/src/utils/type_guards';
+import { DateTime } from 'luxon';
 
 @Injectable()
 export class InMemoryDepositService extends DepositService {
@@ -42,14 +43,18 @@ export class InMemoryDepositService extends DepositService {
 
     const userId = input.userId;
 
-    const startDate = input?.startDate;
-    const endDate = input?.endDate;
+    const startDate = DateTime.fromISO(input?.startDate ?? 'bad', {
+      zone: 'America/Chicago',
+    });
+    const endDate = DateTime.fromISO(input?.endDate ?? 'bad', {
+      zone: 'America/Chicago',
+    });
 
     const deposits = this.depositsList
       .filter((d) => {
         if (d.userId !== userId) return false;
-        if (startDate && d.date < startDate) return false;
-        if (endDate && d.date > endDate) return false;
+        if (startDate.isValid && d.date < startDate) return false;
+        if (endDate.isValid && d.date > endDate) return false;
 
         return true;
       })

@@ -1,3 +1,4 @@
+import { InvalidInputError } from '@/src/errors';
 import { isNumber, isRecord, isString } from '@/src/utils/type_guards';
 
 export interface PurchasePriceJSON {
@@ -43,7 +44,7 @@ export class PurchasePrice {
   static fromJSON(input: unknown): PurchasePrice {
     if (!PurchasePrice.isPurchasePriceJSON(input)) {
       const errors = PurchasePrice.PurchasePriceJSONTest(input);
-      throw new Error(`Invalid JSON ${errors.join(', ')}`);
+      throw new InvalidInputError(`Invalid JSON ${errors.join(', ')}`);
     }
 
     return new PurchasePrice(input.id, input.userId, input.name, input.price);

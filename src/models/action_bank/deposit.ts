@@ -6,6 +6,7 @@ import {
   isString,
   isValidDateTimeString,
 } from '@/src/utils/type_guards';
+import { InvalidInputError } from '@/src/errors';
 
 export interface DepositJSON {
   id: string;
@@ -64,12 +65,12 @@ export class Deposit {
   static fromJSON(input: unknown): Deposit {
     if (!Deposit.isDepositJSON(input)) {
       const errors = Deposit.DepositJSONTest(input);
-      throw new Error(`Invalid JSON ${errors.join(', ')}`);
+      throw new InvalidInputError(`Invalid JSON ${errors.join(', ')}`);
     }
 
     const dateTime = DateTime.fromISO(input.date);
     if (!dateTime.isValid) {
-      throw new Error('Invalid date');
+      throw new InvalidInputError('Invalid date');
     }
 
     return new Deposit(

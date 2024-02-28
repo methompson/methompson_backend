@@ -6,6 +6,7 @@ import {
   isString,
   isValidDateTimeString,
 } from '@/src/utils/type_guards';
+import { InvalidInputError } from '@/src/errors';
 
 export interface PurchaseJSON {
   id: string;
@@ -57,12 +58,12 @@ export class Purchase {
   static fromJSON(input: unknown): Purchase {
     if (!Purchase.isPurchaseJSON(input)) {
       const errors = Purchase.PurchaseJSONTest(input);
-      throw new Error(`Invalid JSON ${errors.join(', ')}`);
+      throw new InvalidInputError(`Invalid JSON ${errors.join(', ')}`);
     }
 
     const dateTime = DateTime.fromISO(input.date);
     if (!dateTime.isValid) {
-      throw new Error('Invalid date');
+      throw new InvalidInputError('Invalid date');
     }
 
     return new Purchase(

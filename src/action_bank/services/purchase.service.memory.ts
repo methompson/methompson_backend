@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
+import { DateTime } from 'luxon';
 
 import { PurchaseInputOptions } from '@/src/action_bank/types';
 import { Purchase } from '@/src/models/action_bank/purchase';
@@ -41,14 +42,18 @@ export class InMemoryPurchaseService extends PurchaseService {
 
     const userId = input.userId;
 
-    const startDate = input?.startDate;
-    const endDate = input?.endDate;
+    const startDate = DateTime.fromISO(input?.startDate ?? 'bad', {
+      zone: 'America/Chicago',
+    });
+    const endDate = DateTime.fromISO(input?.endDate ?? 'bad', {
+      zone: 'America/Chicago',
+    });
 
     const purchases = this.purchasesList
       .filter((p) => {
         if (p.userId !== userId) return false;
-        if (startDate && p.date < startDate) return false;
-        if (endDate && p.date > endDate) return false;
+        if (startDate.isValid && p.date < startDate) return false;
+        if (endDate.isValid && p.date > endDate) return false;
 
         return true;
       })
