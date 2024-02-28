@@ -14,7 +14,7 @@ import { LoggerService } from '@/src/logger/logger.service';
 import { pageAndPagination } from '@/src/utils/page_and_pagination';
 import { ActionBankUser } from '@/src/models/action_bank/action_bank_user';
 import { isNullOrUndefined, isRecord, isString } from '@/src/utils/type_guards';
-import { InvalidInputError } from '@/src/errors';
+import { InvalidInputError, NotFoundError } from '@/src/errors';
 import { AuthRequiredIncerceptor } from '@/src/middleware/auth_interceptor';
 import { commonErrorHandler } from '@/src/utils/common_error_handler';
 
@@ -34,7 +34,7 @@ export class ActionBankUserController {
     const { page, pagination } = pageAndPagination(request);
 
     try {
-      return this.actionBankUserService.getActionBankUsers({
+      return await this.actionBankUserService.getActionBankUsers({
         page,
         pagination,
       });
@@ -60,7 +60,7 @@ export class ActionBankUserController {
       const user = users[0];
 
       if (isNullOrUndefined(user)) {
-        throw new Error(`User with ID ${userId} not found`);
+        throw new NotFoundError(`User with ID ${userId} not found`);
       }
 
       return user;

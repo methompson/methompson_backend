@@ -11,7 +11,7 @@ export async function commonErrorHandler(
     httpExceptionMessage?: string;
   },
 ): Promise<Error> {
-  const notFoundErrorMessage = options?.notFoundErrorMessage ?? 'No User Found';
+  const notFoundErrorMessage = options?.notFoundErrorMessage ?? 'Not Found';
   const invalidInputErrorMessage =
     options?.invalidInputErrorMessage ?? 'Invalid Input';
   const httpExceptionMessage = options?.httpExceptionMessage ?? 'Server Error';

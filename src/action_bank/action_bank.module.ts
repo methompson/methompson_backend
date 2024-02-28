@@ -15,7 +15,7 @@ import { DepositConversionsController } from './controllers/deposit_conversions.
 import { PurchasePricesController } from './controllers/purchase_prices.controller';
 import { PurchaseController } from './controllers/purchase.controller';
 
-const actionBankFactory = {
+const actionBankUserFactory = {
   provide: 'ACTION_BANK_USER_SERVICE',
   useFactory: async (_configService: ConfigService) =>
     new InMemoryActionBankUserService(),
@@ -28,18 +28,21 @@ const depositConversionsFactory = {
     new InMemoryDepositConversionsService(),
   inject: [ConfigService],
 };
+
 const depositFactory = {
   provide: 'DEPOSIT_SERVICE',
   useFactory: async (_configService: ConfigService) =>
     new InMemoryDepositService(),
   inject: [ConfigService],
 };
+
 const purchasePricesFactory = {
   provide: 'PURCHASE_PRICES_SERVICE',
   useFactory: async (_configService: ConfigService) =>
     new InMemoryPurchasePricesService(),
   inject: [ConfigService],
 };
+
 const purchaseFactory = {
   provide: 'PURCHASE_SERVICE',
   useFactory: async (_configService: ConfigService) =>
@@ -57,7 +60,7 @@ const purchaseFactory = {
     PurchaseController,
   ],
   providers: [
-    actionBankFactory,
+    actionBankUserFactory,
     depositConversionsFactory,
     depositFactory,
     purchasePricesFactory,
