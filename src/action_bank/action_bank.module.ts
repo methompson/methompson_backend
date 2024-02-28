@@ -37,7 +37,7 @@ const actionBankUserFactory = {
     const type = configService.get('actionBankType');
 
     if (type === 'file') {
-      const path = configService.get('actionBankTypePath');
+      const path = configService.get('actionBankFilePath');
       if (isString(path)) {
         const service = await FileActionBankUserService.init(path);
         return service;
@@ -57,7 +57,7 @@ const depositConversionsFactory = {
     const type = configService.get('actionBankType');
 
     if (type === 'file') {
-      const path = configService.get('actionBankTypePath');
+      const path = configService.get('actionBankFilePath');
       if (isString(path)) {
         const service = await FileDepositConversionsService.init(path);
         return service;
@@ -75,7 +75,7 @@ const depositFactory = {
     const type = configService.get('actionBankType');
 
     if (type === 'file') {
-      const path = configService.get('actionBankTypePath');
+      const path = configService.get('actionBankFilePath');
       if (isString(path)) {
         const service = await FileDepositService.init(path);
         return service;
@@ -95,7 +95,7 @@ const purchasePricesFactory = {
     const type = configService.get('actionBankType');
 
     if (type === 'file') {
-      const path = configService.get('actionBankTypePath');
+      const path = configService.get('actionBankFilePath');
       if (isString(path)) {
         const service = await FilePurchasePricesService.init(path);
         return service;

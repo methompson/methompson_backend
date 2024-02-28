@@ -7,6 +7,7 @@ import { blogConfiguration } from '@/src/config/blog_configuration';
 import { logConfiguration } from '@/src/config/log_configuration';
 import { authConfiguration } from '@/src/config/auth_configuration';
 import { fileConfiguration } from '@/src/config/file_configuration';
+import { actionBankConfiguration } from './config/action_bank_configuration';
 
 import { BlogModule } from '@/src/blog/blog.module';
 import { LoggerModule } from '@/src/logger/logger.module';
@@ -24,6 +25,7 @@ import { ActionBankModule } from './action_bank/action_bank.module';
         fileConfiguration,
         mongodbConfiguration,
         blogConfiguration,
+        actionBankConfiguration,
         logConfiguration,
         authConfiguration,
         noteConfiguration,
