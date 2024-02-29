@@ -8,13 +8,11 @@ import { Deposit } from '@/src/models/action_bank/deposit';
 import { isNullOrUndefined } from '@/src/utils/type_guards';
 
 @Injectable()
-export class InMemoryDepositService extends DepositService {
+export class InMemoryDepositService implements DepositService {
   // Key is the ID
   protected _deposits: Record<string, Deposit> = {};
 
   constructor(deposits?: Deposit[]) {
-    super();
-
     if (deposits) {
       for (const i of deposits) {
         this._deposits[i.id] = i;

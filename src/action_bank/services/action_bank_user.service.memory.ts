@@ -8,13 +8,11 @@ import { GetActionBankUsersOptions } from '@/src/action_bank/types';
 import { NotFoundError } from '@/src/errors';
 
 @Injectable()
-export class InMemoryActionBankUserService extends ActionBankUserService {
+export class InMemoryActionBankUserService implements ActionBankUserService {
   // Key is the ID
   protected _actionBankUsers: Record<string, ActionBankUser> = {};
 
   constructor(users?: ActionBankUser[]) {
-    super();
-
     if (users) {
       for (const user of users) {
         this._actionBankUsers[user.id] = user;

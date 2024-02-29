@@ -7,13 +7,11 @@ import { PurchasePricesService } from './purchase_prices.service';
 import { isNullOrUndefined } from '@/src/utils/type_guards';
 
 @Injectable()
-export class InMemoryPurchasePricesService extends PurchasePricesService {
+export class InMemoryPurchasePricesService implements PurchasePricesService {
   // Key is the ID
   protected _purchasePrices: Record<string, PurchasePrice> = {};
 
   constructor(input?: PurchasePrice[]) {
-    super();
-
     if (input) {
       for (const i of input) {
         this._purchasePrices[i.id] = i;

@@ -6,14 +6,15 @@ import { GetPageAndUserOptions } from '@/src/action_bank/types';
 import { DepositConversionsService } from './deposit_conversions.service';
 import { isNullOrUndefined } from '@/src/utils/type_guards';
 
+// Using this to get around prettier formatting the really long line below
+type DCS = DepositConversionsService;
+
 @Injectable()
-export class InMemoryDepositConversionsService extends DepositConversionsService {
+export class InMemoryDepositConversionsService implements DCS {
   // Key is the ID
   protected _depositConversions: Record<string, DepositConversion> = {};
 
   constructor(depositConversions?: DepositConversion[]) {
-    super();
-
     if (depositConversions) {
       for (const conversion of depositConversions) {
         this._depositConversions[conversion.id] = conversion;
