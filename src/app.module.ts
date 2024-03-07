@@ -7,7 +7,7 @@ import { blogConfiguration } from '@/src/config/blog_configuration';
 import { logConfiguration } from '@/src/config/log_configuration';
 import { authConfiguration } from '@/src/config/auth_configuration';
 import { fileConfiguration } from '@/src/config/file_configuration';
-import { actionBankConfiguration } from './config/action_bank_configuration';
+import { viceBankConfiguration } from './config/vice_bank_configuration';
 
 import { BlogModule } from '@/src/blog/blog.module';
 import { LoggerModule } from '@/src/logger/logger.module';
@@ -16,7 +16,7 @@ import { authCheckMiddlewareFactory } from '@/src/middleware/auth_check.middlewa
 import { FileUploadModule } from '@/src/file/file.module';
 import { NotesModule } from '@/src/notes/notes.module';
 import { noteConfiguration } from '@/src/config/note_configuration';
-import { ActionBankModule } from './action_bank/action_bank.module';
+import { ViceBankModule } from './vice_bank/vice_bank.module';
 
 @Module({
   imports: [
@@ -25,7 +25,7 @@ import { ActionBankModule } from './action_bank/action_bank.module';
         fileConfiguration,
         mongodbConfiguration,
         blogConfiguration,
-        actionBankConfiguration,
+        viceBankConfiguration,
         logConfiguration,
         authConfiguration,
         noteConfiguration,
@@ -35,7 +35,7 @@ import { ActionBankModule } from './action_bank/action_bank.module';
     BlogModule,
     FileUploadModule,
     NotesModule,
-    ActionBankModule,
+    ViceBankModule,
     ScheduleModule.forRoot(),
   ],
 })
