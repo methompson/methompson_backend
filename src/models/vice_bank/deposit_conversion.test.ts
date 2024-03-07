@@ -9,7 +9,6 @@ describe('DepositConversion', () => {
     depositsPer: 1,
     tokensPer: 2,
     minDeposit: 3,
-    maxDeposit: 4,
   };
 
   describe('toJSON', () => {
@@ -33,7 +32,6 @@ describe('DepositConversion', () => {
       expect(result.depositsPer).toBe(1);
       expect(result.tokensPer).toBe(2);
       expect(result.minDeposit).toBe(3);
-      expect(result.maxDeposit).toBe(4);
     });
 
     test('throws an error if values are missing from the input', () => {
@@ -65,10 +63,6 @@ describe('DepositConversion', () => {
 
       invalidInput = { ...validInput };
       delete invalidInput.minDeposit;
-      expect(() => DepositConversion.fromJSON(invalidInput)).toThrow();
-
-      invalidInput = { ...validInput };
-      delete invalidInput.maxDeposit;
       expect(() => DepositConversion.fromJSON(invalidInput)).toThrow();
     });
 
@@ -127,12 +121,6 @@ describe('DepositConversion', () => {
 
       invalidInput = { ...validInput };
       delete invalidInput.minDeposit;
-      expect(DepositConversion.isDepositConversionJSON(invalidInput)).toBe(
-        false,
-      );
-
-      invalidInput = { ...validInput };
-      delete invalidInput.maxDeposit;
       expect(DepositConversion.isDepositConversionJSON(invalidInput)).toBe(
         false,
       );
@@ -200,12 +188,6 @@ describe('DepositConversion', () => {
       expect(DepositConversion.DepositConversionJSONTest(invalidInput)).toEqual(
         ['minDeposit'],
       );
-
-      invalidInput = { ...validInput };
-      delete invalidInput.maxDeposit;
-      expect(DepositConversion.DepositConversionJSONTest(invalidInput)).toEqual(
-        ['maxDeposit'],
-      );
     });
 
     test('returns root if the input is not an object', () => {
@@ -237,7 +219,6 @@ describe('DepositConversion', () => {
       expect(result.depositsPer).toBe(input.depositsPer);
       expect(result.tokensPer).toBe(input.tokensPer);
       expect(result.minDeposit).toBe(input.minDeposit);
-      expect(result.maxDeposit).toBe(input.maxDeposit);
     });
   });
 });

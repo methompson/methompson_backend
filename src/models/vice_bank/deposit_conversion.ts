@@ -9,7 +9,6 @@ export interface DepositConversionJSON {
   depositsPer: number;
   tokensPer: number;
   minDeposit: number;
-  maxDeposit: number;
 }
 
 /**
@@ -32,7 +31,6 @@ export class DepositConversion {
     protected _depositsPer: number,
     protected _tokensPer: number,
     protected _minDeposit: number,
-    protected _maxDeposit: number,
   ) {}
 
   get id(): string {
@@ -63,10 +61,6 @@ export class DepositConversion {
     return this._minDeposit;
   }
 
-  get maxDeposit(): number {
-    return this._maxDeposit;
-  }
-
   toJSON(): DepositConversionJSON {
     return {
       id: this.id,
@@ -76,7 +70,6 @@ export class DepositConversion {
       depositsPer: this.depositsPer,
       tokensPer: this.tokensPer,
       minDeposit: this.minDeposit,
-      maxDeposit: this.maxDeposit,
     };
   }
 
@@ -94,7 +87,6 @@ export class DepositConversion {
       input.depositsPer,
       input.tokensPer,
       input.minDeposit,
-      input.maxDeposit,
     );
   }
 
@@ -120,7 +112,6 @@ export class DepositConversion {
     if (!isNumber(input.depositsPer)) output.push('depositsPer');
     if (!isNumber(input.tokensPer)) output.push('tokensPer');
     if (!isNumber(input.minDeposit)) output.push('minDeposit');
-    if (!isNumber(input.maxDeposit)) output.push('maxDeposit');
 
     return output;
   }

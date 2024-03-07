@@ -24,7 +24,7 @@ export class Deposit {
     protected _date: DateTime<true>,
     protected _depositQuantity: number,
     protected _conversionRate: number,
-    protected _depositeConversionName: string,
+    protected _depositConversionName: string,
   ) {}
 
   get id(): string {
@@ -48,7 +48,7 @@ export class Deposit {
   }
 
   get depositConversionName(): string {
-    return this._depositeConversionName;
+    return this._depositConversionName;
   }
 
   toJSON(): DepositJSON {

@@ -25,7 +25,6 @@ const conversionJSON1: DepositConversionJSON = {
   depositsPer: 1,
   tokensPer: 1,
   minDeposit: 1,
-  maxDeposit: 1,
 };
 const conversionJSON2: DepositConversionJSON = {
   id: 'id2',
@@ -35,7 +34,6 @@ const conversionJSON2: DepositConversionJSON = {
   depositsPer: 2,
   tokensPer: 2,
   minDeposit: 2,
-  maxDeposit: 2,
 };
 const conversionJSON3: DepositConversionJSON = {
   id: 'id3',
@@ -45,7 +43,6 @@ const conversionJSON3: DepositConversionJSON = {
   depositsPer: 3,
   tokensPer: 3,
   minDeposit: 3,
-  maxDeposit: 3,
 };
 
 const conversion1 = DepositConversion.fromJSON(conversionJSON1);
@@ -326,7 +323,6 @@ describe('InMemoryDepositConversionsService', () => {
         depositsPer: conversion1.depositsPer,
         tokensPer: conversion1.tokensPer,
         minDeposit: conversion1.minDeposit,
-        maxDeposit: conversion1.maxDeposit,
       });
       expect(service.depositConversionsList[0]).toBe(result);
       expect(service.depositConversionsList.length).toBe(1);
