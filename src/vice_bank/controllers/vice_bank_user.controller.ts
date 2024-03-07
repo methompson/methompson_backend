@@ -22,7 +22,7 @@ import { commonErrorHandler } from '@/src/utils/common_error_handler';
 @Controller({ path: 'api/vice_bank' })
 export class ViceBankUserController {
   constructor(
-    @Inject('vice_BANK_USER_SERVICE')
+    @Inject('VICE_BANK_USER_SERVICE')
     private readonly viceBankUserService: ViceBankUserService,
     @Inject('LOGGER_SERVICE')
     private readonly loggerService: LoggerService,

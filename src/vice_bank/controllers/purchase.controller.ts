@@ -18,7 +18,7 @@ import { isRecord, isString } from '@/src/utils/type_guards';
 import { commonErrorHandler } from '@/src/utils/common_error_handler';
 
 @UseInterceptors(RequestLogInterceptor)
-@Controller({ path: 'api/action_bank' })
+@Controller({ path: 'api/vice_bank' })
 export class PurchaseController {
   constructor(
     @Inject('PURCHASE_SERVICE')

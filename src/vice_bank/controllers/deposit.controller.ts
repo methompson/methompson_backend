@@ -18,7 +18,7 @@ import { isRecord, isString } from '@/src/utils/type_guards';
 import { InvalidInputError } from '@/src/errors';
 
 @UseInterceptors(RequestLogInterceptor)
-@Controller({ path: 'api/action_bank' })
+@Controller({ path: 'api/vice_bank' })
 export class DepositController {
   constructor(
     @Inject('DEPOSIT_SERVICE')
