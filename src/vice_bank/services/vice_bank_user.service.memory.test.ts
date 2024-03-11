@@ -17,18 +17,23 @@ jest.mock('uuid', () => {
 
 const uuidv4 = uuid.v4 as jest.Mock<unknown, unknown[]>;
 
+const userId = 'userId';
+
 const user1JSON: ViceBankUserJSON = {
   id: 'id1',
+  userId,
   name: 'name1',
   currentTokens: 1,
 };
 const user2JSON: ViceBankUserJSON = {
   id: 'id2',
+  userId,
   name: 'name2',
   currentTokens: 2,
 };
 const user3JSON: ViceBankUserJSON = {
   id: 'id3',
+  userId,
   name: 'name3',
   currentTokens: 3,
 };
@@ -45,9 +50,11 @@ describe('InMemoryViceBankUserService', () => {
       const viceBankUsers = service.viceBankUsers;
 
       expect(viceBankUsers).toEqual({
-        id1: user1,
-        id2: user2,
-        id3: user3,
+        userId: {
+          id1: user1,
+          id2: user2,
+          id3: user3,
+        },
       });
     });
 
@@ -65,16 +72,18 @@ describe('InMemoryViceBankUserService', () => {
 
       const viceBankUsers = service.viceBankUsers;
 
-      delete viceBankUsers.id1;
+      delete viceBankUsers.userId?.id1;
 
-      expect(Object.values(viceBankUsers).length).toBe(2);
+      expect(Object.values(viceBankUsers.userId ?? {}).length).toBe(2);
 
       expect(service.viceBankUsers).toEqual({
-        id1: user1,
-        id2: user2,
-        id3: user3,
+        userId: {
+          id1: user1,
+          id2: user2,
+          id3: user3,
+        },
       });
-      expect(Object.values(service.viceBankUsers).length).toBe(3);
+      expect(service.viceBankUsersList.length).toBe(3);
     });
   });
 
@@ -103,13 +112,13 @@ describe('InMemoryViceBankUserService', () => {
       list.push(user3);
 
       expect(list.length).toBe(3);
-      expect(Object.values(service.viceBankUsers).length).toBe(2);
+      expect(service.viceBankUsersList.length).toBe(2);
 
       list.pop();
       list.pop();
 
       expect(list.length).toBe(1);
-      expect(Object.values(service.viceBankUsers).length).toBe(2);
+      expect(service.viceBankUsersList.length).toBe(2);
     });
   });
 
@@ -117,7 +126,7 @@ describe('InMemoryViceBankUserService', () => {
     test('returns an array of all users if the pagination / page is less than total users', async () => {
       const service = new InMemoryViceBankUserService([user1, user2, user3]);
 
-      const result = await service.getViceBankUsers();
+      const result = await service.getViceBankUsers(userId);
 
       expect(result.length).toBe(3);
       expect(result.includes(user1));
@@ -131,6 +140,7 @@ describe('InMemoryViceBankUserService', () => {
       for (let i = 4; i < 10; i++) {
         const json: ViceBankUserJSON = {
           id: `id${i}`,
+          userId,
           name: `name${i}`,
           currentTokens: i,
         };
@@ -151,7 +161,7 @@ describe('InMemoryViceBankUserService', () => {
       expect(isNullOrUndefined(user4)).toBeFalsy();
       expect(isNullOrUndefined(user5)).toBeFalsy();
 
-      const result = await service.getViceBankUsers({ pagination: 5 });
+      const result = await service.getViceBankUsers(userId, { pagination: 5 });
 
       if (!user4 || !user5) {
         throw new Error('This should never happen');
@@ -171,6 +181,7 @@ describe('InMemoryViceBankUserService', () => {
       for (let i = 4; i < 10; i++) {
         const json: ViceBankUserJSON = {
           id: `id${i}`,
+          userId,
           name: `name${i}`,
           currentTokens: i,
         };
@@ -195,7 +206,7 @@ describe('InMemoryViceBankUserService', () => {
       expect(isNullOrUndefined(user8)).toBeFalsy();
       expect(isNullOrUndefined(user9)).toBeFalsy();
 
-      const result = await service.getViceBankUsers({
+      const result = await service.getViceBankUsers(userId, {
         pagination: 5,
         page: 2,
       });
@@ -213,12 +224,12 @@ describe('InMemoryViceBankUserService', () => {
     test('returns an empty array if the page is beyond the range of users', async () => {
       const service = new InMemoryViceBankUserService([user1, user2, user3]);
 
-      const resultA = await service.getViceBankUsers({
+      const resultA = await service.getViceBankUsers(userId, {
         page: 1,
       });
       expect(resultA.length).toBe(3);
 
-      const resultB = await service.getViceBankUsers({
+      const resultB = await service.getViceBankUsers(userId, {
         page: 2,
       });
       expect(resultB.length).toBe(0);
@@ -227,7 +238,7 @@ describe('InMemoryViceBankUserService', () => {
     test('returns a single user if an id is provided', async () => {
       const service = new InMemoryViceBankUserService([user1, user2, user3]);
 
-      const result = await service.getViceBankUsers({
+      const result = await service.getViceBankUsers(userId, {
         userId: user1.id,
       });
 
@@ -242,7 +253,7 @@ describe('InMemoryViceBankUserService', () => {
       const invalidId = 'invalid id';
 
       await expect(() =>
-        service.getViceBankUsers({
+        service.getViceBankUsers(userId, {
           userId: invalidId,
         }),
       ).rejects.toThrow(`User with ID ${invalidId} not found`);
@@ -261,6 +272,7 @@ describe('InMemoryViceBankUserService', () => {
       const result = await service.addViceBankUser(user1);
       expect(result.toJSON()).toEqual({
         id: someId,
+        userId: user1.userId,
         name: user1.name,
         currentTokens: user1.currentTokens,
       });
@@ -310,7 +322,7 @@ describe('InMemoryViceBankUserService', () => {
       expect(service.viceBankUsersList.length).toBe(3);
       expect(service.viceBankUsersList.includes(user1)).toBeTruthy();
 
-      const result = await service.deleteViceBankUser(user1.id);
+      const result = await service.deleteViceBankUser(userId, user1.id);
 
       expect(result).toBe(user1);
       expect(service.viceBankUsersList.length).toBe(2);
@@ -323,9 +335,9 @@ describe('InMemoryViceBankUserService', () => {
 
       const badId = 'bad id';
 
-      await expect(() => service.deleteViceBankUser(badId)).rejects.toThrow(
-        `User with ID ${badId} not found`,
-      );
+      await expect(() =>
+        service.deleteViceBankUser(userId, badId),
+      ).rejects.toThrow(`User with ID ${badId} not found`);
 
       expect(service.viceBankUsersList.length).toBe(3);
     });

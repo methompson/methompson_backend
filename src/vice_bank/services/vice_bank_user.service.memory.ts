@@ -10,38 +10,62 @@ import { NotFoundError } from '@/src/errors';
 @Injectable()
 export class InMemoryViceBankUserService implements ViceBankUserService {
   // Key is the ID
-  protected _viceBankUsers: Record<string, ViceBankUser> = {};
+  protected _viceBankUsers: Record<string, Record<string, ViceBankUser>> = {};
 
   constructor(users?: ViceBankUser[]) {
     if (users) {
-      for (const user of users) {
-        this._viceBankUsers[user.id] = user;
-      }
+      this._viceBankUsers = this.convertListToRecord(users);
     }
   }
 
-  get viceBankUsers(): Record<string, ViceBankUser> {
-    return { ...this._viceBankUsers };
+  get viceBankUsers(): Record<string, Record<string, ViceBankUser>> {
+    const output: Record<string, Record<string, ViceBankUser>> = {};
+
+    Object.entries(this._viceBankUsers).forEach(([userId, users]) => {
+      output[userId] = { ...users };
+    });
+
+    return output;
   }
 
   get viceBankUsersList(): ViceBankUser[] {
-    return Object.values(this._viceBankUsers).sort((a, b) =>
-      a.name.localeCompare(b.name),
-    );
+    const users: ViceBankUser[] = [];
+
+    for (const u of Object.values(this._viceBankUsers)) {
+      users.push(...Object.values(u));
+    }
+
+    return users.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  convertListToRecord(
+    users: ViceBankUser[],
+  ): Record<string, Record<string, ViceBankUser>> {
+    const result: Record<string, Record<string, ViceBankUser>> = {};
+
+    for (const user of users) {
+      const usersByUserId = result[user.userId] ?? {};
+      usersByUserId[user.id] = user;
+      result[user.userId] = usersByUserId;
+    }
+
+    return result;
   }
 
   async getViceBankUsers(
+    userId: string,
     input?: GetViceBankUsersOptions,
   ): Promise<ViceBankUser[]> {
     const page = input?.page ?? 1;
     const pagination = input?.pagination ?? 10;
-    const userId = input?.userId;
+    const viceBankUserId = input?.userId;
 
-    if (isString(userId)) {
-      const user = this._viceBankUsers[userId];
+    if (isString(viceBankUserId)) {
+      const users = this._viceBankUsers[userId];
+      const user = users?.[viceBankUserId];
 
       if (isNullOrUndefined(user)) {
-        throw new NotFoundError(`User with ID ${userId} not found`);
+        throw new NotFoundError(`User with ID ${viceBankUserId} not found`);
       }
 
       return [user];
@@ -50,7 +74,9 @@ export class InMemoryViceBankUserService implements ViceBankUserService {
     const skip = pagination * (page - 1);
     const end = pagination * page;
 
-    const users = this.viceBankUsersList.slice(skip, end);
+    const allUsers = Object.values(this._viceBankUsers[userId] ?? {});
+
+    const users = allUsers.slice(skip, end);
     return users;
   }
 
@@ -58,34 +84,45 @@ export class InMemoryViceBankUserService implements ViceBankUserService {
     const id = uuidv4();
 
     const newUser = ViceBankUser.fromNewViceBankUser(id, user);
-    this._viceBankUsers[id] = newUser;
+
+    const users = this._viceBankUsers[newUser.userId] ?? {};
+
+    users[id] = newUser;
+    this._viceBankUsers[newUser.userId] = users;
 
     return newUser;
   }
 
   async updateViceBankUser(user: ViceBankUser): Promise<ViceBankUser> {
-    const { id } = user;
+    const { id, userId } = user;
 
-    const existingUser = this._viceBankUsers[id];
+    const existingUsers = this._viceBankUsers[userId];
+    const existingUser = this._viceBankUsers[userId]?.[id];
 
-    if (isNullOrUndefined(existingUser)) {
+    if (isNullOrUndefined(existingUser) || isNullOrUndefined(existingUsers)) {
       throw new Error(`User with ID ${id} not found`);
     }
 
-    this._viceBankUsers[id] = user;
+    existingUsers[id] = user;
+    this._viceBankUsers[userId] = existingUsers;
 
     return existingUser;
   }
 
-  async deleteViceBankUser(userId: string): Promise<ViceBankUser> {
-    const user = this._viceBankUsers[userId];
+  async deleteViceBankUser(
+    userId: string,
+    viceBankuserId: string,
+  ): Promise<ViceBankUser> {
+    const existingUsers = this._viceBankUsers[userId];
+    const existingUser = existingUsers?.[viceBankuserId];
 
-    if (isNullOrUndefined(user)) {
-      throw new Error(`User with ID ${userId} not found`);
+    if (isNullOrUndefined(existingUser) || isNullOrUndefined(existingUsers)) {
+      throw new Error(`User with ID ${viceBankuserId} not found`);
     }
 
-    delete this._viceBankUsers[userId];
+    delete existingUsers[viceBankuserId];
+    this._viceBankUsers[userId] = existingUsers;
 
-    return user;
+    return existingUser;
   }
 }

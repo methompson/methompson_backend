@@ -1,8 +1,10 @@
 import { ViceBankUser, ViceBankUserJSON } from './vice_bank_user';
 
 describe('ViceBankUser', () => {
+  const userId = 'userId';
   const validInput: ViceBankUserJSON = {
     id: 'id',
+    userId,
     name: 'name',
     currentTokens: 1,
   };

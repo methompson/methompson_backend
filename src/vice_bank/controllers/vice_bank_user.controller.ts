@@ -5,6 +5,7 @@ import {
   Req,
   UseInterceptors,
   Post,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Request } from 'express';
 
@@ -17,6 +18,27 @@ import { isNullOrUndefined, isRecord, isString } from '@/src/utils/type_guards';
 import { InvalidInputError, NotFoundError } from '@/src/errors';
 import { AuthRequiredIncerceptor } from '@/src/middleware/auth_interceptor';
 import { commonErrorHandler } from '@/src/utils/common_error_handler';
+import { type METIncomingMessage } from '@/src/utils/met_incoming_message';
+
+interface GetUsersResponse {
+  users: ViceBankUser[];
+}
+
+interface GetUserResponse {
+  user: ViceBankUser;
+}
+
+interface AddUserResponse {
+  user: ViceBankUser;
+}
+
+interface UpdateUserResponse {
+  user: ViceBankUser;
+}
+
+interface DeleteUserResponse {
+  user: ViceBankUser;
+}
 
 @UseInterceptors(RequestLogInterceptor)
 @Controller({ path: 'api/vice_bank' })
@@ -30,14 +52,27 @@ export class ViceBankUserController {
 
   @Get('users')
   @UseInterceptors(AuthRequiredIncerceptor)
-  async getUsers(@Req() request: Request): Promise<ViceBankUser[]> {
+  async getUsers(
+    @Req() request: METIncomingMessage,
+  ): Promise<GetUsersResponse> {
     const { page, pagination } = pageAndPagination(request);
 
     try {
-      return await this.viceBankUserService.getViceBankUsers({
-        page,
-        pagination,
-      });
+      const auth = request.authModel;
+
+      if (isNullOrUndefined(auth)) {
+        throw new UnauthorizedException('Auth Model Not Found in Request');
+      }
+
+      const users = await this.viceBankUserService.getViceBankUsers(
+        auth.userId,
+        {
+          page,
+          pagination,
+        },
+      );
+
+      return { users };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
@@ -45,13 +80,22 @@ export class ViceBankUserController {
 
   @Get('user/:userId')
   @UseInterceptors(AuthRequiredIncerceptor)
-  async getUser(@Req() request: Request): Promise<ViceBankUser> {
+  async getUser(@Req() request: METIncomingMessage): Promise<GetUserResponse> {
     const userId = request.params?.userId;
 
     try {
-      const users = await this.viceBankUserService.getViceBankUsers({
-        userId,
-      });
+      const auth = request.authModel;
+
+      if (isNullOrUndefined(auth)) {
+        throw new UnauthorizedException('Auth Model Not Found in Request');
+      }
+
+      const users = await this.viceBankUserService.getViceBankUsers(
+        auth.userId,
+        {
+          userId,
+        },
+      );
 
       if (users.length > 1) {
         throw new Error('More than one user found');
@@ -63,7 +107,7 @@ export class ViceBankUserController {
         throw new NotFoundError(`User with ID ${userId} not found`);
       }
 
-      return user;
+      return { user };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
@@ -71,18 +115,22 @@ export class ViceBankUserController {
 
   @Post('addUser')
   @UseInterceptors(AuthRequiredIncerceptor)
-  async addUser(@Req() request: Request): Promise<ViceBankUser> {
+  async addUser(@Req() request: METIncomingMessage): Promise<AddUserResponse> {
     try {
+      const auth = request.authModel;
       const { body } = request;
 
-      if (!isRecord(body)) {
+      if (!isRecord(body) || !isRecord(body.user)) {
         throw new InvalidInputError('Invalid User Input');
       }
 
-      const newUser = ViceBankUser.fromJSON(body.user);
+      const newUser = ViceBankUser.fromJSON({
+        ...body.user,
+        userId: auth?.userId,
+      });
       const user = await this.viceBankUserService.addViceBankUser(newUser);
 
-      return user;
+      return { user };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
@@ -90,7 +138,7 @@ export class ViceBankUserController {
 
   @Post('updateUser')
   @UseInterceptors(AuthRequiredIncerceptor)
-  async updateUser(@Req() request: Request): Promise<ViceBankUser> {
+  async updateUser(@Req() request: Request): Promise<UpdateUserResponse> {
     try {
       const { body } = request;
 
@@ -98,9 +146,12 @@ export class ViceBankUserController {
         throw new InvalidInputError('Invalid User Input');
       }
 
-      const newUser = ViceBankUser.fromJSON(body.user);
-      const user = await this.viceBankUserService.updateViceBankUser(newUser);
-      return user;
+      const updatedUser = ViceBankUser.fromJSON(body.user);
+      const user = await this.viceBankUserService.updateViceBankUser(
+        updatedUser,
+      );
+
+      return { user };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
@@ -108,18 +159,28 @@ export class ViceBankUserController {
 
   @Post('deleteUser')
   @UseInterceptors(AuthRequiredIncerceptor)
-  async deleteUser(@Req() request: Request): Promise<ViceBankUser> {
+  async deleteUser(
+    @Req() request: METIncomingMessage,
+  ): Promise<DeleteUserResponse> {
     try {
+      const auth = request.authModel;
+
+      if (isNullOrUndefined(auth)) {
+        throw new UnauthorizedException('Auth Model Not Found in Request');
+      }
+
       const { body } = request;
-      if (!isRecord(body) || !isString(body.userId)) {
+
+      if (!isRecord(body) || !isString(body.viceBankUserId)) {
         throw new InvalidInputError('Invalid User ID');
       }
 
       const user = await this.viceBankUserService.deleteViceBankUser(
-        body.userId,
+        auth.userId,
+        body.viceBankUserId,
       );
 
-      return user;
+      return { user };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }

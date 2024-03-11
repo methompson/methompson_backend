@@ -39,3 +39,10 @@ export class UnimplementedError extends Error {
     Object.setPrototypeOf(this, UnimplementedError.prototype);
   }
 }
+
+export class NotAuthorizedError extends Error {
+  constructor(message?: string) {
+    super(message ?? 'Not Authorized');
+    Object.setPrototypeOf(this, NotAuthorizedError.prototype);
+  }
+}

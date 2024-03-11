@@ -63,7 +63,9 @@ describe('DepositConversionsController', () => {
       } as unknown as Request;
 
       const conversions = await controller.getDepositConversions(req);
-      expect(conversions).toEqual([conversion1, conversion2]);
+      expect(conversions).toEqual({
+        depositConversions: [conversion1, conversion2],
+      });
     });
 
     test('throws an error if the userId is not a string', async () => {
@@ -142,7 +144,7 @@ describe('DepositConversionsController', () => {
         .mockResolvedValue(conversion1);
 
       const conversion = await controller.addDepositConversion(req);
-      expect(conversion).toBe(conversion1);
+      expect(conversion).toStrictEqual({ depositConversion: conversion1 });
     });
 
     test('throws an error if the body is not a record', async () => {
@@ -226,7 +228,7 @@ describe('DepositConversionsController', () => {
       } as unknown as Request;
 
       const result = await controller.updateDepositConversion(req);
-      expect(result).toBe(conversion1);
+      expect(result).toStrictEqual({ depositConversion: conversion1 });
       expect(service.depositConversionsList[0]?.toJSON()).toEqual(
         depositConversionUpdate,
       );
@@ -308,7 +310,7 @@ describe('DepositConversionsController', () => {
       } as unknown as Request;
 
       const result = await controller.deleteDepositConversion(req);
-      expect(result).toBe(conversion1);
+      expect(result).toStrictEqual({ depositConversion: conversion1 });
       expect(service.depositConversionsList.length).toBe(0);
     });
 

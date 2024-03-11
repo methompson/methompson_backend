@@ -17,6 +17,19 @@ import { pageAndPagination } from '@/src/utils/page_and_pagination';
 import { isRecord, isString } from '@/src/utils/type_guards';
 import { commonErrorHandler } from '@/src/utils/common_error_handler';
 
+interface GetDepositConversionsResponse {
+  depositConversions: DepositConversion[];
+}
+interface AddDepositConversionResponse {
+  depositConversion: DepositConversion;
+}
+interface UpdateDepositConversionResponse {
+  depositConversion: DepositConversion;
+}
+interface DeleteDepositConversionResponse {
+  depositConversion: DepositConversion;
+}
+
 @UseInterceptors(RequestLogInterceptor)
 @Controller({ path: 'api/vice_bank' })
 export class DepositConversionsController {
@@ -30,7 +43,7 @@ export class DepositConversionsController {
   @Get('depositConversions')
   async getDepositConversions(
     @Req() request: Request,
-  ): Promise<DepositConversion[]> {
+  ): Promise<GetDepositConversionsResponse> {
     const { page, pagination } = pageAndPagination(request);
 
     const userId = request.query?.userId;
@@ -40,11 +53,14 @@ export class DepositConversionsController {
         throw new InvalidInputError('Invalid User Id');
       }
 
-      return await this.depositConversionsService.getDepositConversions({
-        page,
-        pagination,
-        userId,
-      });
+      const depositConversions =
+        await this.depositConversionsService.getDepositConversions({
+          page,
+          pagination,
+          userId,
+        });
+
+      return { depositConversions };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
@@ -53,7 +69,7 @@ export class DepositConversionsController {
   @Post('addDepositConversion')
   async addDepositConversion(
     @Req() request: Request,
-  ): Promise<DepositConversion> {
+  ): Promise<AddDepositConversionResponse> {
     try {
       const { body } = request;
 
@@ -65,9 +81,11 @@ export class DepositConversionsController {
         body.depositConversion,
       );
 
-      return await this.depositConversionsService.addDepositConversion(
+      const res = await this.depositConversionsService.addDepositConversion(
         depositConversion,
       );
+
+      return { depositConversion: res };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
@@ -76,7 +94,7 @@ export class DepositConversionsController {
   @Post('updateDepositConversion')
   async updateDepositConversion(
     @Req() request: Request,
-  ): Promise<DepositConversion> {
+  ): Promise<UpdateDepositConversionResponse> {
     try {
       const { body } = request;
 
@@ -88,18 +106,20 @@ export class DepositConversionsController {
         body.depositConversion,
       );
 
-      return await this.depositConversionsService.updateDepositConversion(
+      const res = await this.depositConversionsService.updateDepositConversion(
         depositConversion,
       );
+
+      return { depositConversion: res };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
   }
 
-  @Post('delete_deposit_conversion')
+  @Post('deleteDepositConversion')
   async deleteDepositConversion(
     @Req() request: Request,
-  ): Promise<DepositConversion> {
+  ): Promise<DeleteDepositConversionResponse> {
     try {
       const { body } = request;
 
@@ -107,9 +127,11 @@ export class DepositConversionsController {
         throw new InvalidInputError('Invalid Deposit Conversion Input');
       }
 
-      return await this.depositConversionsService.deleteDepositConversion(
+      const res = await this.depositConversionsService.deleteDepositConversion(
         body.depositConversionId,
       );
+
+      return { depositConversion: res };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }

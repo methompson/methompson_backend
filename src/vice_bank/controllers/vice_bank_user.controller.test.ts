@@ -1,5 +1,3 @@
-import { Request } from 'express';
-
 import {
   ViceBankUser,
   ViceBankUserJSON,
@@ -8,19 +6,25 @@ import { InMemoryViceBankUserService } from '@/src/vice_bank/services/vice_bank_
 import { ViceBankUserController } from './vice_bank_user.controller';
 import { LoggerService } from '@/src/logger/logger.service';
 import { HttpException, HttpStatus } from '@nestjs/common';
+import type { METIncomingMessage } from '@/src/utils/met_incoming_message';
+import { AuthModel, NoAuthModel } from '@/src/models/auth_model';
 
+const userId = 'userId';
 const user1JSON: ViceBankUserJSON = {
   id: 'id1',
+  userId,
   name: 'name1',
   currentTokens: 1,
 };
 const user2JSON: ViceBankUserJSON = {
   id: 'id2',
+  userId,
   name: 'name2',
   currentTokens: 2,
 };
 const user3JSON: ViceBankUserJSON = {
   id: 'id3',
+  userId,
   name: 'name3',
   currentTokens: 3,
 };
@@ -28,6 +32,10 @@ const user3JSON: ViceBankUserJSON = {
 const user1 = ViceBankUser.fromJSON(user1JSON);
 const user2 = ViceBankUser.fromJSON(user2JSON);
 const user3 = ViceBankUser.fromJSON(user3JSON);
+
+const authModel = new AuthModel({
+  sub: userId,
+});
 
 describe('ViceBankUserController', () => {
   describe('getUsers', () => {
@@ -38,14 +46,15 @@ describe('ViceBankUserController', () => {
       const controller = new ViceBankUserController(service, loggerService);
 
       const req = {
+        authModel,
         query: {
           page: '1',
           pagination: '10',
         },
-      } as unknown as Request;
+      } as unknown as METIncomingMessage;
 
       const users = await controller.getUsers(req);
-      expect(users).toEqual([user1, user2, user3]);
+      expect(users).toEqual({ users: [user1, user2, user3] });
     });
 
     test("uses page and pagination if it's in the request", async () => {
@@ -55,34 +64,37 @@ describe('ViceBankUserController', () => {
       const controller = new ViceBankUserController(service, loggerService);
 
       const req1 = {
+        authModel,
         query: {
           page: '1',
           pagination: '2',
         },
-      } as unknown as Request;
+      } as unknown as METIncomingMessage;
 
       const result1 = await controller.getUsers(req1);
-      expect(result1).toEqual([user1, user2]);
+      expect(result1).toEqual({ users: [user1, user2] });
 
       const req2 = {
+        authModel,
         query: {
           page: '2',
           pagination: '2',
         },
-      } as unknown as Request;
+      } as unknown as METIncomingMessage;
 
       const result2 = await controller.getUsers(req2);
-      expect(result2).toEqual([user3]);
+      expect(result2).toEqual({ users: [user3] });
 
       const req3 = {
+        authModel,
         query: {
           page: '3',
           pagination: '2',
         },
-      } as unknown as Request;
+      } as unknown as METIncomingMessage;
 
       const result3 = await controller.getUsers(req3);
-      expect(result3).toEqual([]);
+      expect(result3).toEqual({ users: [] });
     });
 
     test('throws an error if the viceBankUserService throws an error', async () => {
@@ -92,11 +104,12 @@ describe('ViceBankUserController', () => {
       const controller = new ViceBankUserController(service, loggerService);
 
       const req = {
+        authModel,
         query: {
           page: '1',
           pagination: '10',
         },
-      } as unknown as Request;
+      } as unknown as METIncomingMessage;
 
       jest
         .spyOn(service, 'getViceBankUsers')
@@ -109,6 +122,7 @@ describe('ViceBankUserController', () => {
   });
 
   describe('getUser', () => {
+    ``;
     test('gets a user from the viceBankUserService', async () => {
       const service = new InMemoryViceBankUserService([user1, user2, user3]);
       const loggerService = new LoggerService();
@@ -116,13 +130,14 @@ describe('ViceBankUserController', () => {
       const controller = new ViceBankUserController(service, loggerService);
 
       const req = {
+        authModel,
         params: {
           userId: user1.id,
         },
-      } as unknown as Request;
+      } as unknown as METIncomingMessage;
 
       const user = await controller.getUser(req);
-      expect(user).toEqual(user1);
+      expect(user).toEqual({ user: user1 });
     });
 
     test('throws an error if the viceBankUserService throws an error', async () => {
@@ -132,10 +147,11 @@ describe('ViceBankUserController', () => {
       const controller = new ViceBankUserController(service, loggerService);
 
       const req = {
+        authModel,
         params: {
           userId: user1.id,
         },
-      } as unknown as Request;
+      } as unknown as METIncomingMessage;
 
       jest
         .spyOn(service, 'getViceBankUsers')
@@ -153,10 +169,11 @@ describe('ViceBankUserController', () => {
       const controller = new ViceBankUserController(service, loggerService);
 
       const req = {
+        authModel,
         params: {
           userId: user1.id,
         },
-      } as unknown as Request;
+      } as unknown as METIncomingMessage;
 
       jest.spyOn(service, 'getViceBankUsers').mockResolvedValue([user1, user2]);
 
@@ -172,10 +189,11 @@ describe('ViceBankUserController', () => {
       const controller = new ViceBankUserController(service, loggerService);
 
       const req = {
+        authModel,
         params: {
           userId: user1.id,
         },
-      } as unknown as Request;
+      } as unknown as METIncomingMessage;
 
       await expect(() => controller.getUser(req)).rejects.toThrow('Not Found');
     });
@@ -189,15 +207,16 @@ describe('ViceBankUserController', () => {
       const controller = new ViceBankUserController(service, loggerService);
 
       const req = {
+        authModel,
         body: {
           user: { ...user1JSON },
         },
-      } as unknown as Request;
+      } as unknown as METIncomingMessage;
 
       jest.spyOn(service, 'addViceBankUser').mockResolvedValue(user1);
 
       const result = await controller.addUser(req);
-      expect(result).toBe(user1);
+      expect(result).toEqual({ user: user1 });
     });
 
     test('throws an error if the viceBankUserService throws an error', async () => {
@@ -207,10 +226,11 @@ describe('ViceBankUserController', () => {
       const controller = new ViceBankUserController(service, loggerService);
 
       const req = {
+        authModel,
         body: {
           user: { ...user1JSON },
         },
-      } as unknown as Request;
+      } as unknown as METIncomingMessage;
 
       jest
         .spyOn(service, 'addViceBankUser')
@@ -227,7 +247,9 @@ describe('ViceBankUserController', () => {
 
       const controller = new ViceBankUserController(service, loggerService);
 
-      const req = {} as unknown as Request;
+      const req = {
+        authModel,
+      } as unknown as METIncomingMessage;
 
       await expect(() => controller.addUser(req)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
@@ -241,10 +263,11 @@ describe('ViceBankUserController', () => {
       const controller = new ViceBankUserController(service, loggerService);
 
       const req = {
+        authModel,
         body: {
           user: {},
         },
-      } as unknown as Request;
+      } as unknown as METIncomingMessage;
 
       await expect(() => controller.addUser(req)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
@@ -265,14 +288,15 @@ describe('ViceBankUserController', () => {
       };
 
       const req = {
+        authModel,
         body: {
           user: { ...user1Update },
         },
-      } as unknown as Request;
+      } as unknown as METIncomingMessage;
 
       const result = await controller.updateUser(req);
 
-      expect(result).toBe(user1);
+      expect(result).toEqual({ user: user1 });
       expect(service.viceBankUsersList[0]?.toJSON()).toEqual(user1Update);
     });
 
@@ -288,10 +312,11 @@ describe('ViceBankUserController', () => {
       };
 
       const req = {
+        authModel,
         body: {
           user: { ...user1Update },
         },
-      } as unknown as Request;
+      } as unknown as METIncomingMessage;
 
       jest
         .spyOn(service, 'updateViceBankUser')
@@ -308,7 +333,9 @@ describe('ViceBankUserController', () => {
 
       const controller = new ViceBankUserController(service, loggerService);
 
-      const req = {} as unknown as Request;
+      const req = {
+        authModel,
+      } as unknown as METIncomingMessage;
 
       await expect(() => controller.updateUser(req)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
@@ -322,10 +349,11 @@ describe('ViceBankUserController', () => {
       const controller = new ViceBankUserController(service, loggerService);
 
       const req = {
+        authModel,
         body: {
           user: {},
         },
-      } as unknown as Request;
+      } as unknown as METIncomingMessage;
 
       await expect(() => controller.updateUser(req)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
@@ -341,13 +369,14 @@ describe('ViceBankUserController', () => {
       const controller = new ViceBankUserController(service, loggerService);
 
       const req = {
+        authModel,
         body: {
-          userId: user1.id,
+          viceBankUserId: user1.id,
         },
-      } as unknown as Request;
+      } as unknown as METIncomingMessage;
 
       const result = await controller.deleteUser(req);
-      expect(result).toBe(user1);
+      expect(result).toEqual({ user: user1 });
       expect(service.viceBankUsersList.length).toBe(0);
     });
 
@@ -358,10 +387,11 @@ describe('ViceBankUserController', () => {
       const controller = new ViceBankUserController(service, loggerService);
 
       const req = {
+        authModel,
         body: {
-          userId: user1.id,
+          viceBankUserId: user1.id,
         },
-      } as unknown as Request;
+      } as unknown as METIncomingMessage;
 
       jest
         .spyOn(service, 'deleteViceBankUser')
@@ -379,10 +409,11 @@ describe('ViceBankUserController', () => {
       const controller = new ViceBankUserController(service, loggerService);
 
       const req = {
+        authModel,
         body: {
-          userId: user1.id,
+          viceBankUserId: user1.id,
         },
-      } as unknown as Request;
+      } as unknown as METIncomingMessage;
 
       await expect(() => controller.deleteUser(req)).rejects.toThrow(
         new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
@@ -395,7 +426,9 @@ describe('ViceBankUserController', () => {
 
       const controller = new ViceBankUserController(service, loggerService);
 
-      const req = {} as unknown as Request;
+      const req = {
+        authModel,
+      } as unknown as METIncomingMessage;
 
       await expect(() => controller.deleteUser(req)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),

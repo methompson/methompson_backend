@@ -55,7 +55,7 @@ describe('Deposit Controller', () => {
 
       const deposits = await controller.getDeposits(req);
 
-      expect(deposits).toEqual([deposit1, deposit2]);
+      expect(deposits).toEqual({ deposits: [deposit1, deposit2] });
     });
 
     test('start date and end date get passed to the DepositService', async () => {
@@ -80,7 +80,7 @@ describe('Deposit Controller', () => {
 
       const deposits = await controller.getDeposits(req);
 
-      expect(deposits).toEqual([deposit1]);
+      expect(deposits).toEqual({ deposits: [deposit1] });
 
       expect(getSpy).toHaveBeenCalledTimes(1);
       expect(getSpy).toHaveBeenCalledWith({
@@ -162,7 +162,7 @@ describe('Deposit Controller', () => {
 
       const deposit = await controller.addDeposit(req);
 
-      expect(deposit).toEqual(deposit1);
+      expect(deposit).toEqual({ deposit: deposit1 });
     });
 
     test('throws an error if the body is invalid', async () => {
@@ -232,7 +232,7 @@ describe('Deposit Controller', () => {
 
       const result = await controller.updateDeposit(req);
 
-      expect(result).toEqual(deposit1);
+      expect(result).toEqual({ deposit: deposit1 });
       expect(service.depositsList[0]?.toJSON()).toEqual(updatedDeposit);
     });
 
@@ -301,7 +301,7 @@ describe('Deposit Controller', () => {
 
       const result = await controller.deleteDeposit(req);
 
-      expect(result).toEqual(deposit1);
+      expect(result).toEqual({ deposit: deposit1 });
       expect(service.depositsList).toEqual([]);
     });
 

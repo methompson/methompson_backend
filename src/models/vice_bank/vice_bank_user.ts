@@ -3,6 +3,7 @@ import { isNumber, isRecord, isString } from '@/src/utils/type_guards';
 
 export interface ViceBankUserJSON {
   id: string;
+  userId: string;
   name: string;
   currentTokens: number;
 }
@@ -10,12 +11,17 @@ export interface ViceBankUserJSON {
 export class ViceBankUser {
   constructor(
     protected _id: string,
+    protected _userId: string,
     protected _name: string,
     protected _currentTokens: number,
   ) {}
 
   get id(): string {
     return this._id;
+  }
+
+  get userId(): string {
+    return this._userId;
   }
 
   get name(): string {
@@ -29,6 +35,7 @@ export class ViceBankUser {
   toJSON(): ViceBankUserJSON {
     return {
       id: this.id,
+      userId: this.userId,
       name: this.name,
       currentTokens: this.currentTokens,
     };
@@ -40,7 +47,12 @@ export class ViceBankUser {
       throw new InvalidInputError(`Invalid JSON ${errors.join(', ')}`);
     }
 
-    return new ViceBankUser(input.id, input.name, input.currentTokens);
+    return new ViceBankUser(
+      input.id,
+      input.userId,
+      input.name,
+      input.currentTokens,
+    );
   }
 
   static isViceBankUserJSON(input: unknown): input is ViceBankUserJSON {
@@ -57,6 +69,7 @@ export class ViceBankUser {
     const output: string[] = [];
 
     if (!isString(input.id)) output.push('id');
+    if (!isString(input.userId)) output.push('userId');
     if (!isString(input.name)) output.push('name');
     if (!isNumber(input.currentTokens)) output.push('currentTokens');
 

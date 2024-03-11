@@ -17,6 +17,19 @@ import { InvalidInputError } from '@/src/errors';
 import { isRecord, isString } from '@/src/utils/type_guards';
 import { commonErrorHandler } from '@/src/utils/common_error_handler';
 
+interface GetPurchasesResponse {
+  purchases: Purchase[];
+}
+interface AddPurchaseResponse {
+  purchase: Purchase;
+}
+interface UpdatePurchaseResponse {
+  purchase: Purchase;
+}
+interface DeletePurchaseResponse {
+  purchase: Purchase;
+}
+
 @UseInterceptors(RequestLogInterceptor)
 @Controller({ path: 'api/vice_bank' })
 export class PurchaseController {
@@ -28,7 +41,7 @@ export class PurchaseController {
   ) {}
 
   @Get('purchases')
-  async getPurchases(@Req() request: Request): Promise<Purchase[]> {
+  async getPurchases(@Req() request: Request): Promise<GetPurchasesResponse> {
     const { page, pagination } = pageAndPagination(request);
 
     try {
@@ -43,7 +56,7 @@ export class PurchaseController {
         throw new InvalidInputError('Invalid User Id');
       }
 
-      return await this.purchesService.getPurchases({
+      const purchases = await this.purchesService.getPurchases({
         page,
         pagination,
         userId,
@@ -51,13 +64,15 @@ export class PurchaseController {
         endDate,
         purchasePriceId,
       });
+
+      return { purchases };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
   }
 
   @Post('addPurchase')
-  async addPurchase(@Req() request: Request): Promise<Purchase> {
+  async addPurchase(@Req() request: Request): Promise<AddPurchaseResponse> {
     try {
       const { body } = request;
 
@@ -67,14 +82,18 @@ export class PurchaseController {
 
       const purchase = Purchase.fromJSON(body.purchase);
 
-      return await this.purchesService.addPurchase(purchase);
+      const res = await this.purchesService.addPurchase(purchase);
+
+      return { purchase: res };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
   }
 
   @Post('updatePurchase')
-  async updatePurchase(@Req() request: Request): Promise<Purchase> {
+  async updatePurchase(
+    @Req() request: Request,
+  ): Promise<UpdatePurchaseResponse> {
     try {
       const { body } = request;
 
@@ -84,14 +103,18 @@ export class PurchaseController {
 
       const purchase = Purchase.fromJSON(body.purchase);
 
-      return await this.purchesService.updatePurchase(purchase);
+      const res = await this.purchesService.updatePurchase(purchase);
+
+      return { purchase: res };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
   }
 
   @Post('deletePurchase')
-  async deletePurchase(@Req() request: Request): Promise<Purchase> {
+  async deletePurchase(
+    @Req() request: Request,
+  ): Promise<DeletePurchaseResponse> {
     try {
       const { body } = request;
 
@@ -99,7 +122,9 @@ export class PurchaseController {
         throw new InvalidInputError('Invalid Purchase Id');
       }
 
-      return await this.purchesService.deletePurchase(body.purchaseId);
+      const res = await this.purchesService.deletePurchase(body.purchaseId);
+
+      return { purchase: res };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }

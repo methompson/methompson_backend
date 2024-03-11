@@ -54,7 +54,7 @@ describe('Purchase Controller', () => {
 
       const result = await controller.getPurchases(request);
 
-      expect(result).toEqual([purchase1, purchase2]);
+      expect(result).toEqual({ purchases: [purchase1, purchase2] });
       expect(getSpy).toHaveBeenCalledTimes(1);
       expect(getSpy).toHaveBeenCalledWith({
         page: 1,
@@ -88,7 +88,7 @@ describe('Purchase Controller', () => {
 
       const result1 = await controller.getPurchases(request1);
 
-      expect(result1).toEqual([purchase1]);
+      expect(result1).toEqual({ purchases: [purchase1] });
 
       expect(getSpy).toHaveBeenCalledTimes(1);
       expect(getSpy).toHaveBeenCalledWith({
@@ -109,7 +109,7 @@ describe('Purchase Controller', () => {
       } as unknown as Request;
       const result2 = await controller.getPurchases(request2);
 
-      expect(result2).toEqual([purchase2]);
+      expect(result2).toEqual({ purchases: [purchase2] });
     });
 
     test('throws an error if the query is invalid', async () => {
@@ -196,7 +196,7 @@ describe('Purchase Controller', () => {
 
       const result = await controller.addPurchase(request);
 
-      expect(result).toEqual(purchase1);
+      expect(result).toEqual({ purchase: purchase1 });
       expect(addSpy).toHaveBeenCalledTimes(1);
     });
 
@@ -292,7 +292,7 @@ describe('Purchase Controller', () => {
 
       const result = await controller.updatePurchase(request);
 
-      expect(result).toBe(purchase1);
+      expect(result).toEqual({ purchase: purchase1 });
       expect(updateSpy).toHaveBeenCalledTimes(1);
     });
 
@@ -379,7 +379,7 @@ describe('Purchase Controller', () => {
 
       const result = await controller.deletePurchase(request);
 
-      expect(result).toBe(purchase1);
+      expect(result).toEqual({ purchase: purchase1 });
       expect(service.purchasesList.length).toBe(0);
       expect(deleteSpy).toHaveBeenCalledTimes(1);
     });

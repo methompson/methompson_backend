@@ -2,7 +2,7 @@ interface UserMap {
   [key: string]: UserType;
 }
 
-class UserTypeMap {
+export class UserTypeMap {
   private userMap: UserMap;
 
   constructor() {
@@ -75,7 +75,7 @@ class UserTypeMap {
   }
 }
 
-class UserType {
+export class UserType {
   constructor(private typeName: string, private level: number) {}
 
   toString(): string {
@@ -103,12 +103,10 @@ class UserType {
   }
 }
 
-const defaultUserTypes: UserMap = {
+export const defaultUserTypes: UserMap = {
   superAdmin: new UserType('superAdmin', Number.MAX_SAFE_INTEGER),
   admin: new UserType('admin', Number.MAX_SAFE_INTEGER - 1),
   editor: new UserType('editor', Math.pow(2, 32)),
   writer: new UserType('writer', Math.pow(2, 16)),
   viewer: new UserType('viewer', Math.pow(2, 4)),
 };
-
-export { UserType, UserTypeMap, defaultUserTypes };

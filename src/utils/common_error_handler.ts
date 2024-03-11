@@ -1,6 +1,11 @@
+import {
+  HttpException,
+  HttpStatus,
+  UnauthorizedException,
+} from '@nestjs/common';
+
 import { InvalidInputError, NotFoundError } from '@/src/errors';
 import { LoggerService } from '@/src/logger/logger.service';
-import { HttpException, HttpStatus } from '@nestjs/common';
 
 export async function commonErrorHandler(
   e: unknown,
@@ -9,24 +14,27 @@ export async function commonErrorHandler(
     notFoundErrorMessage?: string;
     invalidInputErrorMessage?: string;
     httpExceptionMessage?: string;
+    notAuthorizedErrorMessage?: string;
   },
 ): Promise<Error> {
-  const notFoundErrorMessage = options?.notFoundErrorMessage ?? 'Not Found';
-  const invalidInputErrorMessage =
+  const notFoundErrMsg = options?.notFoundErrorMessage ?? 'Not Found';
+  const invalidInputErrMsg =
     options?.invalidInputErrorMessage ?? 'Invalid Input';
-  const httpExceptionMessage = options?.httpExceptionMessage ?? 'Server Error';
+  const notAuthorizedErrMsg =
+    options?.notAuthorizedErrorMessage ?? 'Not Authorized';
+  const httpExceptionMsg = options?.httpExceptionMessage ?? 'Server Error';
 
   if (e instanceof NotFoundError) {
-    return new HttpException(notFoundErrorMessage, HttpStatus.NOT_FOUND);
+    return new HttpException(notFoundErrMsg, HttpStatus.NOT_FOUND);
   }
   if (e instanceof InvalidInputError) {
-    return new HttpException(invalidInputErrorMessage, HttpStatus.BAD_REQUEST);
+    return new HttpException(invalidInputErrMsg, HttpStatus.BAD_REQUEST);
+  }
+  if (e instanceof UnauthorizedException) {
+    return new HttpException(notAuthorizedErrMsg, HttpStatus.UNAUTHORIZED);
   }
 
   await loggerService.addErrorLog(e);
 
-  return new HttpException(
-    httpExceptionMessage,
-    HttpStatus.INTERNAL_SERVER_ERROR,
-  );
+  return new HttpException(httpExceptionMsg, HttpStatus.INTERNAL_SERVER_ERROR);
 }

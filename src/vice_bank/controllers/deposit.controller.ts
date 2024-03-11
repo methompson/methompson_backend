@@ -17,6 +17,19 @@ import { commonErrorHandler } from '@/src/utils/common_error_handler';
 import { isRecord, isString } from '@/src/utils/type_guards';
 import { InvalidInputError } from '@/src/errors';
 
+interface GetDepositsResponse {
+  deposits: Deposit[];
+}
+interface AddDepositResponse {
+  deposit: Deposit;
+}
+interface UpdateDepositResponse {
+  deposit: Deposit;
+}
+interface DeleteDepositResponse {
+  deposit: Deposit;
+}
+
 @UseInterceptors(RequestLogInterceptor)
 @Controller({ path: 'api/vice_bank' })
 export class DepositController {
@@ -28,7 +41,7 @@ export class DepositController {
   ) {}
 
   @Get('deposits')
-  async getDeposits(@Req() request: Request): Promise<Deposit[]> {
+  async getDeposits(@Req() request: Request): Promise<GetDepositsResponse> {
     const { page, pagination } = pageAndPagination(request);
 
     try {
@@ -49,7 +62,7 @@ export class DepositController {
         ? depositConversionId
         : undefined;
 
-      return await this.depositService.getDeposits({
+      const deposits = await this.depositService.getDeposits({
         page,
         pagination,
         userId,
@@ -57,13 +70,15 @@ export class DepositController {
         endDate,
         depositConversionId,
       });
+
+      return { deposits };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
   }
 
   @Post('addDeposit')
-  async addDeposit(@Req() request: Request): Promise<Deposit> {
+  async addDeposit(@Req() request: Request): Promise<AddDepositResponse> {
     try {
       const { body } = request;
 
@@ -73,14 +88,16 @@ export class DepositController {
 
       const newDeposit = Deposit.fromJSON(body.deposit);
 
-      return await this.depositService.addDeposit(newDeposit);
+      const deposit = await this.depositService.addDeposit(newDeposit);
+
+      return { deposit };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
   }
 
   @Post('updateDeposit')
-  async updateDeposit(@Req() request: Request): Promise<Deposit> {
+  async updateDeposit(@Req() request: Request): Promise<UpdateDepositResponse> {
     try {
       const { body } = request;
 
@@ -90,14 +107,15 @@ export class DepositController {
 
       const updatedDeposit = Deposit.fromJSON(body.deposit);
 
-      return await this.depositService.updateDeposit(updatedDeposit);
+      const deposit = await this.depositService.updateDeposit(updatedDeposit);
+      return { deposit };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
   }
 
   @Post('deleteDeposit')
-  async deleteDeposit(@Req() request: Request): Promise<Deposit> {
+  async deleteDeposit(@Req() request: Request): Promise<DeleteDepositResponse> {
     try {
       const { body } = request;
 
@@ -105,7 +123,8 @@ export class DepositController {
         throw new InvalidInputError('Invalid Deposit Id');
       }
 
-      return await this.depositService.deleteDeposit(body.depositId);
+      const deposit = await this.depositService.deleteDeposit(body.depositId);
+      return { deposit };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }

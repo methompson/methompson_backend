@@ -48,7 +48,7 @@ describe('PurchasePricesController', () => {
 
       const purchasePrices = await controller.getPurchasePrices(req);
 
-      expect(purchasePrices).toEqual([pp1, pp2]);
+      expect(purchasePrices).toEqual({ purchasePrices: [pp1, pp2] });
     });
 
     test('respects page / pagination if provided', async () => {
@@ -67,7 +67,7 @@ describe('PurchasePricesController', () => {
 
       const result1 = await controller.getPurchasePrices(req1);
 
-      expect(result1).toEqual([pp1]);
+      expect(result1).toEqual({ purchasePrices: [pp1] });
 
       const req2 = {
         query: {
@@ -79,7 +79,7 @@ describe('PurchasePricesController', () => {
 
       const result2 = await controller.getPurchasePrices(req2);
 
-      expect(result2).toEqual([pp2]);
+      expect(result2).toStrictEqual({ purchasePrices: [pp2] });
 
       const req3 = {
         query: {
@@ -91,7 +91,7 @@ describe('PurchasePricesController', () => {
 
       const result3 = await controller.getPurchasePrices(req3);
 
-      expect(result3).toEqual([]);
+      expect(result3).toEqual({ purchasePrices: [] });
     });
 
     test('if there are no purchase prices, it returns an empty list', async () => {
@@ -108,7 +108,7 @@ describe('PurchasePricesController', () => {
 
       const purchasePrices = await controller.getPurchasePrices(req);
 
-      expect(purchasePrices).toEqual([]);
+      expect(purchasePrices).toEqual({ purchasePrices: [] });
     });
 
     test('throws an error if the user id is not a string', async () => {
@@ -167,7 +167,7 @@ describe('PurchasePricesController', () => {
 
       const purchasePrice = await controller.addPurchasePrice(req);
 
-      expect(purchasePrice).toBe(pp1);
+      expect(purchasePrice).toStrictEqual({ purchasePrice: pp1 });
     });
 
     test('throws an error if the body is not a record', async () => {
@@ -242,7 +242,7 @@ describe('PurchasePricesController', () => {
 
       const purchasePrice = await controller.updatePurchasePrice(req);
 
-      expect(purchasePrice).toBe(pp1);
+      expect(purchasePrice).toStrictEqual({ purchasePrice: pp1 });
       expect(service.purchasePricesList[0]?.toJSON()).toEqual(updatedpp1JSON);
     });
 
@@ -313,7 +313,7 @@ describe('PurchasePricesController', () => {
 
       const purchasePrice = await controller.deletePurchasePrice(req);
 
-      expect(purchasePrice).toBe(pp1);
+      expect(purchasePrice).toStrictEqual({ purchasePrice: pp1 });
       expect(service.purchasePricesList.length).toBe(0);
     });
 
