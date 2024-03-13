@@ -5,7 +5,7 @@ export interface DepositConversionJSON {
   id: string;
   userId: string;
   name: string;
-  rateName: string;
+  conversionUnit: string;
   depositsPer: number;
   tokensPer: number;
   minDeposit: number;
@@ -27,7 +27,7 @@ export class DepositConversion {
     protected _id: string,
     protected _userId: string,
     protected _name: string,
-    protected _rateName: string,
+    protected _conversionUnit: string,
     protected _depositsPer: number,
     protected _tokensPer: number,
     protected _minDeposit: number,
@@ -45,8 +45,8 @@ export class DepositConversion {
     return this._name;
   }
 
-  get rateName(): string {
-    return this._rateName;
+  get conversionUnit(): string {
+    return this._conversionUnit;
   }
 
   get depositsPer(): number {
@@ -66,7 +66,7 @@ export class DepositConversion {
       id: this.id,
       userId: this.userId,
       name: this.name,
-      rateName: this.rateName,
+      conversionUnit: this.conversionUnit,
       depositsPer: this.depositsPer,
       tokensPer: this.tokensPer,
       minDeposit: this.minDeposit,
@@ -83,7 +83,7 @@ export class DepositConversion {
       input.id,
       input.userId,
       input.name,
-      input.rateName,
+      input.conversionUnit,
       input.depositsPer,
       input.tokensPer,
       input.minDeposit,
@@ -108,7 +108,7 @@ export class DepositConversion {
     if (!isString(input.id)) output.push('id');
     if (!isString(input.userId)) output.push('userId');
     if (!isString(input.name)) output.push('name');
-    if (!isString(input.rateName)) output.push('rateName');
+    if (!isString(input.conversionUnit)) output.push('conversionUnit');
     if (!isNumber(input.depositsPer)) output.push('depositsPer');
     if (!isNumber(input.tokensPer)) output.push('tokensPer');
     if (!isNumber(input.minDeposit)) output.push('minDeposit');

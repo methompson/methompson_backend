@@ -5,7 +5,7 @@ describe('DepositConversion', () => {
     id: 'id',
     userId: 'userId',
     name: 'name',
-    rateName: 'rateName',
+    conversionUnit: 'conversionUnit',
     depositsPer: 1,
     tokensPer: 2,
     minDeposit: 3,
@@ -28,7 +28,7 @@ describe('DepositConversion', () => {
       expect(result.id).toBe('id');
       expect(result.userId).toBe('userId');
       expect(result.name).toBe('name');
-      expect(result.rateName).toBe('rateName');
+      expect(result.conversionUnit).toBe('conversionUnit');
       expect(result.depositsPer).toBe(1);
       expect(result.tokensPer).toBe(2);
       expect(result.minDeposit).toBe(3);
@@ -50,7 +50,7 @@ describe('DepositConversion', () => {
       expect(() => DepositConversion.fromJSON(invalidInput)).toThrow();
 
       invalidInput = { ...validInput };
-      delete invalidInput.rateName;
+      delete invalidInput.conversionUnit;
       expect(() => DepositConversion.fromJSON(invalidInput)).toThrow();
 
       invalidInput = { ...validInput };
@@ -102,7 +102,7 @@ describe('DepositConversion', () => {
       );
 
       invalidInput = { ...validInput };
-      delete invalidInput.rateName;
+      delete invalidInput.conversionUnit;
       expect(DepositConversion.isDepositConversionJSON(invalidInput)).toBe(
         false,
       );
@@ -166,9 +166,9 @@ describe('DepositConversion', () => {
       );
 
       invalidInput = { ...validInput };
-      delete invalidInput.rateName;
+      delete invalidInput.conversionUnit;
       expect(DepositConversion.DepositConversionJSONTest(invalidInput)).toEqual(
-        ['rateName'],
+        ['conversionUnit'],
       );
 
       invalidInput = { ...validInput };
@@ -215,7 +215,7 @@ describe('DepositConversion', () => {
       expect(result.id).toBe(newId);
       expect(result.userId).toBe(input.userId);
       expect(result.name).toBe(input.name);
-      expect(result.rateName).toBe(input.rateName);
+      expect(result.conversionUnit).toBe(input.conversionUnit);
       expect(result.depositsPer).toBe(input.depositsPer);
       expect(result.tokensPer).toBe(input.tokensPer);
       expect(result.minDeposit).toBe(input.minDeposit);

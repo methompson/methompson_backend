@@ -15,6 +15,7 @@ export interface DepositJSON {
   depositQuantity: number;
   conversionRate: number;
   depositConversionName: string;
+  conversionUnit: string;
 }
 
 export class Deposit {
@@ -25,6 +26,7 @@ export class Deposit {
     protected _depositQuantity: number,
     protected _conversionRate: number,
     protected _depositConversionName: string,
+    protected _conversionUnit: string,
   ) {}
 
   get id(): string {
@@ -51,6 +53,14 @@ export class Deposit {
     return this._depositConversionName;
   }
 
+  get conversionUnit(): string {
+    return this._conversionUnit;
+  }
+
+  get tokensEarned(): number {
+    return this._depositQuantity * this._conversionRate;
+  }
+
   toJSON(): DepositJSON {
     return {
       id: this.id,
@@ -59,6 +69,7 @@ export class Deposit {
       depositQuantity: this.depositQuantity,
       conversionRate: this.conversionRate,
       depositConversionName: this.depositConversionName,
+      conversionUnit: this.conversionUnit,
     };
   }
 
@@ -80,6 +91,7 @@ export class Deposit {
       input.depositQuantity,
       input.conversionRate,
       input.depositConversionName,
+      input.conversionUnit,
     );
   }
 
@@ -103,6 +115,7 @@ export class Deposit {
     if (!isNumber(input.conversionRate)) output.push('conversionRate');
     if (!isString(input.depositConversionName))
       output.push('depositConversionName');
+    if (!isString(input.conversionUnit)) output.push('conversionUnit');
 
     return output;
   }

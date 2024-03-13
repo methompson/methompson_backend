@@ -8,6 +8,7 @@ describe('Deposit', () => {
     depositQuantity: 1,
     conversionRate: 1,
     depositConversionName: 'depositConversionName',
+    conversionUnit: 'minutes',
   };
 
   describe('toJSON', () => {

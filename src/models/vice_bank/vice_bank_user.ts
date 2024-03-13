@@ -41,6 +41,13 @@ export class ViceBankUser {
     };
   }
 
+  copyWith(input: Record<string, unknown>): ViceBankUser {
+    return ViceBankUser.fromJSON({
+      ...this.toJSON(),
+      ...input,
+    });
+  }
+
   static fromJSON(input: unknown): ViceBankUser {
     if (!ViceBankUser.isViceBankUserJSON(input)) {
       const errors = ViceBankUser.ViceBankUserJSONTest(input);

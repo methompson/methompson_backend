@@ -18,7 +18,7 @@ import { isNullOrUndefined, isRecord, isString } from '@/src/utils/type_guards';
 import { InvalidInputError, NotFoundError } from '@/src/errors';
 import { AuthRequiredIncerceptor } from '@/src/middleware/auth_interceptor';
 import { commonErrorHandler } from '@/src/utils/common_error_handler';
-import { type METIncomingMessage } from '@/src/utils/met_incoming_message';
+import type { METIncomingMessage } from '@/src/utils/met_incoming_message';
 
 interface GetUsersResponse {
   users: ViceBankUser[];
@@ -162,6 +162,7 @@ export class ViceBankUserController {
   async deleteUser(
     @Req() request: METIncomingMessage,
   ): Promise<DeleteUserResponse> {
+    // TODO clear all deposits, conversions, purchases and prices for the user
     try {
       const auth = request.authModel;
 

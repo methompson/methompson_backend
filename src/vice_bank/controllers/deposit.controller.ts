@@ -4,6 +4,7 @@ import {
   Inject,
   Post,
   Req,
+  UnauthorizedException,
   UseInterceptors,
 } from '@nestjs/common';
 import { Request } from 'express';
@@ -11,17 +12,20 @@ import { Request } from 'express';
 import { RequestLogInterceptor } from '@/src/middleware/request_log.interceptor';
 import { LoggerService } from '@/src/logger/logger.service';
 import { DepositService } from '@/src/vice_bank/services/deposit.service';
+import { ViceBankUserService } from '@/src/vice_bank/services/vice_bank_user.service';
 import { pageAndPagination } from '@/src/utils/page_and_pagination';
 import { Deposit } from '@/src/models/vice_bank/deposit';
 import { commonErrorHandler } from '@/src/utils/common_error_handler';
-import { isRecord, isString } from '@/src/utils/type_guards';
-import { InvalidInputError } from '@/src/errors';
+import { isNullOrUndefined, isRecord, isString } from '@/src/utils/type_guards';
+import { InvalidInputError, NotFoundError } from '@/src/errors';
+import { type METIncomingMessage } from '@/src/utils/met_incoming_message';
 
 interface GetDepositsResponse {
   deposits: Deposit[];
 }
 interface AddDepositResponse {
   deposit: Deposit;
+  currentTokens: number;
 }
 interface UpdateDepositResponse {
   deposit: Deposit;
@@ -36,6 +40,8 @@ export class DepositController {
   constructor(
     @Inject('DEPOSIT_SERVICE')
     private readonly depositService: DepositService,
+    @Inject('VICE_BANK_USER_SERVICE')
+    private readonly viceBankUserService: ViceBankUserService,
     @Inject('LOGGER_SERVICE')
     private readonly loggerService: LoggerService,
   ) {}
@@ -78,8 +84,16 @@ export class DepositController {
   }
 
   @Post('addDeposit')
-  async addDeposit(@Req() request: Request): Promise<AddDepositResponse> {
+  async addDeposit(
+    @Req() request: METIncomingMessage,
+  ): Promise<AddDepositResponse> {
     try {
+      const auth = request.authModel;
+
+      if (isNullOrUndefined(auth)) {
+        throw new UnauthorizedException('Auth Model Not Found in Request');
+      }
+
       const { body } = request;
 
       if (!isRecord(body)) {
@@ -88,9 +102,30 @@ export class DepositController {
 
       const newDeposit = Deposit.fromJSON(body.deposit);
 
-      const deposit = await this.depositService.addDeposit(newDeposit);
+      const users = await this.viceBankUserService.getViceBankUsers(
+        auth.userId,
+        { userId: newDeposit.userId },
+      );
 
-      return { deposit };
+      const user = users[0];
+      if (isNullOrUndefined(user)) {
+        throw new NotFoundError(`User with ID ${newDeposit.userId} not found`);
+      }
+
+      const tokensEarned = newDeposit.tokensEarned;
+
+      const userToUpdate = user.copyWith({
+        currentTokens: user.currentTokens + tokensEarned,
+      });
+
+      const [deposit] = await Promise.all([
+        this.depositService.addDeposit(newDeposit),
+        this.viceBankUserService.updateViceBankUser(userToUpdate),
+      ]);
+
+      // const deposit = await this.depositService.addDeposit(newDeposit);
+
+      return { deposit, currentTokens: userToUpdate.currentTokens };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }

@@ -20,6 +20,7 @@ const deposit1JSON: DepositJSON = {
   depositQuantity: 1,
   conversionRate: 1,
   depositConversionName: 'name1',
+  conversionUnit: 'minutes',
 };
 const deposit2JSON: DepositJSON = {
   id: 'id2',
@@ -28,6 +29,7 @@ const deposit2JSON: DepositJSON = {
   depositQuantity: 1,
   conversionRate: 1,
   depositConversionName: 'name1',
+  conversionUnit: 'minutes',
 };
 const deposit3JSON: DepositJSON = {
   id: 'id3',
@@ -36,6 +38,7 @@ const deposit3JSON: DepositJSON = {
   depositQuantity: 1,
   conversionRate: 1,
   depositConversionName: 'name2',
+  conversionUnit: 'minutes',
 };
 
 const deposit1 = Deposit.fromJSON(deposit1JSON);
@@ -169,6 +172,7 @@ describe('InMemoryDepositService', () => {
           depositQuantity: i,
           conversionRate: i,
           depositConversionName: `name${i}`,
+          conversionUnit: 'minutes',
         };
 
         deposits.push(Deposit.fromJSON(deposit));
@@ -225,6 +229,7 @@ describe('InMemoryDepositService', () => {
           depositQuantity: i,
           conversionRate: i,
           depositConversionName: `name${i}`,
+          conversionUnit: 'minutes',
         };
 
         deposits.push(Deposit.fromJSON(deposit));
@@ -279,6 +284,7 @@ describe('InMemoryDepositService', () => {
           depositQuantity: i,
           conversionRate: i,
           depositConversionName: `name${i}`,
+          conversionUnit: 'minutes',
         };
 
         deposits.push(Deposit.fromJSON(deposit));
@@ -341,6 +347,7 @@ describe('InMemoryDepositService', () => {
           depositQuantity: i,
           conversionRate: i,
           depositConversionName: `name${i}`,
+          conversionUnit: 'minutes',
         };
 
         deposits.push(Deposit.fromJSON(deposit));
