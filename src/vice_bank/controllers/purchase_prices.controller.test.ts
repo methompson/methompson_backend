@@ -11,19 +11,19 @@ import { PurchasePricesController } from './purchase_prices.controller';
 
 const pp1JSON: PurchasePriceJSON = {
   id: 'id1',
-  userId: 'userId1',
+  vbUserId: 'userId1',
   name: 'name1',
   price: 1,
 };
 const pp2JSON: PurchasePriceJSON = {
   id: 'id2',
-  userId: 'userId1',
+  vbUserId: 'userId1',
   name: 'name2',
   price: 2,
 };
 const pp3JSON: PurchasePriceJSON = {
   id: 'id3',
-  userId: 'userId2',
+  vbUserId: 'userId2',
   name: 'name3',
   price: 3,
 };

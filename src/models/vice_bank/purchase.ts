@@ -10,7 +10,7 @@ import { InvalidInputError } from '@/src/errors';
 
 export interface PurchaseJSON {
   id: string;
-  userId: string;
+  vbUserId: string;
   purchasePriceId: string;
   date: string;
   purchasedQuantity: number;
@@ -19,7 +19,7 @@ export interface PurchaseJSON {
 export class Purchase {
   constructor(
     protected _id: string,
-    protected _userId: string,
+    protected _vbUserId: string,
     protected _purchasePriceId: string,
     protected _date: DateTime<true>,
     protected _purchasedQuantity: number,
@@ -29,8 +29,8 @@ export class Purchase {
     return this._id;
   }
 
-  get userId(): string {
-    return this._userId;
+  get vbUserId(): string {
+    return this._vbUserId;
   }
 
   get purchasePriceId(): string {
@@ -48,7 +48,7 @@ export class Purchase {
   toJSON(): PurchaseJSON {
     return {
       id: this.id,
-      userId: this.userId,
+      vbUserId: this.vbUserId,
       purchasePriceId: this.purchasePriceId,
       date: this.date.toISO(),
       purchasedQuantity: this.purchasedQuantity,
@@ -68,7 +68,7 @@ export class Purchase {
 
     return new Purchase(
       input.id,
-      input.userId,
+      input.vbUserId,
       input.purchasePriceId,
       dateTime,
       input.purchasedQuantity,
@@ -89,7 +89,7 @@ export class Purchase {
     const output: string[] = [];
 
     if (!isString(input.id)) output.push('id');
-    if (!isString(input.userId)) output.push('userId');
+    if (!isString(input.vbUserId)) output.push('vbUserId');
     if (!isString(input.purchasePriceId)) output.push('purchasePriceId');
     if (!isValidDateTimeString(input.date)) output.push('date');
     if (!isNumber(input.purchasedQuantity)) output.push('purchasedQuantity');

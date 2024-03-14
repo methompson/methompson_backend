@@ -3,7 +3,7 @@ import { DepositConversion, DepositConversionJSON } from './deposit_conversion';
 describe('DepositConversion', () => {
   const validInput: DepositConversionJSON = {
     id: 'id',
-    userId: 'userId',
+    vbUserId: 'vbUserId',
     name: 'name',
     conversionUnit: 'conversionUnit',
     depositsPer: 1,
@@ -26,7 +26,7 @@ describe('DepositConversion', () => {
       const result = DepositConversion.fromJSON(validInput);
       expect(result instanceof DepositConversion).toBe(true);
       expect(result.id).toBe('id');
-      expect(result.userId).toBe('userId');
+      expect(result.vbUserId).toBe('vbUserId');
       expect(result.name).toBe('name');
       expect(result.conversionUnit).toBe('conversionUnit');
       expect(result.depositsPer).toBe(1);
@@ -42,7 +42,7 @@ describe('DepositConversion', () => {
       expect(() => DepositConversion.fromJSON(invalidInput)).toThrow();
 
       invalidInput = { ...validInput };
-      delete invalidInput.userId;
+      delete invalidInput.vbUserId;
       expect(() => DepositConversion.fromJSON(invalidInput)).toThrow();
 
       invalidInput = { ...validInput };
@@ -90,7 +90,7 @@ describe('DepositConversion', () => {
       );
 
       invalidInput = { ...validInput };
-      delete invalidInput.userId;
+      delete invalidInput.vbUserId;
       expect(DepositConversion.isDepositConversionJSON(invalidInput)).toBe(
         false,
       );
@@ -154,9 +154,9 @@ describe('DepositConversion', () => {
       );
 
       invalidInput = { ...validInput };
-      delete invalidInput.userId;
+      delete invalidInput.vbUserId;
       expect(DepositConversion.DepositConversionJSONTest(invalidInput)).toEqual(
-        ['userId'],
+        ['vbUserId'],
       );
 
       invalidInput = { ...validInput };
@@ -213,7 +213,7 @@ describe('DepositConversion', () => {
 
       expect(result instanceof DepositConversion).toBe(true);
       expect(result.id).toBe(newId);
-      expect(result.userId).toBe(input.userId);
+      expect(result.vbUserId).toBe(input.vbUserId);
       expect(result.name).toBe(input.name);
       expect(result.conversionUnit).toBe(input.conversionUnit);
       expect(result.depositsPer).toBe(input.depositsPer);

@@ -3,7 +3,7 @@ import { Deposit, DepositJSON } from './deposit';
 describe('Deposit', () => {
   const validInput: DepositJSON = {
     id: 'id',
-    userId: 'userId',
+    vbUserId: 'vbUserId',
     date: '2023-02-25T00:00:00.000-06:00',
     depositQuantity: 1,
     conversionRate: 1,
@@ -26,7 +26,7 @@ describe('Deposit', () => {
       const result = Deposit.fromJSON(validInput);
       expect(result instanceof Deposit).toBe(true);
       expect(result.id).toBe(validInput.id);
-      expect(result.userId).toBe(validInput.userId);
+      expect(result.vbUserId).toBe(validInput.vbUserId);
       expect(result.date.toISO()).toBe(validInput.date);
       expect(result.depositQuantity).toBe(validInput.depositQuantity);
       expect(result.conversionRate).toBe(validInput.conversionRate);
@@ -43,7 +43,7 @@ describe('Deposit', () => {
       expect(() => Deposit.fromJSON(invalidInput)).toThrow();
 
       invalidInput = { ...validInput };
-      delete invalidInput.userId;
+      delete invalidInput.vbUserId;
       expect(() => Deposit.fromJSON(invalidInput)).toThrow();
 
       invalidInput = { ...validInput };
@@ -85,7 +85,7 @@ describe('Deposit', () => {
       expect(Deposit.isDepositJSON(invalidInput)).toBe(false);
 
       invalidInput = { ...validInput };
-      delete invalidInput.userId;
+      delete invalidInput.vbUserId;
       expect(Deposit.isDepositJSON(invalidInput)).toBe(false);
 
       invalidInput = { ...validInput };
@@ -119,8 +119,8 @@ describe('Deposit', () => {
       expect(Deposit.DepositJSONTest(invalidInput)).toEqual(['id']);
 
       invalidInput = { ...validInput };
-      delete invalidInput.userId;
-      expect(Deposit.DepositJSONTest(invalidInput)).toEqual(['userId']);
+      delete invalidInput.vbUserId;
+      expect(Deposit.DepositJSONTest(invalidInput)).toEqual(['vbUserId']);
 
       invalidInput = { ...validInput };
       delete invalidInput.date;
@@ -160,7 +160,7 @@ describe('Deposit', () => {
 
       expect(result instanceof Deposit).toBe(true);
       expect(result.id).toBe(newId);
-      expect(result.userId).toBe(depositInput.userId);
+      expect(result.vbUserId).toBe(depositInput.vbUserId);
       expect(result.date.toISO()).toBe(depositInput.date.toISO());
       expect(result.depositQuantity).toBe(depositInput.depositQuantity);
       expect(result.conversionRate).toBe(depositInput.conversionRate);

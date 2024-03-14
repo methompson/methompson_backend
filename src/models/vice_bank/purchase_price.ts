@@ -3,7 +3,7 @@ import { isNumber, isRecord, isString } from '@/src/utils/type_guards';
 
 export interface PurchasePriceJSON {
   id: string;
-  userId: string;
+  vbUserId: string;
   name: string;
   price: number;
 }
@@ -11,7 +11,7 @@ export interface PurchasePriceJSON {
 export class PurchasePrice {
   constructor(
     protected _id: string,
-    protected _userId: string,
+    protected _vbUserId: string,
     protected _name: string,
     protected _price: number,
   ) {}
@@ -20,8 +20,8 @@ export class PurchasePrice {
     return this._id;
   }
 
-  get userId(): string {
-    return this._userId;
+  get vbUserId(): string {
+    return this._vbUserId;
   }
 
   get name(): string {
@@ -35,7 +35,7 @@ export class PurchasePrice {
   toJSON(): PurchasePriceJSON {
     return {
       id: this.id,
-      userId: this.userId,
+      vbUserId: this.vbUserId,
       name: this.name,
       price: this.price,
     };
@@ -47,7 +47,7 @@ export class PurchasePrice {
       throw new InvalidInputError(`Invalid JSON ${errors.join(', ')}`);
     }
 
-    return new PurchasePrice(input.id, input.userId, input.name, input.price);
+    return new PurchasePrice(input.id, input.vbUserId, input.name, input.price);
   }
 
   static isPurchasePriceJSON(input: unknown): input is PurchasePriceJSON {
@@ -64,7 +64,7 @@ export class PurchasePrice {
     const output: string[] = [];
 
     if (!isString(input.id)) output.push('id');
-    if (!isString(input.userId)) output.push('userId');
+    if (!isString(input.vbUserId)) output.push('vbUserId');
     if (!isString(input.name)) output.push('name');
     if (!isNumber(input.price)) output.push('price');
 

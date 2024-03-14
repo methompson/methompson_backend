@@ -15,7 +15,7 @@ const uuidv4 = uuid.v4 as jest.Mock<unknown, unknown[]>;
 
 const deposit1JSON: DepositJSON = {
   id: 'id1',
-  userId: 'userId1',
+  vbUserId: 'userId1',
   date: '2021-01-01T00:00:00.000-06:00',
   depositQuantity: 1,
   conversionRate: 1,
@@ -24,7 +24,7 @@ const deposit1JSON: DepositJSON = {
 };
 const deposit2JSON: DepositJSON = {
   id: 'id2',
-  userId: 'userId1',
+  vbUserId: 'userId1',
   date: '2021-01-12T00:00:00.000-06:00',
   depositQuantity: 1,
   conversionRate: 1,
@@ -33,7 +33,7 @@ const deposit2JSON: DepositJSON = {
 };
 const deposit3JSON: DepositJSON = {
   id: 'id3',
-  userId: 'userId2',
+  vbUserId: 'userId2',
   date: '2021-02-01T00:00:00.000-06:00',
   depositQuantity: 1,
   conversionRate: 1,
@@ -167,7 +167,7 @@ describe('InMemoryDepositService', () => {
       for (let i = 4; i < 15; i++) {
         const deposit: DepositJSON = {
           id: `id${i}`,
-          userId: 'userId1',
+          vbUserId: 'userId1',
           date: baseDate.plus({ days: i }).toISO(),
           depositQuantity: i,
           conversionRate: i,
@@ -224,7 +224,7 @@ describe('InMemoryDepositService', () => {
       for (let i = 4; i < 15; i++) {
         const deposit: DepositJSON = {
           id: `id${i}`,
-          userId: 'userId1',
+          vbUserId: 'userId1',
           date: baseDate.plus({ days: i }).toISO(),
           depositQuantity: i,
           conversionRate: i,
@@ -279,7 +279,7 @@ describe('InMemoryDepositService', () => {
       for (let i = 4; i < 15; i++) {
         const deposit: DepositJSON = {
           id: `id${i}`,
-          userId: 'userId1',
+          vbUserId: 'userId1',
           date: baseDate.plus({ days: i }).toISO(),
           depositQuantity: i,
           conversionRate: i,
@@ -342,7 +342,7 @@ describe('InMemoryDepositService', () => {
       for (let i = 4; i < 8; i++) {
         const deposit: DepositJSON = {
           id: `id${i}`,
-          userId: 'userId1',
+          vbUserId: 'userId1',
           date: baseDate.plus({ days: i }).toISO(),
           depositQuantity: i,
           conversionRate: i,

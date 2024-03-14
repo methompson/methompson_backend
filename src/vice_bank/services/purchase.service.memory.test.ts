@@ -15,21 +15,21 @@ const uuidv4 = uuid.v4 as jest.Mock<unknown, unknown[]>;
 
 const p1JSON: PurchaseJSON = {
   id: 'id1',
-  userId: 'userId1',
+  vbUserId: 'userId1',
   purchasePriceId: 'purchasePriceId1',
   date: '2021-01-01T00:00:00.000-06:00',
   purchasedQuantity: 1,
 };
 const p2JSON: PurchaseJSON = {
   id: 'id2',
-  userId: 'userId1',
+  vbUserId: 'userId1',
   purchasePriceId: 'purchasePriceId2',
   date: '2021-01-12T00:00:00.000-06:00',
   purchasedQuantity: 2,
 };
 const p3JSON: PurchaseJSON = {
   id: 'id3',
-  userId: 'userId2',
+  vbUserId: 'userId2',
   purchasePriceId: 'purchasePriceId3',
   date: '2021-01-25T00:00:00.000-06:00',
   purchasedQuantity: 3,
@@ -161,7 +161,7 @@ describe('InMemoryPurchaseService', () => {
       for (let i = 4; i < 10; i++) {
         const pJSON: PurchaseJSON = {
           id: `id${i}`,
-          userId: 'userId1',
+          vbUserId: 'userId1',
           purchasePriceId: `purchasePriceId${i}`,
           date: baseDate.plus({ days: i }).toISO(),
           purchasedQuantity: i,
@@ -217,7 +217,7 @@ describe('InMemoryPurchaseService', () => {
       for (let i = 4; i < 10; i++) {
         const pJSON: PurchaseJSON = {
           id: `id${i}`,
-          userId: 'userId1',
+          vbUserId: 'userId1',
           purchasePriceId: `purchasePriceId${i}`,
           date: baseDate.plus({ days: i }).toISO(),
           purchasedQuantity: i,
@@ -309,7 +309,7 @@ describe('InMemoryPurchaseService', () => {
       for (let i = 4; i < 8; i++) {
         const purchase: PurchaseJSON = {
           id: `id${i}`,
-          userId: 'userId1',
+          vbUserId: 'userId1',
           purchasePriceId: `purchasePriceId${i}`,
           date: baseDate.plus({ days: i }).toISO(),
           purchasedQuantity: i,

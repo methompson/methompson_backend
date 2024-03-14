@@ -50,7 +50,7 @@ export class InMemoryDepositService implements DepositService {
 
     const deposits = this.depositsList
       .filter((d) => {
-        if (d.userId !== userId) return false;
+        if (d.vbUserId !== userId) return false;
         if (startDate.isValid && d.date < startDate) return false;
         if (endDate.isValid && d.date > endDate) return false;
 

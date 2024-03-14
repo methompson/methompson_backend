@@ -42,7 +42,7 @@ export class InMemoryPurchasePricesService implements PurchasePricesService {
     const { userId } = input;
 
     const list = this.purchasePricesList
-      .filter((p) => p.userId === userId)
+      .filter((p) => p.vbUserId === userId)
       .slice(skip, end);
 
     return list;

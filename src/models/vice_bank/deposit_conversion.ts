@@ -3,7 +3,7 @@ import { isNumber, isRecord, isString } from '@/src/utils/type_guards';
 
 export interface DepositConversionJSON {
   id: string;
-  userId: string;
+  vbUserId: string;
   name: string;
   conversionUnit: string;
   depositsPer: number;
@@ -25,7 +25,7 @@ export interface DepositConversionJSON {
 export class DepositConversion {
   constructor(
     protected _id: string,
-    protected _userId: string,
+    protected _vbUserId: string,
     protected _name: string,
     protected _conversionUnit: string,
     protected _depositsPer: number,
@@ -37,8 +37,8 @@ export class DepositConversion {
     return this._id;
   }
 
-  get userId(): string {
-    return this._userId;
+  get vbUserId(): string {
+    return this._vbUserId;
   }
 
   get name(): string {
@@ -64,7 +64,7 @@ export class DepositConversion {
   toJSON(): DepositConversionJSON {
     return {
       id: this.id,
-      userId: this.userId,
+      vbUserId: this.vbUserId,
       name: this.name,
       conversionUnit: this.conversionUnit,
       depositsPer: this.depositsPer,
@@ -81,7 +81,7 @@ export class DepositConversion {
 
     return new DepositConversion(
       input.id,
-      input.userId,
+      input.vbUserId,
       input.name,
       input.conversionUnit,
       input.depositsPer,
@@ -106,7 +106,7 @@ export class DepositConversion {
     const output: string[] = [];
 
     if (!isString(input.id)) output.push('id');
-    if (!isString(input.userId)) output.push('userId');
+    if (!isString(input.vbUserId)) output.push('vbUserId');
     if (!isString(input.name)) output.push('name');
     if (!isString(input.conversionUnit)) output.push('conversionUnit');
     if (!isNumber(input.depositsPer)) output.push('depositsPer');

@@ -104,12 +104,14 @@ export class DepositController {
 
       const users = await this.viceBankUserService.getViceBankUsers(
         auth.userId,
-        { userId: newDeposit.userId },
+        { userId: newDeposit.vbUserId },
       );
 
       const user = users[0];
       if (isNullOrUndefined(user)) {
-        throw new NotFoundError(`User with ID ${newDeposit.userId} not found`);
+        throw new NotFoundError(
+          `User with ID ${newDeposit.vbUserId} not found`,
+        );
       }
 
       const tokensEarned = newDeposit.tokensEarned;

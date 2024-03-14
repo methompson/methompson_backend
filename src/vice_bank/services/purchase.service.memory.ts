@@ -49,7 +49,7 @@ export class InMemoryPurchaseService implements PurchaseService {
 
     const purchases = this.purchasesList
       .filter((p) => {
-        if (p.userId !== userId) return false;
+        if (p.vbUserId !== userId) return false;
         if (startDate.isValid && p.date < startDate) return false;
         if (endDate.isValid && p.date > endDate) return false;
 

@@ -19,7 +19,7 @@ const uuidv4 = uuid.v4 as jest.Mock<unknown, unknown[]>;
 
 const conversionJSON1: DepositConversionJSON = {
   id: 'id1',
-  userId: 'userId1',
+  vbUserId: 'userId1',
   name: 'name1',
   conversionUnit: 'conversionUnit1',
   depositsPer: 1,
@@ -28,7 +28,7 @@ const conversionJSON1: DepositConversionJSON = {
 };
 const conversionJSON2: DepositConversionJSON = {
   id: 'id2',
-  userId: 'userId1',
+  vbUserId: 'userId1',
   name: 'name2',
   conversionUnit: 'conversionUnit2',
   depositsPer: 2,
@@ -37,7 +37,7 @@ const conversionJSON2: DepositConversionJSON = {
 };
 const conversionJSON3: DepositConversionJSON = {
   id: 'id3',
-  userId: 'userId3',
+  vbUserId: 'userId3',
   name: 'name3',
   conversionUnit: 'conversionUnit3',
   depositsPer: 3,
@@ -177,7 +177,7 @@ describe('InMemoryDepositConversionsService', () => {
         conversions.push(
           DepositConversion.fromJSON({
             id: `id${i}`,
-            userId: 'userId1',
+            vbUserId: 'userId1',
             name: `name${i}`,
             conversionUnit: `conversionUnit${i}`,
             depositsPer: i,
@@ -224,7 +224,7 @@ describe('InMemoryDepositConversionsService', () => {
         conversions.push(
           DepositConversion.fromJSON({
             id: `id${i}`,
-            userId: 'userId1',
+            vbUserId: 'userId1',
             name: `name${i}`,
             conversionUnit: `conversionUnit${i}`,
             depositsPer: i,
@@ -317,7 +317,7 @@ describe('InMemoryDepositConversionsService', () => {
 
       expect(result.toJSON()).toEqual({
         id: someId,
-        userId: conversion1.userId,
+        vbUserId: conversion1.vbUserId,
         name: conversion1.name,
         conversionUnit: conversion1.conversionUnit,
         depositsPer: conversion1.depositsPer,

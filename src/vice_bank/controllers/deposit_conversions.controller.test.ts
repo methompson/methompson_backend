@@ -11,7 +11,7 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 
 const conversionJSON1: DepositConversionJSON = {
   id: 'id1',
-  userId: 'userId1',
+  vbUserId: 'userId1',
   name: 'name1',
   conversionUnit: 'conversionUnit1',
   depositsPer: 1,
@@ -20,7 +20,7 @@ const conversionJSON1: DepositConversionJSON = {
 };
 const conversionJSON2: DepositConversionJSON = {
   id: 'id2',
-  userId: 'userId1',
+  vbUserId: 'userId1',
   name: 'name2',
   conversionUnit: 'conversionUnit2',
   depositsPer: 2,
@@ -29,7 +29,7 @@ const conversionJSON2: DepositConversionJSON = {
 };
 const conversionJSON3: DepositConversionJSON = {
   id: 'id3',
-  userId: 'userId3',
+  vbUserId: 'userId3',
   name: 'name3',
   conversionUnit: 'conversionUnit3',
   depositsPer: 3,

@@ -45,7 +45,7 @@ export class InMemoryDepositConversionsService implements DCS {
     const { userId } = input;
 
     const list = this.depositConversionsList
-      .filter((p) => p.userId === userId)
+      .filter((p) => p.vbUserId === userId)
       .slice(skip, end);
 
     return list;

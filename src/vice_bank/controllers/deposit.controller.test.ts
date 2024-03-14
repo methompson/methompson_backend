@@ -5,10 +5,19 @@ import { InMemoryDepositService } from '@/src/vice_bank/services/deposit.service
 import { LoggerService } from '@/src/logger/logger.service';
 import { DepositController } from './deposit.controller';
 import { HttpException, HttpStatus } from '@nestjs/common';
+import {
+  ViceBankUser,
+  ViceBankUserJSON,
+} from '@/src/models/vice_bank/vice_bank_user';
+import { InMemoryViceBankUserService } from '@/src/vice_bank/services/vice_bank_user.service.memory';
+import { METIncomingMessage } from '@/src/utils/met_incoming_message';
+import { NoAuthModel } from '@/src/models/auth_model';
+
+const userId = 'userId';
 
 const deposit1JSON: DepositJSON = {
   id: 'id1',
-  userId: 'userId1',
+  vbUserId: 'id1',
   date: '2021-01-01T00:00:00.000-06:00',
   depositQuantity: 1,
   conversionRate: 1,
@@ -17,7 +26,7 @@ const deposit1JSON: DepositJSON = {
 };
 const deposit2JSON: DepositJSON = {
   id: 'id2',
-  userId: 'userId1',
+  vbUserId: 'id1',
   date: '2021-01-12T00:00:00.000-06:00',
   depositQuantity: 1,
   conversionRate: 1,
@@ -26,7 +35,7 @@ const deposit2JSON: DepositJSON = {
 };
 const deposit3JSON: DepositJSON = {
   id: 'id3',
-  userId: 'userId2',
+  vbUserId: 'userId2',
   date: '2021-02-01T00:00:00.000-06:00',
   depositQuantity: 1,
   conversionRate: 1,
@@ -38,7 +47,36 @@ const deposit1 = Deposit.fromJSON(deposit1JSON);
 const deposit2 = Deposit.fromJSON(deposit2JSON);
 const deposit3 = Deposit.fromJSON(deposit3JSON);
 
+const user1JSON: ViceBankUserJSON = {
+  id: 'id1',
+  userId,
+  name: 'name1',
+  currentTokens: 1,
+};
+const user2JSON: ViceBankUserJSON = {
+  id: 'id2',
+  userId,
+  name: 'name2',
+  currentTokens: 2,
+};
+const user3JSON: ViceBankUserJSON = {
+  id: 'id3',
+  userId,
+  name: 'name3',
+  currentTokens: 3,
+};
+
+const user1 = ViceBankUser.fromJSON(user1JSON);
+const user2 = ViceBankUser.fromJSON(user2JSON);
+const user3 = ViceBankUser.fromJSON(user3JSON);
+
 describe('Deposit Controller', () => {
+  let vbService = new InMemoryViceBankUserService([user1, user2, user3]);
+
+  beforeEach(() => {
+    vbService = new InMemoryViceBankUserService([user1, user2, user3]);
+  });
+
   describe('getDeposits', () => {
     test('gets deposits from the DepositService', async () => {
       const service = new InMemoryDepositService([
@@ -48,11 +86,11 @@ describe('Deposit Controller', () => {
       ]);
       const logger = new LoggerService();
 
-      const controller = new DepositController(service, logger);
+      const controller = new DepositController(service, vbService, logger);
 
       const req = {
         query: {
-          userId: 'userId1',
+          userId: 'id1',
         },
       } as unknown as Request;
 
@@ -69,11 +107,11 @@ describe('Deposit Controller', () => {
       ]);
       const logger = new LoggerService();
 
-      const controller = new DepositController(service, logger);
+      const controller = new DepositController(service, vbService, logger);
 
       const req = {
         query: {
-          userId: 'userId1',
+          userId: 'id1',
           startDate: '2021-01-01',
           endDate: '2021-01-10',
         },
@@ -89,7 +127,7 @@ describe('Deposit Controller', () => {
       expect(getSpy).toHaveBeenCalledWith({
         page: 1,
         pagination: 10,
-        userId: 'userId1',
+        userId: 'id1',
         startDate: '2021-01-01',
         endDate: '2021-01-10',
         depositConversionId: undefined,
@@ -100,7 +138,7 @@ describe('Deposit Controller', () => {
       const service = new InMemoryDepositService();
       const logger = new LoggerService();
 
-      const controller = new DepositController(service, logger);
+      const controller = new DepositController(service, vbService, logger);
 
       const req = {
         query: 'bad',
@@ -115,7 +153,7 @@ describe('Deposit Controller', () => {
       const service = new InMemoryDepositService();
       const logger = new LoggerService();
 
-      const controller = new DepositController(service, logger);
+      const controller = new DepositController(service, vbService, logger);
 
       const req = {
         query: {
@@ -132,7 +170,7 @@ describe('Deposit Controller', () => {
       const service = new InMemoryDepositService();
       const logger = new LoggerService();
 
-      const controller = new DepositController(service, logger);
+      const controller = new DepositController(service, vbService, logger);
 
       const req = {
         query: {
@@ -153,30 +191,39 @@ describe('Deposit Controller', () => {
       const service = new InMemoryDepositService();
       const logger = new LoggerService();
 
-      const controller = new DepositController(service, logger);
+      const controller = new DepositController(service, vbService, logger);
+
+      const authModel = new NoAuthModel();
+      jest.spyOn(authModel, 'userId', 'get').mockReturnValue('userId');
 
       const req = {
+        authModel,
         body: {
           deposit: deposit1JSON,
         },
-      } as unknown as Request;
+      } as unknown as METIncomingMessage;
 
       jest.spyOn(service, 'addDeposit').mockResolvedValue(deposit1);
 
       const deposit = await controller.addDeposit(req);
 
-      expect(deposit).toEqual({ deposit: deposit1 });
+      expect(deposit).toEqual({ deposit: deposit1, currentTokens: 2 });
     });
 
     test('throws an error if the body is invalid', async () => {
       const service = new InMemoryDepositService();
       const logger = new LoggerService();
 
-      const controller = new DepositController(service, logger);
+      const controller = new DepositController(service, vbService, logger);
 
-      const req = {} as unknown as Request;
+      const authModel = new NoAuthModel();
+      jest.spyOn(authModel, 'userId', 'get').mockReturnValue('userId');
 
-      expect(() => controller.addDeposit(req)).rejects.toThrow(
+      const req = {
+        authModel,
+      } as unknown as METIncomingMessage;
+
+      await expect(() => controller.addDeposit(req)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
     });
@@ -185,15 +232,19 @@ describe('Deposit Controller', () => {
       const service = new InMemoryDepositService();
       const logger = new LoggerService();
 
-      const controller = new DepositController(service, logger);
+      const controller = new DepositController(service, vbService, logger);
+
+      const authModel = new NoAuthModel();
+      jest.spyOn(authModel, 'userId', 'get').mockReturnValue('userId');
 
       const req = {
+        authModel,
         body: {
           deposit: {},
         },
-      } as unknown as Request;
+      } as unknown as METIncomingMessage;
 
-      expect(() => controller.addDeposit(req)).rejects.toThrow(
+      await expect(() => controller.addDeposit(req)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
     });
@@ -202,13 +253,17 @@ describe('Deposit Controller', () => {
       const service = new InMemoryDepositService();
       const logger = new LoggerService();
 
-      const controller = new DepositController(service, logger);
+      const controller = new DepositController(service, vbService, logger);
+
+      const authModel = new NoAuthModel();
+      jest.spyOn(authModel, 'userId', 'get').mockReturnValue('userId');
 
       const req = {
+        authModel,
         body: {
           deposit: deposit1JSON,
         },
-      } as unknown as Request;
+      } as unknown as METIncomingMessage;
 
       jest.spyOn(service, 'addDeposit').mockRejectedValue(new Error('bad'));
 
@@ -223,7 +278,7 @@ describe('Deposit Controller', () => {
       const service = new InMemoryDepositService([deposit1]);
       const logger = new LoggerService();
 
-      const controller = new DepositController(service, logger);
+      const controller = new DepositController(service, vbService, logger);
 
       const updatedDeposit = { ...deposit1JSON, depositQuantity: 2 };
 
@@ -243,11 +298,11 @@ describe('Deposit Controller', () => {
       const service = new InMemoryDepositService([deposit1]);
       const logger = new LoggerService();
 
-      const controller = new DepositController(service, logger);
+      const controller = new DepositController(service, vbService, logger);
 
       const req = {} as unknown as Request;
 
-      expect(() => controller.updateDeposit(req)).rejects.toThrow(
+      await expect(() => controller.updateDeposit(req)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
     });
@@ -256,7 +311,7 @@ describe('Deposit Controller', () => {
       const service = new InMemoryDepositService([deposit1]);
       const logger = new LoggerService();
 
-      const controller = new DepositController(service, logger);
+      const controller = new DepositController(service, vbService, logger);
 
       const req = {
         body: {
@@ -264,7 +319,7 @@ describe('Deposit Controller', () => {
         },
       } as unknown as Request;
 
-      expect(() => controller.updateDeposit(req)).rejects.toThrow(
+      await expect(() => controller.updateDeposit(req)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
     });
@@ -273,7 +328,7 @@ describe('Deposit Controller', () => {
       const service = new InMemoryDepositService([deposit1]);
       const logger = new LoggerService();
 
-      const controller = new DepositController(service, logger);
+      const controller = new DepositController(service, vbService, logger);
 
       const req = {
         body: {
@@ -294,7 +349,7 @@ describe('Deposit Controller', () => {
       const service = new InMemoryDepositService([deposit1]);
       const logger = new LoggerService();
 
-      const controller = new DepositController(service, logger);
+      const controller = new DepositController(service, vbService, logger);
 
       const req = {
         body: {
@@ -312,11 +367,11 @@ describe('Deposit Controller', () => {
       const service = new InMemoryDepositService([deposit1]);
       const logger = new LoggerService();
 
-      const controller = new DepositController(service, logger);
+      const controller = new DepositController(service, vbService, logger);
 
       const req = {} as unknown as Request;
 
-      expect(() => controller.deleteDeposit(req)).rejects.toThrow(
+      await expect(() => controller.deleteDeposit(req)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
     });
@@ -325,7 +380,7 @@ describe('Deposit Controller', () => {
       const service = new InMemoryDepositService([deposit1]);
       const logger = new LoggerService();
 
-      const controller = new DepositController(service, logger);
+      const controller = new DepositController(service, vbService, logger);
 
       const req = {
         body: {
@@ -333,7 +388,7 @@ describe('Deposit Controller', () => {
         },
       } as unknown as Request;
 
-      expect(() => controller.deleteDeposit(req)).rejects.toThrow(
+      await expect(() => controller.deleteDeposit(req)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
     });
@@ -342,7 +397,7 @@ describe('Deposit Controller', () => {
       const service = new InMemoryDepositService([deposit1]);
       const logger = new LoggerService();
 
-      const controller = new DepositController(service, logger);
+      const controller = new DepositController(service, vbService, logger);
 
       const req = {
         body: {

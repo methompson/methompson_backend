@@ -10,7 +10,7 @@ import { InvalidInputError } from '@/src/errors';
 
 export interface DepositJSON {
   id: string;
-  userId: string;
+  vbUserId: string;
   date: string;
   depositQuantity: number;
   conversionRate: number;
@@ -21,7 +21,7 @@ export interface DepositJSON {
 export class Deposit {
   constructor(
     protected _id: string,
-    protected _userId: string,
+    protected _vbUserId: string,
     protected _date: DateTime<true>,
     protected _depositQuantity: number,
     protected _conversionRate: number,
@@ -33,8 +33,8 @@ export class Deposit {
     return this._id;
   }
 
-  get userId(): string {
-    return this._userId;
+  get vbUserId(): string {
+    return this._vbUserId;
   }
 
   get date(): DateTime<true> {
@@ -64,7 +64,7 @@ export class Deposit {
   toJSON(): DepositJSON {
     return {
       id: this.id,
-      userId: this.userId,
+      vbUserId: this.vbUserId,
       date: this.date.toISO(),
       depositQuantity: this.depositQuantity,
       conversionRate: this.conversionRate,
@@ -86,7 +86,7 @@ export class Deposit {
 
     return new Deposit(
       input.id,
-      input.userId,
+      input.vbUserId,
       dateTime,
       input.depositQuantity,
       input.conversionRate,
@@ -109,7 +109,7 @@ export class Deposit {
     const output: string[] = [];
 
     if (!isString(input.id)) output.push('id');
-    if (!isString(input.userId)) output.push('userId');
+    if (!isString(input.vbUserId)) output.push('vbUserId');
     if (!isValidDateTimeString(input.date)) output.push('date');
     if (!isNumber(input.depositQuantity)) output.push('depositQuantity');
     if (!isNumber(input.conversionRate)) output.push('conversionRate');

@@ -5,24 +5,33 @@ import { Purchase, PurchaseJSON } from '@/src/models/vice_bank/purchase';
 import { LoggerService } from '@/src/logger/logger.service';
 import { InMemoryPurchaseService } from '@/src/vice_bank/services/purchase.service.memory';
 import { PurchaseController } from './purchase.controller';
+import {
+  ViceBankUser,
+  ViceBankUserJSON,
+} from '@/src/models/vice_bank/vice_bank_user';
+import { InMemoryViceBankUserService } from '@/src/vice_bank/services/vice_bank_user.service.memory';
+import { NoAuthModel } from '@/src/models/auth_model';
+import { METIncomingMessage } from '@/src/utils/met_incoming_message';
+
+const userId = 'userId';
 
 const p1JSON: PurchaseJSON = {
   id: 'id1',
-  userId: 'userId1',
+  vbUserId: 'id1',
   purchasePriceId: 'purchasePriceId1',
   date: '2021-01-01T00:00:00.000-06:00',
   purchasedQuantity: 1,
 };
 const p2JSON: PurchaseJSON = {
   id: 'id2',
-  userId: 'userId1',
+  vbUserId: 'id1',
   purchasePriceId: 'purchasePriceId2',
   date: '2021-01-12T00:00:00.000-06:00',
   purchasedQuantity: 2,
 };
 const p3JSON: PurchaseJSON = {
   id: 'id3',
-  userId: 'userId2',
+  vbUserId: 'id2',
   purchasePriceId: 'purchasePriceId3',
   date: '2021-01-25T00:00:00.000-06:00',
   purchasedQuantity: 3,
@@ -32,7 +41,36 @@ const purchase1 = Purchase.fromJSON(p1JSON);
 const purchase2 = Purchase.fromJSON(p2JSON);
 const purchase3 = Purchase.fromJSON(p3JSON);
 
+const user1JSON: ViceBankUserJSON = {
+  id: 'id1',
+  userId,
+  name: 'name1',
+  currentTokens: 1,
+};
+const user2JSON: ViceBankUserJSON = {
+  id: 'id2',
+  userId,
+  name: 'name2',
+  currentTokens: 2,
+};
+const user3JSON: ViceBankUserJSON = {
+  id: 'id3',
+  userId,
+  name: 'name3',
+  currentTokens: 3,
+};
+
+const user1 = ViceBankUser.fromJSON(user1JSON);
+const user2 = ViceBankUser.fromJSON(user2JSON);
+const user3 = ViceBankUser.fromJSON(user3JSON);
+
 describe('Purchase Controller', () => {
+  let vbService = new InMemoryViceBankUserService([user1, user2, user3]);
+
+  beforeEach(() => {
+    vbService = new InMemoryViceBankUserService([user1, user2, user3]);
+  });
+
   describe('getPurchases', () => {
     test('gets purchases from the PurchaseService', async () => {
       const service = new InMemoryPurchaseService([
@@ -42,11 +80,11 @@ describe('Purchase Controller', () => {
       ]);
       const logger = new LoggerService();
 
-      const controller = new PurchaseController(service, logger);
+      const controller = new PurchaseController(service, vbService, logger);
 
       const request = {
         query: {
-          userId: 'userId1',
+          userId: 'id1',
         },
       } as unknown as Request;
 
@@ -59,7 +97,7 @@ describe('Purchase Controller', () => {
       expect(getSpy).toHaveBeenCalledWith({
         page: 1,
         pagination: 10,
-        userId: 'userId1',
+        userId: 'id1',
         startDate: undefined,
         endDate: undefined,
         purchasePriceId: undefined,
@@ -74,11 +112,11 @@ describe('Purchase Controller', () => {
       ]);
       const logger = new LoggerService();
 
-      const controller = new PurchaseController(service, logger);
+      const controller = new PurchaseController(service, vbService, logger);
 
       const request1 = {
         query: {
-          userId: 'userId1',
+          userId: 'id1',
           startDate: '2021-01-01',
           endDate: '2021-01-05',
         },
@@ -94,7 +132,7 @@ describe('Purchase Controller', () => {
       expect(getSpy).toHaveBeenCalledWith({
         page: 1,
         pagination: 10,
-        userId: 'userId1',
+        userId: 'id1',
         startDate: '2021-01-01',
         endDate: '2021-01-05',
         purchasePriceId: undefined,
@@ -102,7 +140,7 @@ describe('Purchase Controller', () => {
 
       const request2 = {
         query: {
-          userId: 'userId1',
+          userId: 'id1',
           startDate: '2021-01-05',
           endDate: '2021-01-20',
         },
@@ -120,13 +158,13 @@ describe('Purchase Controller', () => {
       ]);
       const logger = new LoggerService();
 
-      const controller = new PurchaseController(service, logger);
+      const controller = new PurchaseController(service, vbService, logger);
 
       const request = {
         query: 'invalid',
       } as unknown as Request;
 
-      expect(() => controller.getPurchases(request)).rejects.toThrow(
+      await expect(() => controller.getPurchases(request)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
     });
@@ -139,7 +177,7 @@ describe('Purchase Controller', () => {
       ]);
       const logger = new LoggerService();
 
-      const controller = new PurchaseController(service, logger);
+      const controller = new PurchaseController(service, vbService, logger);
 
       const request = {
         query: {
@@ -147,7 +185,7 @@ describe('Purchase Controller', () => {
         },
       } as unknown as Request;
 
-      expect(() => controller.getPurchases(request)).rejects.toThrow(
+      await expect(() => controller.getPurchases(request)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
     });
@@ -160,11 +198,11 @@ describe('Purchase Controller', () => {
       ]);
       const logger = new LoggerService();
 
-      const controller = new PurchaseController(service, logger);
+      const controller = new PurchaseController(service, vbService, logger);
 
       const request = {
         query: {
-          userId: 'userId1',
+          userId: 'id1',
         },
       } as unknown as Request;
 
@@ -172,7 +210,7 @@ describe('Purchase Controller', () => {
         .spyOn(service, 'getPurchases')
         .mockRejectedValueOnce(new Error('Test Error'));
 
-      expect(() => controller.getPurchases(request)).rejects.toThrow(
+      await expect(() => controller.getPurchases(request)).rejects.toThrow(
         new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
       );
     });
@@ -183,20 +221,23 @@ describe('Purchase Controller', () => {
       const service = new InMemoryPurchaseService();
       const logger = new LoggerService();
 
-      const controller = new PurchaseController(service, logger);
+      const controller = new PurchaseController(service, vbService, logger);
+      const authModel = new NoAuthModel();
+      jest.spyOn(authModel, 'userId', 'get').mockReturnValue('userId');
 
       const request = {
+        authModel,
         body: {
           purchase: p1JSON,
         },
-      } as unknown as Request;
+      } as unknown as METIncomingMessage;
 
       const addSpy = jest.spyOn(service, 'addPurchase');
       addSpy.mockResolvedValue(purchase1);
 
       const result = await controller.addPurchase(request);
 
-      expect(result).toEqual({ purchase: purchase1 });
+      expect(result).toEqual({ purchase: purchase1, currentTokens: 0 });
       expect(addSpy).toHaveBeenCalledTimes(1);
     });
 
@@ -208,13 +249,16 @@ describe('Purchase Controller', () => {
       ]);
       const logger = new LoggerService();
 
-      const controller = new PurchaseController(service, logger);
+      const controller = new PurchaseController(service, vbService, logger);
+      const authModel = new NoAuthModel();
+      jest.spyOn(authModel, 'userId', 'get').mockReturnValue('userId');
 
       const request = {
+        authModel,
         body: 'invalid',
-      } as unknown as Request;
+      } as unknown as METIncomingMessage;
 
-      expect(() => controller.addPurchase(request)).rejects.toThrow(
+      await expect(() => controller.addPurchase(request)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
     });
@@ -227,15 +271,18 @@ describe('Purchase Controller', () => {
       ]);
       const logger = new LoggerService();
 
-      const controller = new PurchaseController(service, logger);
+      const controller = new PurchaseController(service, vbService, logger);
+      const authModel = new NoAuthModel();
+      jest.spyOn(authModel, 'userId', 'get').mockReturnValue('userId');
 
       const request = {
+        authModel,
         body: {
           purchase: 'invalid',
         },
-      } as unknown as Request;
+      } as unknown as METIncomingMessage;
 
-      expect(() => controller.addPurchase(request)).rejects.toThrow(
+      await expect(() => controller.addPurchase(request)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
     });
@@ -248,19 +295,22 @@ describe('Purchase Controller', () => {
       ]);
       const logger = new LoggerService();
 
-      const controller = new PurchaseController(service, logger);
+      const controller = new PurchaseController(service, vbService, logger);
+      const authModel = new NoAuthModel();
+      jest.spyOn(authModel, 'userId', 'get').mockReturnValue('userId');
 
       const request = {
+        authModel,
         body: {
           purchase: p1JSON,
         },
-      } as unknown as Request;
+      } as unknown as METIncomingMessage;
 
       jest
         .spyOn(service, 'addPurchase')
         .mockRejectedValueOnce(new Error('Test Error'));
 
-      expect(() => controller.addPurchase(request)).rejects.toThrow(
+      await expect(() => controller.addPurchase(request)).rejects.toThrow(
         new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
       );
     });
@@ -275,7 +325,7 @@ describe('Purchase Controller', () => {
       ]);
       const logger = new LoggerService();
 
-      const controller = new PurchaseController(service, logger);
+      const controller = new PurchaseController(service, vbService, logger);
 
       const updatedPurchase = {
         ...p1JSON,
@@ -304,13 +354,13 @@ describe('Purchase Controller', () => {
       ]);
       const logger = new LoggerService();
 
-      const controller = new PurchaseController(service, logger);
+      const controller = new PurchaseController(service, vbService, logger);
 
       const request = {
         body: 'invalid',
       } as unknown as Request;
 
-      expect(() => controller.updatePurchase(request)).rejects.toThrow(
+      await expect(() => controller.updatePurchase(request)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
     });
@@ -323,7 +373,7 @@ describe('Purchase Controller', () => {
       ]);
       const logger = new LoggerService();
 
-      const controller = new PurchaseController(service, logger);
+      const controller = new PurchaseController(service, vbService, logger);
 
       const request = {
         body: {
@@ -331,7 +381,7 @@ describe('Purchase Controller', () => {
         },
       } as unknown as Request;
 
-      expect(() => controller.updatePurchase(request)).rejects.toThrow(
+      await expect(() => controller.updatePurchase(request)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
     });
@@ -344,7 +394,7 @@ describe('Purchase Controller', () => {
       ]);
       const logger = new LoggerService();
 
-      const controller = new PurchaseController(service, logger);
+      const controller = new PurchaseController(service, vbService, logger);
 
       const request = {
         body: {
@@ -356,7 +406,7 @@ describe('Purchase Controller', () => {
         .spyOn(service, 'updatePurchase')
         .mockRejectedValueOnce(new Error('Test Error'));
 
-      expect(() => controller.updatePurchase(request)).rejects.toThrow(
+      await expect(() => controller.updatePurchase(request)).rejects.toThrow(
         new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
       );
     });
@@ -367,7 +417,7 @@ describe('Purchase Controller', () => {
       const service = new InMemoryPurchaseService([purchase1]);
       const logger = new LoggerService();
 
-      const controller = new PurchaseController(service, logger);
+      const controller = new PurchaseController(service, vbService, logger);
 
       const request = {
         body: {
@@ -392,13 +442,13 @@ describe('Purchase Controller', () => {
       ]);
       const logger = new LoggerService();
 
-      const controller = new PurchaseController(service, logger);
+      const controller = new PurchaseController(service, vbService, logger);
 
       const request = {
         body: 'invalid',
       } as unknown as Request;
 
-      expect(() => controller.deletePurchase(request)).rejects.toThrow(
+      await expect(() => controller.deletePurchase(request)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
     });
@@ -411,7 +461,7 @@ describe('Purchase Controller', () => {
       ]);
       const logger = new LoggerService();
 
-      const controller = new PurchaseController(service, logger);
+      const controller = new PurchaseController(service, vbService, logger);
 
       const request = {
         body: {
@@ -419,7 +469,7 @@ describe('Purchase Controller', () => {
         },
       } as unknown as Request;
 
-      expect(() => controller.deletePurchase(request)).rejects.toThrow(
+      await expect(() => controller.deletePurchase(request)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
     });
@@ -432,7 +482,7 @@ describe('Purchase Controller', () => {
       ]);
       const logger = new LoggerService();
 
-      const controller = new PurchaseController(service, logger);
+      const controller = new PurchaseController(service, vbService, logger);
 
       const request = {
         body: {
@@ -444,7 +494,7 @@ describe('Purchase Controller', () => {
         .spyOn(service, 'deletePurchase')
         .mockRejectedValueOnce(new Error('Test Error'));
 
-      expect(() => controller.deletePurchase(request)).rejects.toThrow(
+      await expect(() => controller.deletePurchase(request)).rejects.toThrow(
         new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
       );
     });

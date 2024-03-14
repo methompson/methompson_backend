@@ -18,19 +18,19 @@ const uuidv4 = uuid.v4 as jest.Mock<unknown, unknown[]>;
 
 const pp1JSON: PurchasePriceJSON = {
   id: 'id1',
-  userId: 'userId1',
+  vbUserId: 'userId1',
   name: 'name1',
   price: 1,
 };
 const pp2JSON: PurchasePriceJSON = {
   id: 'id2',
-  userId: 'userId1',
+  vbUserId: 'userId1',
   name: 'name2',
   price: 2,
 };
 const pp3JSON: PurchasePriceJSON = {
   id: 'id3',
-  userId: 'userId2',
+  vbUserId: 'userId2',
   name: 'name3',
   price: 3,
 };
@@ -143,7 +143,7 @@ describe('InMemoryPurchasePricesService', () => {
       for (let i = 4; i < 10; i++) {
         const ppJson: PurchasePriceJSON = {
           id: `id${i}`,
-          userId: 'userId1',
+          vbUserId: 'userId1',
           name: `name${i}`,
           price: i,
         };
@@ -187,7 +187,7 @@ describe('InMemoryPurchasePricesService', () => {
       for (let i = 4; i < 10; i++) {
         const ppJson: PurchasePriceJSON = {
           id: `id${i}`,
-          userId: 'userId1',
+          vbUserId: 'userId1',
           name: `name${i}`,
           price: i,
         };

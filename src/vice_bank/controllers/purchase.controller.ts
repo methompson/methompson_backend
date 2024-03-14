@@ -98,12 +98,14 @@ export class PurchaseController {
 
       const users = await this.viceBankUserService.getViceBankUsers(
         auth.userId,
-        { userId: newPurchase.userId },
+        { userId: newPurchase.vbUserId },
       );
 
       const user = users[0];
       if (isNullOrUndefined(user)) {
-        throw new NotFoundError(`User with ID ${newPurchase.userId} not found`);
+        throw new NotFoundError(
+          `User with ID ${newPurchase.vbUserId} not found`,
+        );
       }
 
       const currentTokens = user.currentTokens - newPurchase.purchasedQuantity;

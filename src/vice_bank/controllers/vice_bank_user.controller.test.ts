@@ -7,7 +7,7 @@ import { ViceBankUserController } from './vice_bank_user.controller';
 import { LoggerService } from '@/src/logger/logger.service';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import type { METIncomingMessage } from '@/src/utils/met_incoming_message';
-import { AuthModel, NoAuthModel } from '@/src/models/auth_model';
+import { AuthModel } from '@/src/models/auth_model';
 
 const userId = 'userId';
 const user1JSON: ViceBankUserJSON = {
@@ -122,7 +122,6 @@ describe('ViceBankUserController', () => {
   });
 
   describe('getUser', () => {
-    ``;
     test('gets a user from the viceBankUserService', async () => {
       const service = new InMemoryViceBankUserService([user1, user2, user3]);
       const loggerService = new LoggerService();
