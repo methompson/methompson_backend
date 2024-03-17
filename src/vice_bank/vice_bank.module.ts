@@ -115,7 +115,7 @@ const purchaseFactory = {
     const type = configService.get('viceBankType');
 
     if (type === 'file') {
-      const path = configService.get('viceBankUserFilePath');
+      const path = configService.get('viceBankFilePath');
       if (isString(path)) {
         const service = await FilePurchaseService.init(path);
         return service;
