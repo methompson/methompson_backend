@@ -56,7 +56,7 @@ export class FileDepositService extends InMemoryDepositService {
 
   async backup() {
     const backupPath = join(this.viceBankPath, 'backup');
-    await FileDepositService.writeBackup(backupPath, this.viceBankPath);
+    await FileDepositService.writeBackup(backupPath, this.depositsString);
   }
 
   static async makeFileHandle(

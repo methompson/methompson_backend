@@ -56,7 +56,7 @@ export class FilePurchaseService extends InMemoryPurchaseService {
 
   async backup() {
     const backupPath = join(this.viceBankPath, 'backup');
-    await FilePurchaseService.writeBackup(backupPath, this.viceBankPath);
+    await FilePurchaseService.writeBackup(backupPath, this.purchasesString);
   }
 
   static async makeFileHandle(

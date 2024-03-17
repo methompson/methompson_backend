@@ -1,16 +1,9 @@
-import { mkdir, open } from 'fs/promises';
-import { Buffer } from 'node:buffer';
-import { join } from 'path';
 import * as uuid from 'uuid';
+import { mkdir, open } from 'fs/promises';
+import { join } from 'path';
 
-import {
-  ViceBankUser,
-  ViceBankUserJSON,
-} from '@/src/models/vice_bank/vice_bank_user';
-import {
-  FILE_NAME,
-  FileViceBankUserService,
-} from './vice_bank_user.service.file';
+import { Deposit, DepositJSON } from '@/src/models/vice_bank/deposit';
+import { FILE_NAME, FileDepositService } from './deposit.service.file';
 
 jest.mock('fs/promises', () => {
   const mkdir = jest.fn();
@@ -50,47 +43,50 @@ jest.mock('uuid', () => {
 
 const mockOpen = open as unknown as jest.Mock;
 const mockMkdir = mkdir as unknown as jest.Mock;
-
 const uuidv4 = uuid.v4 as jest.Mock<unknown, unknown[]>;
 
-const userId = 'userId';
-
-const user1JSON: ViceBankUserJSON = {
+const deposit1JSON: DepositJSON = {
   id: 'id1',
-  userId,
-  name: 'name1',
-  currentTokens: 1,
+  vbUserId: 'userId1',
+  date: '2021-01-01T00:00:00.000-06:00',
+  depositQuantity: 1,
+  conversionRate: 1,
+  depositConversionName: 'name1',
+  conversionUnit: 'minutes',
 };
-const user2JSON: ViceBankUserJSON = {
+const deposit2JSON: DepositJSON = {
   id: 'id2',
-  userId,
-  name: 'name2',
-  currentTokens: 2,
+  vbUserId: 'userId1',
+  date: '2021-01-12T00:00:00.000-06:00',
+  depositQuantity: 1,
+  conversionRate: 1,
+  depositConversionName: 'name1',
+  conversionUnit: 'minutes',
 };
-const user3JSON: ViceBankUserJSON = {
+const deposit3JSON: DepositJSON = {
   id: 'id3',
-  userId,
-  name: 'name3',
-  currentTokens: 3,
+  vbUserId: 'userId2',
+  date: '2021-02-01T00:00:00.000-06:00',
+  depositQuantity: 1,
+  conversionRate: 1,
+  depositConversionName: 'name2',
+  conversionUnit: 'minutes',
 };
 
-const user1 = ViceBankUser.fromJSON(user1JSON);
-const user2 = ViceBankUser.fromJSON(user2JSON);
-const user3 = ViceBankUser.fromJSON(user3JSON);
+const deposit1 = Deposit.fromJSON(deposit1JSON);
+const deposit2 = Deposit.fromJSON(deposit2JSON);
+const deposit3 = Deposit.fromJSON(deposit3JSON);
 
-const testError = 'test error 42tawrgv';
+const testError = 'test error 824uwoherfjs';
 
 const logSpy = jest.spyOn(console, 'log');
 logSpy.mockImplementation(() => {});
 const errorSpy = jest.spyOn(console, 'error');
 errorSpy.mockImplementation(() => {});
 
-describe('FileViceBankUserService', () => {
-  const makeFileHandleSpy = jest.spyOn(
-    FileViceBankUserService,
-    'makeFileHandle',
-  );
-  const writeBackupSpy = jest.spyOn(FileViceBankUserService, 'writeBackup');
+describe('FileDepositService', () => {
+  const makeFileHandleSpy = jest.spyOn(FileDepositService, 'makeFileHandle');
+  const writeBackupSpy = jest.spyOn(FileDepositService, 'writeBackup');
 
   beforeEach(() => {
     closeMock.mockReset();
@@ -106,53 +102,54 @@ describe('FileViceBankUserService', () => {
     writeBackupSpy.mockClear();
   });
 
-  describe('viceBankUsersString', () => {
-    test('returns a stringified JSON array of users', async () => {
+  describe('depositsString', () => {
+    test('returns a stringified JSON array', async () => {
       mockOpen.mockImplementationOnce(async () => new MockFileHandle());
 
-      const service = new FileViceBankUserService(await open(''), 'path', [
-        user1,
-        user2,
-        user3,
+      const service = new FileDepositService(await open(''), 'path', [
+        deposit1,
+        deposit2,
+        deposit3,
       ]);
 
-      const users = service.viceBankUsersString;
+      const str = service.depositsString;
 
-      const usersJson = JSON.parse(users);
-      expect(usersJson).toEqual([user1JSON, user2JSON, user3JSON]);
+      const json = JSON.parse(str);
+      expect(json).toEqual([deposit1JSON, deposit2JSON, deposit3JSON]);
     });
 
-    test('returns an empty array if there are no users', async () => {
+    test('returns an empty array if there is no data', async () => {
       mockOpen.mockImplementationOnce(async () => new MockFileHandle());
 
-      const service = new FileViceBankUserService(await open(''), 'path');
+      const service = new FileDepositService(await open(''), 'path', []);
 
-      const users = service.viceBankUsersString;
+      const str = service.depositsString;
 
-      expect(users).toBe('[]');
+      const json = JSON.parse(str);
+      expect(json).toEqual([]);
     });
   });
 
-  describe('addViceBankUser', () => {
+  describe('addDeposit', () => {
     test('adds a users and calls writeToFile', async () => {
       mockOpen.mockImplementationOnce(async () => new MockFileHandle());
 
-      const service = new FileViceBankUserService(await open(''), 'path');
+      const service = new FileDepositService(await open(''), 'path');
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
       writeToFileSpy.mockImplementationOnce(async () => {});
 
-      expect(service.viceBankUsersList.length).toBe(0);
+      expect(service.depositsList.length).toBe(0);
 
-      await service.addViceBankUser(user1);
+      await service.addDeposit(deposit1);
 
-      expect(service.viceBankUsersList.length).toBe(1);
+      expect(service.depositsList.length).toBe(1);
       expect(writeToFileSpy).toHaveBeenCalledTimes(1);
     });
 
     test('throws an error if writeToFiles throws an error', async () => {
       mockOpen.mockImplementationOnce(async () => new MockFileHandle());
 
-      const service = new FileViceBankUserService(await open(''), 'path');
+      const service = new FileDepositService(await open(''), 'path');
 
       const testErr = 'Test Error';
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
@@ -160,39 +157,39 @@ describe('FileViceBankUserService', () => {
         throw new Error(testErr);
       });
 
-      await expect(() => service.addViceBankUser(user1)).rejects.toThrow();
+      await expect(() => service.addDeposit(deposit1)).rejects.toThrow();
 
       expect(writeToFileSpy).toHaveBeenCalledTimes(1);
     });
   });
 
-  describe('updateViceBankUser', () => {
+  describe('updateDeposit', () => {
     test('updates a user and calls writeToFile', async () => {
       mockOpen.mockImplementationOnce(async () => new MockFileHandle());
 
-      const service = new FileViceBankUserService(await open(''), 'path', [
-        user1,
+      const service = new FileDepositService(await open(''), 'path', [
+        deposit1,
       ]);
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
       writeToFileSpy.mockImplementationOnce(async () => {});
 
-      const updatedUser = ViceBankUser.fromJSON({
-        ...user1.toJSON(),
-        name: 'new name',
+      const updatedUser = Deposit.fromJSON({
+        ...deposit1.toJSON(),
+        depositQuantity: 20.0,
       });
 
-      await service.updateViceBankUser(updatedUser);
+      await service.updateDeposit(updatedUser);
 
-      expect(service.viceBankUsersList.length).toBe(1);
-      expect(service.viceBankUsersList[0]).toBe(updatedUser);
+      expect(service.depositsList.length).toBe(1);
+      expect(service.depositsList[0]).toBe(updatedUser);
       expect(writeToFileSpy).toHaveBeenCalledTimes(1);
     });
 
     test('throws an error if writeToFiles throws an error', async () => {
       mockOpen.mockImplementationOnce(async () => new MockFileHandle());
 
-      const service = new FileViceBankUserService(await open(''), 'path', [
-        user1,
+      const service = new FileDepositService(await open(''), 'path', [
+        deposit1,
       ]);
 
       const testErr = 'Test Error';
@@ -201,40 +198,38 @@ describe('FileViceBankUserService', () => {
         throw new Error(testErr);
       });
 
-      const updatedUser = ViceBankUser.fromJSON({
-        ...user1.toJSON(),
-        name: 'new name',
+      const updatedUser = Deposit.fromJSON({
+        ...deposit1.toJSON(),
+        depositQuantity: 20.0,
       });
 
-      await expect(() =>
-        service.updateViceBankUser(updatedUser),
-      ).rejects.toThrow();
+      await expect(() => service.updateDeposit(updatedUser)).rejects.toThrow();
 
       expect(writeToFileSpy).toHaveBeenCalledTimes(1);
     });
   });
 
-  describe('deleteViceBankUser', () => {
+  describe('deleteDeposit', () => {
     test('deletes a user and calls writeToFile', async () => {
       mockOpen.mockImplementationOnce(async () => new MockFileHandle());
 
-      const service = new FileViceBankUserService(await open(''), 'path', [
-        user1,
+      const service = new FileDepositService(await open(''), 'path', [
+        deposit1,
       ]);
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
       writeToFileSpy.mockImplementationOnce(async () => {});
 
-      await service.deleteViceBankUser(userId, user1.id);
+      await service.deleteDeposit(deposit1.id);
 
-      expect(service.viceBankUsersList.length).toBe(0);
+      expect(service.depositsList.length).toBe(0);
       expect(writeToFileSpy).toHaveBeenCalledTimes(1);
     });
 
     test('throws an error if writeToFiles throws an error', async () => {
       mockOpen.mockImplementationOnce(async () => new MockFileHandle());
 
-      const service = new FileViceBankUserService(await open(''), 'path', [
-        user1,
+      const service = new FileDepositService(await open(''), 'path', [
+        deposit1,
       ]);
 
       const testErr = 'Test Error';
@@ -243,9 +238,7 @@ describe('FileViceBankUserService', () => {
         throw new Error(testErr);
       });
 
-      await expect(() =>
-        service.deleteViceBankUser(userId, user1.id),
-      ).rejects.toThrow();
+      await expect(() => service.deleteDeposit(deposit1.id)).rejects.toThrow();
 
       expect(writeToFileSpy).toHaveBeenCalledTimes(1);
     });
@@ -256,9 +249,9 @@ describe('FileViceBankUserService', () => {
       const mockFileHandle = new MockFileHandle();
       mockOpen.mockImplementationOnce(async () => mockFileHandle);
 
-      const svc = new FileViceBankUserService(await open(''), 'path', [user1]);
+      const svc = new FileDepositService(await open(''), 'path', [deposit1]);
 
-      const str = svc.viceBankUsersString;
+      const str = svc.depositsString;
 
       await svc.writeToFile();
 
@@ -277,7 +270,7 @@ describe('FileViceBankUserService', () => {
         throw new Error(testError);
       });
 
-      const svc = new FileViceBankUserService(await open(''), 'path', [user1]);
+      const svc = new FileDepositService(await open(''), 'path', [deposit1]);
 
       await expect(() => svc.writeToFile()).rejects.toThrow(testError);
 
@@ -295,9 +288,9 @@ describe('FileViceBankUserService', () => {
         throw new Error(testError);
       });
 
-      const svc = new FileViceBankUserService(await open(''), 'path', [user1]);
+      const svc = new FileDepositService(await open(''), 'path', [deposit1]);
 
-      const str = svc.viceBankUsersString;
+      const str = svc.depositsString;
 
       await expect(() => svc.writeToFile()).rejects.toThrow(testError);
 
@@ -316,20 +309,20 @@ describe('FileViceBankUserService', () => {
       mockOpen.mockImplementationOnce(async () => mockFileHandle1);
       mockOpen.mockImplementationOnce(async () => mockFileHandle2);
 
-      const svc = new FileViceBankUserService(await open(''), 'path', [user1]);
+      const svc = new FileDepositService(await open(''), 'path', [deposit1]);
       await svc.backup();
 
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
       expect(makeFileHandleSpy).toHaveBeenCalledWith(
         'path/backup',
-        expect.stringContaining('vice_bank_user_data_backup'),
+        expect.stringContaining('deposit_data_backup'),
       );
 
       expect(truncateMock).toHaveBeenCalledTimes(1);
       expect(truncateMock).toHaveBeenCalledWith(0);
 
       expect(writeMock).toHaveBeenCalledTimes(1);
-      expect(writeMock).toHaveBeenCalledWith(svc.viceBankUsersString, 0);
+      expect(writeMock).toHaveBeenCalledWith(svc.depositsString, 0);
 
       expect(closeMock).toHaveBeenCalledTimes(1);
     });
@@ -338,7 +331,7 @@ describe('FileViceBankUserService', () => {
       const mockFileHandle1 = new MockFileHandle();
       mockOpen.mockImplementationOnce(async () => mockFileHandle1);
 
-      const svc = new FileViceBankUserService(await open(''), 'path', [user1]);
+      const svc = new FileDepositService(await open(''), 'path', [deposit1]);
 
       makeFileHandleSpy.mockImplementationOnce(async () => {
         throw new Error(testError);
@@ -349,7 +342,7 @@ describe('FileViceBankUserService', () => {
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
       expect(makeFileHandleSpy).toHaveBeenCalledWith(
         'path/backup',
-        expect.stringContaining('vice_bank_user_data_backup'),
+        expect.stringContaining('deposit_data_backup'),
       );
 
       expect(truncateMock).toHaveBeenCalledTimes(0);
@@ -363,7 +356,7 @@ describe('FileViceBankUserService', () => {
       mockOpen.mockImplementationOnce(async () => mockFileHandle1);
       mockOpen.mockImplementationOnce(async () => mockFileHandle2);
 
-      const svc = new FileViceBankUserService(await open(''), 'path', [user1]);
+      const svc = new FileDepositService(await open(''), 'path', [deposit1]);
 
       truncateMock.mockImplementationOnce(async () => {
         throw new Error(testError);
@@ -374,7 +367,7 @@ describe('FileViceBankUserService', () => {
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
       expect(makeFileHandleSpy).toHaveBeenCalledWith(
         'path/backup',
-        expect.stringContaining('vice_bank_user_data_backup'),
+        expect.stringContaining('deposit_data_backup'),
       );
 
       expect(truncateMock).toHaveBeenCalledTimes(1);
@@ -391,7 +384,7 @@ describe('FileViceBankUserService', () => {
       mockOpen.mockImplementationOnce(async () => mockFileHandle1);
       mockOpen.mockImplementationOnce(async () => mockFileHandle2);
 
-      const svc = new FileViceBankUserService(await open(''), 'path', [user1]);
+      const svc = new FileDepositService(await open(''), 'path', [deposit1]);
 
       writeMock.mockImplementationOnce(async () => {
         throw new Error(testError);
@@ -402,14 +395,14 @@ describe('FileViceBankUserService', () => {
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
       expect(makeFileHandleSpy).toHaveBeenCalledWith(
         'path/backup',
-        expect.stringContaining('vice_bank_user_data_backup'),
+        expect.stringContaining('deposit_data_backup'),
       );
 
       expect(truncateMock).toHaveBeenCalledTimes(1);
       expect(truncateMock).toHaveBeenCalledWith(0);
 
       expect(writeMock).toHaveBeenCalledTimes(1);
-      expect(writeMock).toHaveBeenCalledWith(svc.viceBankUsersString, 0);
+      expect(writeMock).toHaveBeenCalledWith(svc.depositsString, 0);
 
       expect(closeMock).toHaveBeenCalledTimes(0);
     });
@@ -420,7 +413,7 @@ describe('FileViceBankUserService', () => {
       mockOpen.mockImplementationOnce(async () => mockFileHandle1);
       mockOpen.mockImplementationOnce(async () => mockFileHandle2);
 
-      const svc = new FileViceBankUserService(await open(''), 'path', [user1]);
+      const svc = new FileDepositService(await open(''), 'path', [deposit1]);
 
       closeMock.mockImplementationOnce(async () => {
         throw new Error(testError);
@@ -431,14 +424,14 @@ describe('FileViceBankUserService', () => {
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
       expect(makeFileHandleSpy).toHaveBeenCalledWith(
         'path/backup',
-        expect.stringContaining('vice_bank_user_data_backup'),
+        expect.stringContaining('deposit_data_backup'),
       );
 
       expect(truncateMock).toHaveBeenCalledTimes(1);
       expect(truncateMock).toHaveBeenCalledWith(0);
 
       expect(writeMock).toHaveBeenCalledTimes(1);
-      expect(writeMock).toHaveBeenCalledWith(svc.viceBankUsersString, 0);
+      expect(writeMock).toHaveBeenCalledWith(svc.depositsString, 0);
 
       expect(closeMock).toHaveBeenCalledTimes(1);
     });
@@ -452,7 +445,7 @@ describe('FileViceBankUserService', () => {
       const mockFileHandle = new MockFileHandle();
       mockOpen.mockImplementationOnce(async () => mockFileHandle);
 
-      const result = await FileViceBankUserService.makeFileHandle(path, name);
+      const result = await FileDepositService.makeFileHandle(path, name);
 
       expect(result).toBe(mockFileHandle);
 
@@ -467,7 +460,7 @@ describe('FileViceBankUserService', () => {
       const mockFileHandle = new MockFileHandle();
       mockOpen.mockImplementationOnce(async () => mockFileHandle);
 
-      const result = await FileViceBankUserService.makeFileHandle(path);
+      const result = await FileDepositService.makeFileHandle(path);
 
       expect(result).toBe(mockFileHandle);
 
@@ -484,7 +477,7 @@ describe('FileViceBankUserService', () => {
       });
 
       await expect(() =>
-        FileViceBankUserService.makeFileHandle(path, name),
+        FileDepositService.makeFileHandle(path, name),
       ).rejects.toThrow(testError);
 
       expect(mockMkdir).toHaveBeenCalledTimes(1);
@@ -499,7 +492,7 @@ describe('FileViceBankUserService', () => {
       });
 
       await expect(() =>
-        FileViceBankUserService.makeFileHandle(path, name),
+        FileDepositService.makeFileHandle(path, name),
       ).rejects.toThrow(testError);
 
       expect(mockMkdir).toHaveBeenCalledTimes(1);
@@ -519,7 +512,7 @@ describe('FileViceBankUserService', () => {
       const mockFileHandle = new MockFileHandle();
       mockOpen.mockImplementationOnce(async () => mockFileHandle);
 
-      await FileViceBankUserService.writeBackup(backupPath, stringData, 'name');
+      await FileDepositService.writeBackup(backupPath, stringData, 'name');
 
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
       expect(makeFileHandleSpy).toHaveBeenCalledWith(backupPath, filename);
@@ -539,7 +532,7 @@ describe('FileViceBankUserService', () => {
       });
 
       await expect(() =>
-        FileViceBankUserService.writeBackup(backupPath, stringData, 'name'),
+        FileDepositService.writeBackup(backupPath, stringData, 'name'),
       ).rejects.toThrow();
 
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
@@ -559,7 +552,7 @@ describe('FileViceBankUserService', () => {
       });
 
       await expect(() =>
-        FileViceBankUserService.writeBackup(backupPath, stringData, 'name'),
+        FileDepositService.writeBackup(backupPath, stringData, 'name'),
       ).rejects.toThrow(testError);
 
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
@@ -582,7 +575,7 @@ describe('FileViceBankUserService', () => {
       });
 
       await expect(() =>
-        FileViceBankUserService.writeBackup(backupPath, stringData, 'name'),
+        FileDepositService.writeBackup(backupPath, stringData, 'name'),
       ).rejects.toThrow(testError);
 
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
@@ -606,7 +599,7 @@ describe('FileViceBankUserService', () => {
       });
 
       await expect(() =>
-        FileViceBankUserService.writeBackup(backupPath, stringData, 'name'),
+        FileDepositService.writeBackup(backupPath, stringData, 'name'),
       ).rejects.toThrow(testError);
 
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
@@ -625,20 +618,23 @@ describe('FileViceBankUserService', () => {
   describe('init', () => {
     const blogPath = 'blog path';
 
-    test('creates a file handle, reads a file, creates blog posts and returns a new FileViceBankUserService', async () => {
+    test('creates a file handle, reads a file, creates blog posts and returns a new FileDepositService', async () => {
       const mockFileHandle = new MockFileHandle();
       mockOpen.mockImplementationOnce(async () => mockFileHandle);
 
-      const buf = Buffer.from(JSON.stringify([user1, user2, user3]), 'utf-8');
+      const buf = Buffer.from(
+        JSON.stringify([deposit1, deposit2, deposit3]),
+        'utf-8',
+      );
 
       readFileMock.mockImplementationOnce(async () => buf);
 
-      const svc = await FileViceBankUserService.init(blogPath);
+      const svc = await FileDepositService.init(blogPath);
 
       expect(readFileMock).toHaveBeenCalledTimes(1);
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
 
-      expect((await svc).viceBankUsersList.length).toBe(3);
+      expect((await svc).depositsList.length).toBe(3);
 
       expect(truncateMock).toHaveBeenCalledTimes(0);
       expect(writeMock).toHaveBeenCalledTimes(0);
@@ -649,18 +645,18 @@ describe('FileViceBankUserService', () => {
       mockOpen.mockImplementationOnce(async () => mockFileHandle);
 
       const buf = Buffer.from(
-        JSON.stringify([user1, user2, user3, {}]),
+        JSON.stringify([deposit1, deposit2, deposit3, {}]),
         'utf-8',
       );
 
       readFileMock.mockImplementationOnce(async () => buf);
 
-      const svc = await FileViceBankUserService.init(blogPath);
+      const svc = await FileDepositService.init(blogPath);
 
       expect(readFileMock).toHaveBeenCalledTimes(1);
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
 
-      expect((await svc).viceBankUsersList.length).toBe(3);
+      expect((await svc).depositsList.length).toBe(3);
 
       expect(truncateMock).toHaveBeenCalledTimes(0);
       expect(writeMock).toHaveBeenCalledTimes(0);
@@ -674,12 +670,12 @@ describe('FileViceBankUserService', () => {
 
       readFileMock.mockImplementationOnce(async () => buf);
 
-      const svc = await FileViceBankUserService.init(blogPath);
+      const svc = await FileDepositService.init(blogPath);
 
       expect(readFileMock).toHaveBeenCalledTimes(1);
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
 
-      expect((await svc).viceBankUsersList.length).toBe(0);
+      expect((await svc).depositsList.length).toBe(0);
     });
 
     test('If the raw data buffer is a non-zero length non-JSON string, truncate and write are called and a backup is made', async () => {
@@ -691,13 +687,13 @@ describe('FileViceBankUserService', () => {
       readFileMock.mockImplementationOnce(async () => buf);
       writeBackupSpy.mockImplementationOnce(async () => {});
 
-      const svc = await FileViceBankUserService.init(blogPath);
+      const svc = await FileDepositService.init(blogPath);
 
       expect(readFileMock).toHaveBeenCalledTimes(1);
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
       expect(writeBackupSpy).toHaveBeenCalledTimes(1);
 
-      expect((await svc).viceBankUsersList.length).toBe(0);
+      expect((await svc).depositsList.length).toBe(0);
 
       expect(truncateMock).toHaveBeenCalledTimes(1);
       expect(truncateMock).toHaveBeenCalledWith(0);
@@ -711,9 +707,9 @@ describe('FileViceBankUserService', () => {
         throw new Error(testError);
       });
 
-      await expect(() =>
-        FileViceBankUserService.init(blogPath),
-      ).rejects.toThrow(testError);
+      await expect(() => FileDepositService.init(blogPath)).rejects.toThrow(
+        testError,
+      );
 
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
 
@@ -731,9 +727,9 @@ describe('FileViceBankUserService', () => {
         throw new Error(testError);
       });
 
-      await expect(() =>
-        FileViceBankUserService.init(blogPath),
-      ).rejects.toThrow(testError);
+      await expect(() => FileDepositService.init(blogPath)).rejects.toThrow(
+        testError,
+      );
 
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
       expect(readFileMock).toHaveBeenCalledTimes(1);
@@ -754,9 +750,9 @@ describe('FileViceBankUserService', () => {
         throw new Error(testError);
       });
 
-      await expect(() =>
-        FileViceBankUserService.init(blogPath),
-      ).rejects.toThrow(testError);
+      await expect(() => FileDepositService.init(blogPath)).rejects.toThrow(
+        testError,
+      );
 
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
       expect(readFileMock).toHaveBeenCalledTimes(1);
@@ -779,9 +775,9 @@ describe('FileViceBankUserService', () => {
         throw new Error(testError);
       });
 
-      await expect(() =>
-        FileViceBankUserService.init(blogPath),
-      ).rejects.toThrow(testError);
+      await expect(() => FileDepositService.init(blogPath)).rejects.toThrow(
+        testError,
+      );
 
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
       expect(readFileMock).toHaveBeenCalledTimes(1);
@@ -804,9 +800,9 @@ describe('FileViceBankUserService', () => {
         throw new Error(testError);
       });
 
-      await expect(() =>
-        FileViceBankUserService.init(blogPath),
-      ).rejects.toThrow(testError);
+      await expect(() => FileDepositService.init(blogPath)).rejects.toThrow(
+        testError,
+      );
 
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
       expect(readFileMock).toHaveBeenCalledTimes(1);

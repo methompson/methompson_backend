@@ -64,7 +64,7 @@ export class FileDepositConversionsService extends InMemoryDepositConversionsSer
     const backupPath = join(this.viceBankPath, 'backup');
     await FileDepositConversionsService.writeBackup(
       backupPath,
-      this.viceBankPath,
+      this.depositConversionsString,
     );
   }
 
