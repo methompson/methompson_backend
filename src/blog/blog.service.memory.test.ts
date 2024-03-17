@@ -151,7 +151,7 @@ describe('InMemoryBlogService', () => {
     test('Throws an error if the slug does not exist', async () => {
       const svc = new InMemoryBlogService([post1, post2, post3, post4]);
 
-      expect(() => svc.findBySlug('not a real slug')).rejects.toThrow();
+      await expect(() => svc.findBySlug('not a real slug')).rejects.toThrow();
     });
   });
 

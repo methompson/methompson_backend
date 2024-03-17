@@ -123,7 +123,7 @@ describe('PurchasePricesController', () => {
         },
       } as unknown as Request;
 
-      expect(() => controller.getPurchasePrices(req)).rejects.toThrow(
+      await expect(() => controller.getPurchasePrices(req)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
     });
@@ -144,7 +144,7 @@ describe('PurchasePricesController', () => {
         .spyOn(service, 'getPurchasePrices')
         .mockRejectedValue(new Error('Test Error'));
 
-      expect(() => controller.getPurchasePrices(req)).rejects.toThrow(
+      await expect(() => controller.getPurchasePrices(req)).rejects.toThrow(
         new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
       );
     });
@@ -178,7 +178,7 @@ describe('PurchasePricesController', () => {
 
       const req = {} as unknown as Request;
 
-      expect(() => controller.addPurchasePrice(req)).rejects.toThrow(
+      await expect(() => controller.addPurchasePrice(req)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
     });
@@ -195,7 +195,7 @@ describe('PurchasePricesController', () => {
         },
       } as unknown as Request;
 
-      expect(() => controller.addPurchasePrice(req)).rejects.toThrow(
+      await expect(() => controller.addPurchasePrice(req)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
     });
@@ -216,7 +216,7 @@ describe('PurchasePricesController', () => {
         .spyOn(service, 'addPurchasePrice')
         .mockRejectedValue(new Error('Test Error'));
 
-      expect(() => controller.addPurchasePrice(req)).rejects.toThrow(
+      await expect(() => controller.addPurchasePrice(req)).rejects.toThrow(
         new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
       );
     });
@@ -254,7 +254,7 @@ describe('PurchasePricesController', () => {
 
       const req = {} as unknown as Request;
 
-      expect(() => controller.updatePurchasePrice(req)).rejects.toThrow(
+      await expect(() => controller.updatePurchasePrice(req)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
     });
@@ -271,7 +271,7 @@ describe('PurchasePricesController', () => {
         },
       } as unknown as Request;
 
-      expect(() => controller.updatePurchasePrice(req)).rejects.toThrow(
+      await expect(() => controller.updatePurchasePrice(req)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
     });
@@ -292,7 +292,7 @@ describe('PurchasePricesController', () => {
         .spyOn(service, 'updatePurchasePrice')
         .mockRejectedValue(new Error('Test Error'));
 
-      expect(() => controller.updatePurchasePrice(req)).rejects.toThrow(
+      await expect(() => controller.updatePurchasePrice(req)).rejects.toThrow(
         new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
       );
     });
@@ -325,7 +325,7 @@ describe('PurchasePricesController', () => {
 
       const req = {} as unknown as Request;
 
-      expect(() => controller.deletePurchasePrice(req)).rejects.toThrow(
+      await expect(() => controller.deletePurchasePrice(req)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
     });
@@ -342,7 +342,7 @@ describe('PurchasePricesController', () => {
         },
       } as unknown as Request;
 
-      expect(() => controller.deletePurchasePrice(req)).rejects.toThrow(
+      await expect(() => controller.deletePurchasePrice(req)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
     });
@@ -363,7 +363,7 @@ describe('PurchasePricesController', () => {
         .spyOn(service, 'deletePurchasePrice')
         .mockRejectedValue(new Error('Test Error'));
 
-      expect(() => controller.deletePurchasePrice(req)).rejects.toThrow(
+      await expect(() => controller.deletePurchasePrice(req)).rejects.toThrow(
         new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
       );
     });

@@ -15,9 +15,12 @@ import { METIncomingMessage } from '@/src/utils/met_incoming_message';
 
 const userId = 'userId';
 
+const purchasedName = 'purchasedName';
+
 const p1JSON: PurchaseJSON = {
   id: 'id1',
   vbUserId: 'id1',
+  purchasedName,
   purchasePriceId: 'purchasePriceId1',
   date: '2021-01-01T00:00:00.000-06:00',
   purchasedQuantity: 1,
@@ -25,6 +28,7 @@ const p1JSON: PurchaseJSON = {
 const p2JSON: PurchaseJSON = {
   id: 'id2',
   vbUserId: 'id1',
+  purchasedName,
   purchasePriceId: 'purchasePriceId2',
   date: '2021-01-12T00:00:00.000-06:00',
   purchasedQuantity: 2,
@@ -32,6 +36,7 @@ const p2JSON: PurchaseJSON = {
 const p3JSON: PurchaseJSON = {
   id: 'id3',
   vbUserId: 'id2',
+  purchasedName,
   purchasePriceId: 'purchasePriceId3',
   date: '2021-01-25T00:00:00.000-06:00',
   purchasedQuantity: 3,

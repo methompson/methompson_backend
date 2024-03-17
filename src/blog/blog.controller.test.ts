@@ -160,7 +160,7 @@ describe('BlogController', () => {
         throw new Error('test error');
       });
 
-      expect(() => controller.getPosts(req)).rejects.toThrow();
+      await expect(() => controller.getPosts(req)).rejects.toThrow();
     });
 
     test('logs an error if getPosts throws an error', async () => {
@@ -302,7 +302,7 @@ describe('BlogController', () => {
         throw new Error('test error');
       });
 
-      expect(() => controller.getAllPosts(req)).rejects.toThrow();
+      await expect(() => controller.getAllPosts(req)).rejects.toThrow();
     });
 
     test('logs an error if getAllPosts throws an error', async () => {
@@ -366,7 +366,7 @@ describe('BlogController', () => {
         params: {},
       } as unknown as Request;
 
-      expect(() => controller.findBySlug(req)).rejects.toThrow(
+      await expect(() => controller.findBySlug(req)).rejects.toThrow(
         new HttpException('Invalid Slug', HttpStatus.BAD_REQUEST),
       );
     });
@@ -383,7 +383,7 @@ describe('BlogController', () => {
         },
       } as unknown as Request;
 
-      expect(() => controller.findBySlug(req)).rejects.toThrow(
+      await expect(() => controller.findBySlug(req)).rejects.toThrow(
         new HttpException('Invalid Slug', HttpStatus.BAD_REQUEST),
       );
     });
@@ -427,7 +427,7 @@ describe('BlogController', () => {
         throw new Error('Test Error');
       });
 
-      expect(() => controller.findBySlug(req)).rejects.toThrow(
+      await expect(() => controller.findBySlug(req)).rejects.toThrow(
         new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
       );
     });
@@ -449,7 +449,7 @@ describe('BlogController', () => {
         throw new InvalidInputError('Test Error');
       });
 
-      expect(() => controller.findBySlug(req)).rejects.toThrow(
+      await expect(() => controller.findBySlug(req)).rejects.toThrow(
         new HttpException('No Blog Post', HttpStatus.NOT_FOUND),
       );
     });

@@ -235,7 +235,7 @@ describe('ViceBankUserController', () => {
         .spyOn(service, 'addViceBankUser')
         .mockRejectedValue(new Error('testError'));
 
-      expect(() => controller.addUser(req)).rejects.toThrow(
+      await expect(() => controller.addUser(req)).rejects.toThrow(
         new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
       );
     });
@@ -321,7 +321,7 @@ describe('ViceBankUserController', () => {
         .spyOn(service, 'updateViceBankUser')
         .mockRejectedValue(new Error('testError'));
 
-      expect(() => controller.updateUser(req)).rejects.toThrow(
+      await expect(() => controller.updateUser(req)).rejects.toThrow(
         new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
       );
     });
@@ -396,7 +396,7 @@ describe('ViceBankUserController', () => {
         .spyOn(service, 'deleteViceBankUser')
         .mockRejectedValue(new Error('testError'));
 
-      expect(() => controller.deleteUser(req)).rejects.toThrow(
+      await expect(() => controller.deleteUser(req)).rejects.toThrow(
         new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
       );
     });

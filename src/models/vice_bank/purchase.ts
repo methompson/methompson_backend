@@ -12,6 +12,7 @@ export interface PurchaseJSON {
   id: string;
   vbUserId: string;
   purchasePriceId: string;
+  purchasedName: string;
   date: string;
   purchasedQuantity: number;
 }
@@ -21,6 +22,7 @@ export class Purchase {
     protected _id: string,
     protected _vbUserId: string,
     protected _purchasePriceId: string,
+    protected _purchasedName: string,
     protected _date: DateTime<true>,
     protected _purchasedQuantity: number,
   ) {}
@@ -45,6 +47,10 @@ export class Purchase {
     return this._purchasedQuantity;
   }
 
+  get purchasedName(): string {
+    return this._purchasedName;
+  }
+
   toJSON(): PurchaseJSON {
     return {
       id: this.id,
@@ -52,6 +58,7 @@ export class Purchase {
       purchasePriceId: this.purchasePriceId,
       date: this.date.toISO(),
       purchasedQuantity: this.purchasedQuantity,
+      purchasedName: this.purchasedName,
     };
   }
 
@@ -70,6 +77,7 @@ export class Purchase {
       input.id,
       input.vbUserId,
       input.purchasePriceId,
+      input.purchasedName,
       dateTime,
       input.purchasedQuantity,
     );
@@ -93,6 +101,7 @@ export class Purchase {
     if (!isString(input.purchasePriceId)) output.push('purchasePriceId');
     if (!isValidDateTimeString(input.date)) output.push('date');
     if (!isNumber(input.purchasedQuantity)) output.push('purchasedQuantity');
+    if (!isString(input.purchasedName)) output.push('purchasedName');
 
     return output;
   }

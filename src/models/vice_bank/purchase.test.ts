@@ -5,6 +5,7 @@ describe('Purchase', () => {
     id: 'id',
     vbUserId: 'vbUserId',
     purchasePriceId: 'purchasePriceId',
+    purchasedName: 'purchasedName',
     date: '2023-02-25T00:00:00.000-06:00',
     purchasedQuantity: 1,
   };

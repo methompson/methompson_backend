@@ -538,7 +538,7 @@ describe('InMemoryDepositService', () => {
 
       const depositId = 'invalid id';
 
-      expect(() => service.deleteDeposit(depositId)).rejects.toThrow(
+      await expect(() => service.deleteDeposit(depositId)).rejects.toThrow(
         `Deposit with ID ${depositId} not found`,
       );
     });

@@ -20,7 +20,7 @@ export class FileViceBankUserService extends InMemoryViceBankUserService {
   }
 
   get viceBankUsersString(): string {
-    return JSON.stringify(Object.values(this.viceBankUsers));
+    return JSON.stringify(this.viceBankUsersList);
   }
 
   async addViceBankUser(user: ViceBankUser): Promise<ViceBankUser> {
@@ -31,6 +31,7 @@ export class FileViceBankUserService extends InMemoryViceBankUserService {
     return result;
   }
 
+  // TODO if this fails, should we revert the change?
   async updateViceBankUser(user: ViceBankUser): Promise<ViceBankUser> {
     const result = await super.updateViceBankUser(user);
 
@@ -39,8 +40,11 @@ export class FileViceBankUserService extends InMemoryViceBankUserService {
     return result;
   }
 
-  async deleteViceBankUser(userId: string): Promise<ViceBankUser> {
-    const result = await super.deleteViceBankUser(userId);
+  async deleteViceBankUser(
+    userId: string,
+    viceBankUserId: string,
+  ): Promise<ViceBankUser> {
+    const result = await super.deleteViceBankUser(userId, viceBankUserId);
 
     await this.writeToFile();
 
@@ -56,7 +60,10 @@ export class FileViceBankUserService extends InMemoryViceBankUserService {
 
   async backup() {
     const backupPath = join(this.viceBankPath, 'backup');
-    await FileViceBankUserService.writeBackup(backupPath, this.viceBankPath);
+    await FileViceBankUserService.writeBackup(
+      backupPath,
+      this.viceBankUsersString,
+    );
   }
 
   static async makeFileHandle(
@@ -104,6 +111,8 @@ export class FileViceBankUserService extends InMemoryViceBankUserService {
     try {
       rawData = buffer.toString();
 
+      console.log('rawData', rawData);
+
       const json = JSON.parse(rawData);
 
       if (Array.isArray(json)) {
@@ -111,7 +120,7 @@ export class FileViceBankUserService extends InMemoryViceBankUserService {
           try {
             users.push(ViceBankUser.fromJSON(val));
           } catch (e) {
-            console.error('Invalid BlogPost: ', val, e);
+            console.error('Invalid Vice Bank User: ', val, e);
           }
         }
       }

@@ -153,7 +153,7 @@ describe('InMemoryFileDataService', () => {
     test('Throws an error if its id does not exist', async () => {
       const fds = new InMemoryFileDataService([file1, file2]);
 
-      expect(() => fds.getFileByName('abc')).rejects.toThrow();
+      await expect(() => fds.getFileByName('abc')).rejects.toThrow();
     });
   });
 

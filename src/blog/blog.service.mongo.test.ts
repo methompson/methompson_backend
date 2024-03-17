@@ -192,7 +192,7 @@ describe('MongoBlogService', () => {
       });
 
       const svc = new MongoBlogService(mockMongoDBClient);
-      expect(() => svc['blogCollection']).rejects.toThrow(testError);
+      await expect(() => svc['blogCollection']).rejects.toThrow(testError);
     });
 
     test('Throws an error when _mongoDBClient.db throws an error', async () => {
@@ -201,7 +201,7 @@ describe('MongoBlogService', () => {
       });
 
       const svc = new MongoBlogService(mockMongoDBClient);
-      expect(() => svc['blogCollection']).rejects.toThrow(testError);
+      await expect(() => svc['blogCollection']).rejects.toThrow(testError);
     });
   });
 
