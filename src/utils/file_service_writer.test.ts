@@ -393,10 +393,10 @@ describe('FileServiceWriter', () => {
       const closeSpy = jest.spyOn(mockFileHandle, 'close');
       closeSpy.mockImplementationOnce(async () => {});
 
-      await svc.clearFile();
+      await svc.clearFile(filePath);
 
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
-      expect(makeFileHandleSpy).toHaveBeenCalledWith(svc.filename);
+      expect(makeFileHandleSpy).toHaveBeenCalledWith(filePath, svc.filename);
 
       expect(truncateSpy).toHaveBeenCalledTimes(1);
       expect(truncateSpy).toHaveBeenCalledWith(0);
@@ -420,10 +420,10 @@ describe('FileServiceWriter', () => {
       const writeSpy = jest.spyOn(mockFileHandle, 'write');
       const closeSpy = jest.spyOn(mockFileHandle, 'close');
 
-      await expect(() => svc.clearFile()).rejects.toThrow(testError);
+      await expect(() => svc.clearFile(filePath)).rejects.toThrow(testError);
 
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
-      expect(makeFileHandleSpy).toHaveBeenCalledWith(svc.filename);
+      expect(makeFileHandleSpy).toHaveBeenCalledWith(filePath, svc.filename);
 
       expect(truncateSpy).toHaveBeenCalledTimes(0);
       expect(writeSpy).toHaveBeenCalledTimes(0);
@@ -445,10 +445,10 @@ describe('FileServiceWriter', () => {
       const writeSpy = jest.spyOn(mockFileHandle, 'write');
       const closeSpy = jest.spyOn(mockFileHandle, 'close');
 
-      await expect(() => svc.clearFile()).rejects.toThrow(testError);
+      await expect(() => svc.clearFile(filePath)).rejects.toThrow(testError);
 
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
-      expect(makeFileHandleSpy).toHaveBeenCalledWith(svc.filename);
+      expect(makeFileHandleSpy).toHaveBeenCalledWith(filePath, svc.filename);
 
       expect(truncateSpy).toHaveBeenCalledTimes(1);
       expect(truncateSpy).toHaveBeenCalledWith(0);
@@ -472,10 +472,10 @@ describe('FileServiceWriter', () => {
       });
       const closeSpy = jest.spyOn(mockFileHandle, 'close');
 
-      await expect(() => svc.clearFile()).rejects.toThrow(testError);
+      await expect(() => svc.clearFile(filePath)).rejects.toThrow(testError);
 
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
-      expect(makeFileHandleSpy).toHaveBeenCalledWith(svc.filename);
+      expect(makeFileHandleSpy).toHaveBeenCalledWith(filePath, svc.filename);
 
       expect(truncateSpy).toHaveBeenCalledTimes(1);
       expect(truncateSpy).toHaveBeenCalledWith(0);
