@@ -1,9 +1,9 @@
-import { FileHandle, mkdir, open } from 'fs/promises';
 import { join } from 'path';
 import { Injectable } from '@nestjs/common';
 
-import { InMemoryDepositConversionsService } from './deposit_conversions.service.memory';
+import { InMemoryDepositConversionsService } from '@/src/vice_bank/services/deposit_conversions.service.memory';
 import { DepositConversion } from '@/src/models/vice_bank/deposit_conversion';
+import { FileServiceWriter } from '@/src/utils/file_service_writer';
 
 const BASE_NAME = 'deposit_conversions_data';
 const FILE_EXTENSION = 'json';
@@ -12,7 +12,7 @@ export const FILE_NAME = `${BASE_NAME}.${FILE_EXTENSION}`;
 @Injectable()
 export class FileDepositConversionsService extends InMemoryDepositConversionsService {
   constructor(
-    protected readonly fileHandle: FileHandle,
+    protected readonly fileServiceWriter: FileServiceWriter,
     protected readonly viceBankPath: string,
     depositConversions?: DepositConversion[],
   ) {
@@ -54,66 +54,32 @@ export class FileDepositConversionsService extends InMemoryDepositConversionsSer
   }
 
   async writeToFile(): Promise<void> {
-    const postsJson = this.depositConversionsString;
+    const json = this.depositConversionsString;
 
-    await this.fileHandle.truncate(0);
-    await this.fileHandle.write(postsJson, 0);
+    await this.fileServiceWriter.writeToFile(this.viceBankPath, json);
   }
 
   async backup() {
     const backupPath = join(this.viceBankPath, 'backup');
-    await FileDepositConversionsService.writeBackup(
+    await this.fileServiceWriter.writeBackup(
       backupPath,
       this.depositConversionsString,
     );
   }
 
-  static async makeFileHandle(
-    viceBankPath: string,
-    name?: string,
-  ): Promise<FileHandle> {
-    await mkdir(viceBankPath, { recursive: true });
-
-    const filename = name ?? FILE_NAME;
-
-    const filepath = join(viceBankPath, filename);
-
-    const fileHandle = await open(filepath, 'a+');
-
-    return fileHandle;
-  }
-
-  static async writeBackup(
-    viceBankPath: string,
-    rawData: string,
-    name?: string,
-  ) {
-    const filename =
-      name ??
-      `${BASE_NAME}_backup_${new Date().toISOString()}.${FILE_EXTENSION}`;
-    const fileHandle = await FileDepositConversionsService.makeFileHandle(
-      viceBankPath,
-      filename,
-    );
-
-    await fileHandle.truncate(0);
-    await fileHandle.write(rawData, 0);
-    await fileHandle.close();
-  }
-
   static async init(
     viceBankPath: string,
+    options?: { fileServiceWriter?: FileServiceWriter },
   ): Promise<FileDepositConversionsService> {
-    const fileHandle = await FileDepositConversionsService.makeFileHandle(
-      viceBankPath,
-    );
-    const buffer = await fileHandle.readFile();
+    const fileServiceWriter =
+      options?.fileServiceWriter ??
+      new FileServiceWriter(BASE_NAME, FILE_EXTENSION);
 
-    const users: DepositConversion[] = [];
     let rawData = '';
 
+    const users: DepositConversion[] = [];
     try {
-      rawData = buffer.toString();
+      rawData = await fileServiceWriter.readFile(viceBankPath);
 
       const json = JSON.parse(rawData);
 
@@ -129,14 +95,21 @@ export class FileDepositConversionsService extends InMemoryDepositConversionsSer
     } catch (e) {
       console.error('Invalid or no data when reading file data file', e);
 
-      if (rawData.length > 0) {
-        await FileDepositConversionsService.writeBackup(viceBankPath, rawData);
-      }
+      try {
+        if (rawData.length > 0) {
+          await fileServiceWriter.writeBackup(viceBankPath, rawData);
+        }
 
-      await fileHandle.truncate(0);
-      await fileHandle.write('[]', 0);
+        await fileServiceWriter.clearFile();
+      } catch (e) {
+        console.error('unable to write to disk', e);
+      }
     }
 
-    return new FileDepositConversionsService(fileHandle, viceBankPath, users);
+    return new FileDepositConversionsService(
+      fileServiceWriter,
+      viceBankPath,
+      users,
+    );
   }
 }
