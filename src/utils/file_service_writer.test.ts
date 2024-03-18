@@ -43,10 +43,10 @@ const mockOpen = open as unknown as jest.Mock;
 const mockMkdir = mkdir as unknown as jest.Mock;
 const uuidv4 = uuid.v4 as jest.Mock<unknown, unknown[]>;
 
-// const logSpy = jest.spyOn(console, 'log');
-// logSpy.mockImplementation(() => {});
-// const errorSpy = jest.spyOn(console, 'error');
-// errorSpy.mockImplementation(() => {});
+const logSpy = jest.spyOn(console, 'log');
+logSpy.mockImplementation(() => {});
+const errorSpy = jest.spyOn(console, 'error');
+errorSpy.mockImplementation(() => {});
 
 describe('FileServiceWriter', () => {
   beforeEach(() => {
@@ -381,5 +381,115 @@ describe('FileServiceWriter', () => {
     });
   });
 
-  describe('clearFile', () => {});
+  describe('clearFile', () => {
+    test('gets a file handle, runs truncate, write and close on it', async () => {
+      const svc = new FileServiceWriter(baseName, fileExtension);
+      const mockFileHandle = new MockFileHandle() as unknown as FileHandle;
+
+      const makeFileHandleSpy = jest.spyOn(svc, 'makeFileHandle');
+      makeFileHandleSpy.mockImplementationOnce(async () => mockFileHandle);
+
+      const truncateSpy = jest.spyOn(mockFileHandle, 'truncate');
+      truncateSpy.mockImplementationOnce(async () => {});
+      const writeSpy = jest.spyOn(mockFileHandle, 'write');
+      writeSpy.mockImplementationOnce(async () => ({
+        bytesWritten: 0,
+        buffer: '',
+      }));
+      const closeSpy = jest.spyOn(mockFileHandle, 'close');
+      closeSpy.mockImplementationOnce(async () => {});
+
+      await svc.clearFile();
+
+      expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
+      expect(makeFileHandleSpy).toHaveBeenCalledWith(svc.filename);
+
+      expect(truncateSpy).toHaveBeenCalledTimes(1);
+      expect(truncateSpy).toHaveBeenCalledWith(0);
+
+      expect(writeSpy).toHaveBeenCalledTimes(1);
+      expect(writeSpy).toHaveBeenCalledWith('[]', 0);
+
+      expect(closeSpy).toHaveBeenCalledTimes(1);
+    });
+
+    test('throws an error if makeFileHandle throws an error', async () => {
+      const svc = new FileServiceWriter(baseName, fileExtension);
+      const mockFileHandle = new MockFileHandle() as unknown as FileHandle;
+
+      const makeFileHandleSpy = jest.spyOn(svc, 'makeFileHandle');
+      makeFileHandleSpy.mockImplementationOnce(async () => {
+        throw new Error(testError);
+      });
+
+      const truncateSpy = jest.spyOn(mockFileHandle, 'truncate');
+      const writeSpy = jest.spyOn(mockFileHandle, 'write');
+      const closeSpy = jest.spyOn(mockFileHandle, 'close');
+
+      await expect(() => svc.clearFile()).rejects.toThrow(testError);
+
+      expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
+      expect(makeFileHandleSpy).toHaveBeenCalledWith(svc.filename);
+
+      expect(truncateSpy).toHaveBeenCalledTimes(0);
+      expect(writeSpy).toHaveBeenCalledTimes(0);
+      expect(closeSpy).toHaveBeenCalledTimes(0);
+    });
+
+    test('throws an error if truncate throws an error', async () => {
+      const svc = new FileServiceWriter(baseName, fileExtension);
+      const mockFileHandle = new MockFileHandle() as unknown as FileHandle;
+
+      const makeFileHandleSpy = jest.spyOn(svc, 'makeFileHandle');
+      makeFileHandleSpy.mockImplementationOnce(async () => mockFileHandle);
+
+      const truncateSpy = jest.spyOn(mockFileHandle, 'truncate');
+      truncateSpy.mockImplementationOnce(async () => {
+        throw new Error(testError);
+      });
+
+      const writeSpy = jest.spyOn(mockFileHandle, 'write');
+      const closeSpy = jest.spyOn(mockFileHandle, 'close');
+
+      await expect(() => svc.clearFile()).rejects.toThrow(testError);
+
+      expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
+      expect(makeFileHandleSpy).toHaveBeenCalledWith(svc.filename);
+
+      expect(truncateSpy).toHaveBeenCalledTimes(1);
+      expect(truncateSpy).toHaveBeenCalledWith(0);
+
+      expect(writeSpy).toHaveBeenCalledTimes(0);
+      expect(closeSpy).toHaveBeenCalledTimes(0);
+    });
+
+    test('throws an error if write throws an error', async () => {
+      const svc = new FileServiceWriter(baseName, fileExtension);
+      const mockFileHandle = new MockFileHandle() as unknown as FileHandle;
+
+      const makeFileHandleSpy = jest.spyOn(svc, 'makeFileHandle');
+      makeFileHandleSpy.mockImplementationOnce(async () => mockFileHandle);
+
+      const truncateSpy = jest.spyOn(mockFileHandle, 'truncate');
+      truncateSpy.mockImplementationOnce(async () => {});
+      const writeSpy = jest.spyOn(mockFileHandle, 'write');
+      writeSpy.mockImplementationOnce(async () => {
+        throw new Error(testError);
+      });
+      const closeSpy = jest.spyOn(mockFileHandle, 'close');
+
+      await expect(() => svc.clearFile()).rejects.toThrow(testError);
+
+      expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
+      expect(makeFileHandleSpy).toHaveBeenCalledWith(svc.filename);
+
+      expect(truncateSpy).toHaveBeenCalledTimes(1);
+      expect(truncateSpy).toHaveBeenCalledWith(0);
+
+      expect(writeSpy).toHaveBeenCalledTimes(1);
+      expect(writeSpy).toHaveBeenCalledWith('[]', 0);
+
+      expect(closeSpy).toHaveBeenCalledTimes(0);
+    });
+  });
 });

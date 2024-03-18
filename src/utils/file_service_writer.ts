@@ -56,7 +56,7 @@ export class FileServiceWriter {
   }
 
   async clearFile(fh?: FileHandle) {
-    const fileHandle = fh ?? (await this.makeFileHandle('.'));
+    const fileHandle = fh ?? (await this.makeFileHandle(this.filename));
     await fileHandle.truncate(0);
     await fileHandle.write('[]', 0);
     await fileHandle.close();
