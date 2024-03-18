@@ -64,6 +64,8 @@ describe('FileServiceWriter', () => {
   const baseName = 'baseName';
   const fileExtension = 'fileExtension';
 
+  const filePath = 'path/to/file';
+
   const content = JSON.stringify({ test: 'test' });
 
   describe('writeToFile', () => {
@@ -73,7 +75,7 @@ describe('FileServiceWriter', () => {
 
       const svc = new FileServiceWriter(baseName, fileExtension);
 
-      await svc.writeToFile(content, mockFileHandle);
+      await svc.writeToFile(filePath, content, { fileHandle: mockFileHandle });
 
       expect(mockFileHandle.truncate).toHaveBeenCalledTimes(1);
       expect(mockFileHandle.truncate).toHaveBeenCalledWith(0);
@@ -95,7 +97,7 @@ describe('FileServiceWriter', () => {
       });
 
       await expect(() =>
-        svc.writeToFile(content, mockFileHandle),
+        svc.writeToFile(filePath, content, { fileHandle: mockFileHandle }),
       ).rejects.toThrow();
 
       expect(mockFileHandle.truncate).toHaveBeenCalledTimes(1);
@@ -116,7 +118,7 @@ describe('FileServiceWriter', () => {
       });
 
       await expect(() =>
-        svc.writeToFile(content, mockFileHandle),
+        svc.writeToFile(filePath, content, { fileHandle: mockFileHandle }),
       ).rejects.toThrow();
 
       expect(mockFileHandle.truncate).toHaveBeenCalledTimes(1);
@@ -139,7 +141,7 @@ describe('FileServiceWriter', () => {
       });
 
       await expect(() =>
-        svc.writeToFile(content, mockFileHandle),
+        svc.writeToFile(filePath, content, { fileHandle: mockFileHandle }),
       ).rejects.toThrow();
 
       expect(mockFileHandle.truncate).toHaveBeenCalledTimes(1);
@@ -287,16 +289,11 @@ describe('FileServiceWriter', () => {
 
       await svc.writeBackup(path, content);
 
-      expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
-      expect(makeFileHandleSpy).toHaveBeenCalledWith(
-        path,
-        expect.stringContaining('backup'),
-      );
-
       expect(writeSpy).toHaveBeenCalledTimes(1);
-      expect(writeSpy).toHaveBeenCalledWith(content, mockFileHandle);
-
-      expect(closeMock).toHaveBeenCalledTimes(1);
+      expect(writeSpy).toHaveBeenCalledWith(filePath, content, {
+        fileHandle: undefined,
+        name: expect.stringContaining('backup'),
+      });
     });
 
     test('runs functions with passed in fileHandle', async () => {
@@ -316,25 +313,25 @@ describe('FileServiceWriter', () => {
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(0);
 
       expect(writeSpy).toHaveBeenCalledTimes(1);
-      expect(writeSpy).toHaveBeenCalledWith(content, mockFileHandle);
-
-      expect(closeMock).toHaveBeenCalledTimes(1);
+      expect(writeSpy).toHaveBeenCalledWith(filePath, content, {
+        fileHandle: mockFileHandle,
+        name,
+      });
     });
 
     test('runs functions with passed in name', async () => {
       const svc = new FileServiceWriter(baseName, fileExtension);
-
-      const mockFileHandle = new MockFileHandle() as unknown as FileHandle;
-      const makeFileHandleSpy = jest.spyOn(svc, 'makeFileHandle');
-      makeFileHandleSpy.mockImplementationOnce(async () => mockFileHandle);
 
       const writeSpy = jest.spyOn(svc, 'writeToFile');
       writeSpy.mockImplementationOnce(async () => {});
 
       await svc.writeBackup(path, content, { name });
 
-      expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
-      expect(makeFileHandleSpy).toHaveBeenCalledWith(path, name);
+      expect(writeSpy).toHaveBeenCalledTimes(1);
+      expect(writeSpy).toHaveBeenCalledWith(filePath, content, {
+        fileHandle: undefined,
+        name,
+      });
     });
 
     test('throws an error if makeFileHandle throws an error', async () => {
@@ -352,10 +349,6 @@ describe('FileServiceWriter', () => {
 
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
       expect(makeFileHandleSpy).toHaveBeenCalledWith(path, name);
-
-      expect(truncateMock).toHaveBeenCalledTimes(0);
-      expect(writeMock).toHaveBeenCalledTimes(0);
-      expect(closeMock).toHaveBeenCalledTimes(0);
     });
 
     test('throws an error if writeToFile throws an error', async () => {
@@ -374,13 +367,11 @@ describe('FileServiceWriter', () => {
         testError,
       );
 
-      expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
-      expect(makeFileHandleSpy).toHaveBeenCalledWith(path, expect.any(String));
-
       expect(writeSpy).toHaveBeenCalledTimes(1);
-      expect(writeSpy).toHaveBeenCalledWith(content, mockFileHandle);
-
-      expect(closeMock).toHaveBeenCalledTimes(0);
+      expect(writeSpy).toHaveBeenCalledWith(filePath, content, {
+        fileHandle: undefined,
+        name: expect.stringContaining('backup'),
+      });
     });
   });
 

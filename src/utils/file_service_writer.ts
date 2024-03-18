@@ -14,11 +14,11 @@ export class FileServiceWriter {
   async writeToFile(
     path: string,
     content: string,
-    options?: { fh?: FileHandle; name?: string },
+    options?: { fileHandle?: FileHandle; name?: string },
   ) {
     const filename = options?.name ?? this.filename;
     const fileHandle =
-      options?.fh ?? (await this.makeFileHandle(path, filename));
+      options?.fileHandle ?? (await this.makeFileHandle(path, filename));
 
     await fileHandle.truncate(0);
     await fileHandle.write(content, 0);
@@ -60,7 +60,7 @@ export class FileServiceWriter {
       }`;
 
     await this.writeToFile(filePath, rawData, {
-      fh: options?.fh,
+      fileHandle: options?.fh,
       name: filename,
     });
   }

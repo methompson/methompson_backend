@@ -46,12 +46,14 @@ logSpy.mockImplementation(() => {});
 const errorSpy = jest.spyOn(console, 'error');
 errorSpy.mockImplementation(() => {});
 
+const filePath = 'path/to/file';
+
 describe('FileDepositConversionsService', () => {
   describe('purchasesString', () => {
     test('returns a stringified JSON array', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileDepositConversionsService(fsw, 'path', [
+      const service = new FileDepositConversionsService(fsw, filePath, [
         conversion1,
         conversion2,
         conversion3,
@@ -66,7 +68,7 @@ describe('FileDepositConversionsService', () => {
     test('returns an empty array if there is no data', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileDepositConversionsService(fsw, 'path', []);
+      const service = new FileDepositConversionsService(fsw, filePath, []);
 
       const str = service.depositConversionsString;
 
@@ -78,7 +80,7 @@ describe('FileDepositConversionsService', () => {
   describe('addPurchase', () => {
     test('adds a users and calls writeToFile', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
-      const service = new FileDepositConversionsService(fsw, 'path');
+      const service = new FileDepositConversionsService(fsw, filePath);
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
       writeToFileSpy.mockImplementationOnce(async () => {});
 
@@ -93,7 +95,7 @@ describe('FileDepositConversionsService', () => {
     test('throws an error if writeToFiles throws an error', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileDepositConversionsService(fsw, 'path');
+      const service = new FileDepositConversionsService(fsw, filePath);
 
       const testErr = 'Test Error';
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
@@ -113,7 +115,7 @@ describe('FileDepositConversionsService', () => {
     test('updates a user and calls writeToFile', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileDepositConversionsService(fsw, 'path', [
+      const service = new FileDepositConversionsService(fsw, filePath, [
         conversion1,
       ]);
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
@@ -134,7 +136,7 @@ describe('FileDepositConversionsService', () => {
     test('throws an error if writeToFiles throws an error', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileDepositConversionsService(fsw, 'path', [
+      const service = new FileDepositConversionsService(fsw, filePath, [
         conversion1,
       ]);
 
@@ -161,7 +163,7 @@ describe('FileDepositConversionsService', () => {
     test('deletes a user and calls writeToFile', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileDepositConversionsService(fsw, 'path', [
+      const service = new FileDepositConversionsService(fsw, filePath, [
         conversion1,
       ]);
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
@@ -176,7 +178,7 @@ describe('FileDepositConversionsService', () => {
     test('throws an error if writeToFiles throws an error', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileDepositConversionsService(fsw, 'path', [
+      const service = new FileDepositConversionsService(fsw, filePath, [
         conversion1,
       ]);
 
@@ -197,34 +199,38 @@ describe('FileDepositConversionsService', () => {
   describe('writeToFile', () => {
     test('gets the string, runs truncate and writes to the file handle', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
-      const writeToFileSpy = jest.spyOn(fsw, 'writeToFile');
-      writeToFileSpy.mockImplementationOnce(async () => {});
+      const wtfSpy = jest.spyOn(fsw, 'writeToFile');
+      wtfSpy.mockImplementationOnce(async () => {});
 
-      const svc = new FileDepositConversionsService(fsw, 'path', [conversion1]);
+      const svc = new FileDepositConversionsService(fsw, filePath, [
+        conversion1,
+      ]);
 
       const str = svc.depositConversionsString;
 
       await svc.writeToFile();
 
-      expect(writeToFileSpy).toHaveBeenCalledTimes(1);
-      expect(writeToFileSpy).toHaveBeenCalledWith(str);
+      expect(wtfSpy).toHaveBeenCalledTimes(1);
+      expect(wtfSpy).toHaveBeenCalledWith(filePath, str);
     });
 
     test('Throws an error if FileServiceWriter.writeToFile throws an error', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
-      const writeToFileSpy = jest.spyOn(fsw, 'writeToFile');
-      writeToFileSpy.mockImplementationOnce(async () => {
+      const wtfSpy = jest.spyOn(fsw, 'writeToFile');
+      wtfSpy.mockImplementationOnce(async () => {
         throw new Error(testError);
       });
 
-      const svc = new FileDepositConversionsService(fsw, 'path', [conversion1]);
+      const svc = new FileDepositConversionsService(fsw, filePath, [
+        conversion1,
+      ]);
 
       const str = svc.depositConversionsString;
 
       await expect(() => svc.writeToFile()).rejects.toThrow(testError);
 
-      expect(writeToFileSpy).toHaveBeenCalledTimes(1);
-      expect(writeToFileSpy).toHaveBeenCalledWith(str);
+      expect(wtfSpy).toHaveBeenCalledTimes(1);
+      expect(wtfSpy).toHaveBeenCalledWith(filePath, str);
     });
   });
 
@@ -234,14 +240,19 @@ describe('FileDepositConversionsService', () => {
       const writeBackupSpy = jest.spyOn(fsw, 'writeBackup');
       writeBackupSpy.mockImplementationOnce(async () => {});
 
-      const svc = new FileDepositConversionsService(fsw, 'path', [conversion1]);
+      const svc = new FileDepositConversionsService(fsw, filePath, [
+        conversion1,
+      ]);
 
       const str = svc.depositConversionsString;
 
       await svc.backup();
 
       expect(writeBackupSpy).toHaveBeenCalledTimes(1);
-      expect(writeBackupSpy).toHaveBeenCalledWith(join('path', 'backup'), str);
+      expect(writeBackupSpy).toHaveBeenCalledWith(
+        join(filePath, 'backup'),
+        str,
+      );
     });
   });
 

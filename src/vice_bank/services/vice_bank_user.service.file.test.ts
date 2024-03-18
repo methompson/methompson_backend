@@ -1,3 +1,5 @@
+import { join } from 'path';
+
 import {
   ViceBankUser,
   ViceBankUserJSON,
@@ -37,12 +39,14 @@ logSpy.mockImplementation(() => {});
 const errorSpy = jest.spyOn(console, 'error');
 errorSpy.mockImplementation(() => {});
 
+const filePath = 'path/to/file';
+
 describe('FileViceBankUserService', () => {
   describe('viceBankUsersString', () => {
     test('returns a stringified JSON array of users', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileViceBankUserService(fsw, 'path', [
+      const service = new FileViceBankUserService(fsw, filePath, [
         user1,
         user2,
         user3,
@@ -57,7 +61,7 @@ describe('FileViceBankUserService', () => {
     test('returns an empty array if there are no users', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileViceBankUserService(fsw, 'path');
+      const service = new FileViceBankUserService(fsw, filePath);
 
       const users = service.viceBankUsersString;
 
@@ -69,7 +73,7 @@ describe('FileViceBankUserService', () => {
     test('adds a users and calls writeToFile', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileViceBankUserService(fsw, 'path');
+      const service = new FileViceBankUserService(fsw, filePath);
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
       writeToFileSpy.mockImplementationOnce(async () => {});
 
@@ -84,7 +88,7 @@ describe('FileViceBankUserService', () => {
     test('throws an error if writeToFiles throws an error', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileViceBankUserService(fsw, 'path');
+      const service = new FileViceBankUserService(fsw, filePath);
 
       const testErr = 'Test Error';
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
@@ -102,7 +106,7 @@ describe('FileViceBankUserService', () => {
     test('updates a user and calls writeToFile', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileViceBankUserService(fsw, 'path', [user1]);
+      const service = new FileViceBankUserService(fsw, filePath, [user1]);
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
       writeToFileSpy.mockImplementationOnce(async () => {});
 
@@ -121,7 +125,7 @@ describe('FileViceBankUserService', () => {
     test('throws an error if writeToFiles throws an error', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileViceBankUserService(fsw, 'path', [user1]);
+      const service = new FileViceBankUserService(fsw, filePath, [user1]);
 
       const testErr = 'Test Error';
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
@@ -146,7 +150,7 @@ describe('FileViceBankUserService', () => {
     test('deletes a user and calls writeToFile', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileViceBankUserService(fsw, 'path', [user1]);
+      const service = new FileViceBankUserService(fsw, filePath, [user1]);
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
       writeToFileSpy.mockImplementationOnce(async () => {});
 
@@ -159,7 +163,7 @@ describe('FileViceBankUserService', () => {
     test('throws an error if writeToFiles throws an error', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileViceBankUserService(fsw, 'path', [user1]);
+      const service = new FileViceBankUserService(fsw, filePath, [user1]);
 
       const testErr = 'Test Error';
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
@@ -181,14 +185,14 @@ describe('FileViceBankUserService', () => {
       const wtfSpy = jest.spyOn(fsw, 'writeToFile');
       wtfSpy.mockImplementationOnce(async () => {});
 
-      const svc = new FileViceBankUserService(fsw, 'path', [user1]);
+      const svc = new FileViceBankUserService(fsw, filePath, [user1]);
 
       const str = svc.viceBankUsersString;
 
       await svc.writeToFile();
 
       expect(wtfSpy).toHaveBeenCalledTimes(1);
-      expect(wtfSpy).toHaveBeenCalledWith(str);
+      expect(wtfSpy).toHaveBeenCalledWith(filePath, str);
     });
 
     test('Throws an error if FileServiceWriter.writeToFile throws an error', async () => {
@@ -198,7 +202,7 @@ describe('FileViceBankUserService', () => {
         throw new Error(testError);
       });
 
-      const svc = new FileViceBankUserService(fsw, 'path', [user1]);
+      const svc = new FileViceBankUserService(fsw, filePath, [user1]);
 
       await expect(() => svc.writeToFile()).rejects.toThrow(testError);
     });
@@ -211,12 +215,12 @@ describe('FileViceBankUserService', () => {
       const wbSpy = jest.spyOn(fsw, 'writeBackup');
       wbSpy.mockImplementationOnce(async () => {});
 
-      const svc = new FileViceBankUserService(fsw, 'path', [user1]);
+      const svc = new FileViceBankUserService(fsw, filePath, [user1]);
       await svc.backup();
 
       expect(wbSpy).toHaveBeenCalledTimes(1);
       expect(wbSpy).toHaveBeenCalledWith(
-        'path/backup',
+        join(filePath, 'backup'),
         svc.viceBankUsersString,
       );
     });
@@ -224,7 +228,7 @@ describe('FileViceBankUserService', () => {
     test('throws an error if writeBackup throws an error', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const svc = new FileViceBankUserService(fsw, 'path', [user1]);
+      const svc = new FileViceBankUserService(fsw, filePath, [user1]);
 
       const wbSpy = jest.spyOn(fsw, 'writeBackup');
       wbSpy.mockImplementationOnce(async () => {
@@ -235,7 +239,7 @@ describe('FileViceBankUserService', () => {
 
       expect(wbSpy).toHaveBeenCalledTimes(1);
       expect(wbSpy).toHaveBeenCalledWith(
-        'path/backup',
+        join(filePath, 'backup'),
         svc.viceBankUsersString,
       );
     });

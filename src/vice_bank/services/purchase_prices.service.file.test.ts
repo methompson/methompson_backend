@@ -4,6 +4,7 @@ import {
   PurchasePrice,
   PurchasePriceJSON,
 } from '@/src/models/vice_bank/purchase_price';
+import { join } from 'path';
 
 const pp1JSON: PurchasePriceJSON = {
   id: 'id1',
@@ -35,12 +36,14 @@ logSpy.mockImplementation(() => {});
 const errorSpy = jest.spyOn(console, 'error');
 errorSpy.mockImplementation(() => {});
 
+const filePath = 'path/to/file';
+
 describe('FilePurchasePricesService', () => {
   describe('purchasePricesString', () => {
     test('returns a stringified JSON array', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FilePurchasePricesService(fsw, 'path', [
+      const service = new FilePurchasePricesService(fsw, filePath, [
         pp1,
         pp2,
         pp3,
@@ -55,7 +58,7 @@ describe('FilePurchasePricesService', () => {
     test('returns an empty array if there is no data', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FilePurchasePricesService(fsw, 'path', []);
+      const service = new FilePurchasePricesService(fsw, filePath, []);
 
       const str = service.purchasePricesString;
 
@@ -68,7 +71,7 @@ describe('FilePurchasePricesService', () => {
     test('adds a users and calls writeToFile', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FilePurchasePricesService(fsw, 'path');
+      const service = new FilePurchasePricesService(fsw, filePath);
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
       writeToFileSpy.mockImplementationOnce(async () => {});
 
@@ -83,7 +86,7 @@ describe('FilePurchasePricesService', () => {
     test('throws an error if writeToFiles throws an error', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FilePurchasePricesService(fsw, 'path');
+      const service = new FilePurchasePricesService(fsw, filePath);
 
       const testErr = 'Test Error';
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
@@ -101,7 +104,7 @@ describe('FilePurchasePricesService', () => {
     test('updates a user and calls writeToFile', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FilePurchasePricesService(fsw, 'path', [pp1]);
+      const service = new FilePurchasePricesService(fsw, filePath, [pp1]);
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
       writeToFileSpy.mockImplementationOnce(async () => {});
 
@@ -120,7 +123,7 @@ describe('FilePurchasePricesService', () => {
     test('throws an error if writeToFiles throws an error', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FilePurchasePricesService(fsw, 'path', [pp1]);
+      const service = new FilePurchasePricesService(fsw, filePath, [pp1]);
 
       const testErr = 'Test Error';
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
@@ -145,7 +148,7 @@ describe('FilePurchasePricesService', () => {
     test('deletes a user and calls writeToFile', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FilePurchasePricesService(fsw, 'path', [pp1]);
+      const service = new FilePurchasePricesService(fsw, filePath, [pp1]);
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
       writeToFileSpy.mockImplementationOnce(async () => {});
 
@@ -158,7 +161,7 @@ describe('FilePurchasePricesService', () => {
     test('throws an error if writeToFiles throws an error', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FilePurchasePricesService(fsw, 'path', [pp1]);
+      const service = new FilePurchasePricesService(fsw, filePath, [pp1]);
 
       const testErr = 'Test Error';
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
@@ -178,14 +181,14 @@ describe('FilePurchasePricesService', () => {
       const wtfSpy = jest.spyOn(fsw, 'writeToFile');
       wtfSpy.mockImplementationOnce(async () => {});
 
-      const svc = new FilePurchasePricesService(fsw, 'path', [pp1]);
+      const svc = new FilePurchasePricesService(fsw, filePath, [pp1]);
 
       const str = svc.purchasePricesString;
 
       await svc.writeToFile();
 
       expect(wtfSpy).toHaveBeenCalledTimes(1);
-      expect(wtfSpy).toHaveBeenCalledWith(str);
+      expect(wtfSpy).toHaveBeenCalledWith(filePath, str);
     });
 
     test('Throws an error if FileServiceWriter.writeToFile throws an error', async () => {
@@ -195,14 +198,14 @@ describe('FilePurchasePricesService', () => {
         throw new Error(testError);
       });
 
-      const svc = new FilePurchasePricesService(fsw, 'path', [pp1]);
+      const svc = new FilePurchasePricesService(fsw, filePath, [pp1]);
 
       const str = svc.purchasePricesString;
 
       await expect(() => svc.writeToFile()).rejects.toThrow(testError);
 
       expect(wtfSpy).toHaveBeenCalledTimes(1);
-      expect(wtfSpy).toHaveBeenCalledWith(str);
+      expect(wtfSpy).toHaveBeenCalledWith(filePath, str);
     });
   });
 
@@ -213,12 +216,12 @@ describe('FilePurchasePricesService', () => {
       const wbSpy = jest.spyOn(fsw, 'writeBackup');
       wbSpy.mockImplementationOnce(async () => {});
 
-      const svc = new FilePurchasePricesService(fsw, 'path', [pp1]);
+      const svc = new FilePurchasePricesService(fsw, filePath, [pp1]);
       await svc.backup();
 
       expect(wbSpy).toHaveBeenCalledTimes(1);
       expect(wbSpy).toHaveBeenCalledWith(
-        'path/backup',
+        join(filePath, 'backup'),
         svc.purchasePricesString,
       );
     });
@@ -226,7 +229,7 @@ describe('FilePurchasePricesService', () => {
     test('throws an error if writeBackup throws an error', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const svc = new FilePurchasePricesService(fsw, 'path', [pp1]);
+      const svc = new FilePurchasePricesService(fsw, filePath, [pp1]);
 
       const wbSpy = jest.spyOn(fsw, 'writeBackup');
       wbSpy.mockImplementationOnce(async () => {
@@ -237,7 +240,7 @@ describe('FilePurchasePricesService', () => {
 
       expect(wbSpy).toHaveBeenCalledTimes(1);
       expect(wbSpy).toHaveBeenCalledWith(
-        'path/backup',
+        join(filePath, 'backup'),
         svc.purchasePricesString,
       );
     });
