@@ -93,14 +93,15 @@ export class FileDepositConversionsService extends InMemoryDepositConversionsSer
         }
       }
     } catch (e) {
-      console.error('Invalid or no data when reading file data file', e);
-
       try {
         if (rawData.length > 0) {
+          console.error('Invalid or no data when reading file data file', e);
           await fileServiceWriter.writeBackup(viceBankPath, rawData);
+        } else {
+          console.error('Init: No file data found. Creating new file.');
         }
 
-        await fileServiceWriter.clearFile();
+        await fileServiceWriter.clearFile(viceBankPath);
       } catch (e) {
         console.error('unable to write to disk', e);
       }

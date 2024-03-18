@@ -30,7 +30,7 @@ export class FileServiceWriter {
     const fileHandle = fh ?? (await this.makeFileHandle(path));
     const buffer = await fileHandle.readFile();
 
-    fileHandle.close();
+    await fileHandle.close();
 
     return buffer.toString();
   }
@@ -65,8 +65,9 @@ export class FileServiceWriter {
     });
   }
 
-  async clearFile(fh?: FileHandle) {
-    const fileHandle = fh ?? (await this.makeFileHandle(this.filename));
+  async clearFile(filePath: string, fh?: FileHandle) {
+    const fileHandle =
+      fh ?? (await this.makeFileHandle(filePath, this.filename));
     await fileHandle.truncate(0);
     await fileHandle.write('[]', 0);
     await fileHandle.close();
