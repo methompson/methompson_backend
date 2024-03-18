@@ -288,7 +288,10 @@ describe('FileServiceWriter', () => {
       await svc.writeBackup(path, content);
 
       expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
-      expect(makeFileHandleSpy).toHaveBeenCalledWith(path, expect.any(String));
+      expect(makeFileHandleSpy).toHaveBeenCalledWith(
+        path,
+        expect.stringContaining('backup'),
+      );
 
       expect(writeSpy).toHaveBeenCalledTimes(1);
       expect(writeSpy).toHaveBeenCalledWith(content, mockFileHandle);

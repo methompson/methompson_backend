@@ -1,18 +1,6 @@
-import * as uuid from 'uuid';
-
 import { FilePurchaseService } from './purchase.service.file';
 import { Purchase, PurchaseJSON } from '@/src/models/vice_bank/purchase';
 import { FileServiceWriter } from '@/src/utils/file_service_writer';
-
-jest.mock('uuid', () => {
-  const v4 = jest.fn(() => 'uuidv4');
-
-  return {
-    v4,
-  };
-});
-
-const uuidv4 = uuid.v4 as jest.Mock<unknown, unknown[]>;
 
 const purchasedName = 'purchasedName';
 
@@ -53,13 +41,6 @@ const errorSpy = jest.spyOn(console, 'error');
 errorSpy.mockImplementation(() => {});
 
 describe('FilePurchaseService', () => {
-  beforeEach(() => {
-    uuidv4.mockClear();
-
-    // makeFileHandleSpy.mockClear();
-    // writeBackupSpy.mockClear();
-  });
-
   describe('purchasesString', () => {
     test('returns a stringified JSON array', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
@@ -197,17 +178,19 @@ describe('FilePurchaseService', () => {
   });
 
   describe('writeToFile', () => {
-    test('gets the string, runs truncate and writes to the file handle', async () => {
+    test('gets the string, runs FileHandleService.writeToFile', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
       const wtfSpy = jest.spyOn(fsw, 'writeToFile');
       wtfSpy.mockImplementationOnce(async () => {});
 
       const svc = new FilePurchaseService(fsw, 'path', [purchase1]);
 
+      const str = svc.purchasesString;
+
       await svc.writeToFile();
 
       expect(wtfSpy).toHaveBeenCalledTimes(1);
-      expect(wtfSpy).toHaveBeenCalledWith(svc.purchasesString);
+      expect(wtfSpy).toHaveBeenCalledWith(str);
     });
 
     test('Throws an error if FileServiceWriter.writeToFile throws an error', async () => {

@@ -1,49 +1,6 @@
-import * as uuid from 'uuid';
-import { mkdir, open } from 'fs/promises';
-import { join } from 'path';
-
 import { Deposit, DepositJSON } from '@/src/models/vice_bank/deposit';
-import { FILE_NAME, FileDepositService } from './deposit.service.file';
-
-jest.mock('fs/promises', () => {
-  const mkdir = jest.fn();
-  const open = jest.fn();
-
-  return {
-    mkdir,
-    open,
-  };
-});
-
-const closeMock = jest.fn();
-const readFileMock = jest.fn();
-const truncateMock = jest.fn();
-const writeMock = jest.fn();
-
-class MockFileHandle {
-  close() {}
-  readFile() {}
-  truncate() {}
-  write() {}
-}
-
-// function MockFileHandle() {}
-MockFileHandle.prototype.close = closeMock;
-MockFileHandle.prototype.readFile = readFileMock;
-MockFileHandle.prototype.truncate = truncateMock;
-MockFileHandle.prototype.write = writeMock;
-
-jest.mock('uuid', () => {
-  const v4 = jest.fn(() => 'uuidv4');
-
-  return {
-    v4,
-  };
-});
-
-const mockOpen = open as unknown as jest.Mock;
-const mockMkdir = mkdir as unknown as jest.Mock;
-const uuidv4 = uuid.v4 as jest.Mock<unknown, unknown[]>;
+import { FileDepositService } from './deposit.service.file';
+import { FileServiceWriter } from '@/src/utils/file_service_writer';
 
 const deposit1JSON: DepositJSON = {
   id: 'id1',
@@ -85,28 +42,11 @@ const errorSpy = jest.spyOn(console, 'error');
 errorSpy.mockImplementation(() => {});
 
 describe('FileDepositService', () => {
-  const makeFileHandleSpy = jest.spyOn(FileDepositService, 'makeFileHandle');
-  const writeBackupSpy = jest.spyOn(FileDepositService, 'writeBackup');
-
-  beforeEach(() => {
-    closeMock.mockReset();
-    readFileMock.mockReset();
-    truncateMock.mockReset();
-    writeMock.mockReset();
-    mockMkdir.mockReset();
-    mockOpen.mockReset();
-
-    uuidv4.mockClear();
-
-    makeFileHandleSpy.mockClear();
-    writeBackupSpy.mockClear();
-  });
-
   describe('depositsString', () => {
     test('returns a stringified JSON array', async () => {
-      mockOpen.mockImplementationOnce(async () => new MockFileHandle());
+      const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileDepositService(await open(''), 'path', [
+      const service = new FileDepositService(fsw, 'path', [
         deposit1,
         deposit2,
         deposit3,
@@ -119,9 +59,9 @@ describe('FileDepositService', () => {
     });
 
     test('returns an empty array if there is no data', async () => {
-      mockOpen.mockImplementationOnce(async () => new MockFileHandle());
+      const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileDepositService(await open(''), 'path', []);
+      const service = new FileDepositService(fsw, 'path', []);
 
       const str = service.depositsString;
 
@@ -131,10 +71,10 @@ describe('FileDepositService', () => {
   });
 
   describe('addDeposit', () => {
-    test('adds a users and calls writeToFile', async () => {
-      mockOpen.mockImplementationOnce(async () => new MockFileHandle());
+    test('adds a user and calls writeToFile', async () => {
+      const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileDepositService(await open(''), 'path');
+      const service = new FileDepositService(fsw, 'path');
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
       writeToFileSpy.mockImplementationOnce(async () => {});
 
@@ -147,9 +87,9 @@ describe('FileDepositService', () => {
     });
 
     test('throws an error if writeToFiles throws an error', async () => {
-      mockOpen.mockImplementationOnce(async () => new MockFileHandle());
+      const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileDepositService(await open(''), 'path');
+      const service = new FileDepositService(fsw, 'path');
 
       const testErr = 'Test Error';
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
@@ -165,11 +105,9 @@ describe('FileDepositService', () => {
 
   describe('updateDeposit', () => {
     test('updates a user and calls writeToFile', async () => {
-      mockOpen.mockImplementationOnce(async () => new MockFileHandle());
+      const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileDepositService(await open(''), 'path', [
-        deposit1,
-      ]);
+      const service = new FileDepositService(fsw, 'path', [deposit1]);
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
       writeToFileSpy.mockImplementationOnce(async () => {});
 
@@ -186,11 +124,9 @@ describe('FileDepositService', () => {
     });
 
     test('throws an error if writeToFiles throws an error', async () => {
-      mockOpen.mockImplementationOnce(async () => new MockFileHandle());
+      const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileDepositService(await open(''), 'path', [
-        deposit1,
-      ]);
+      const service = new FileDepositService(fsw, 'path', [deposit1]);
 
       const testErr = 'Test Error';
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
@@ -211,11 +147,9 @@ describe('FileDepositService', () => {
 
   describe('deleteDeposit', () => {
     test('deletes a user and calls writeToFile', async () => {
-      mockOpen.mockImplementationOnce(async () => new MockFileHandle());
+      const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileDepositService(await open(''), 'path', [
-        deposit1,
-      ]);
+      const service = new FileDepositService(fsw, 'path', [deposit1]);
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
       writeToFileSpy.mockImplementationOnce(async () => {});
 
@@ -226,11 +160,9 @@ describe('FileDepositService', () => {
     });
 
     test('throws an error if writeToFiles throws an error', async () => {
-      mockOpen.mockImplementationOnce(async () => new MockFileHandle());
+      const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileDepositService(await open(''), 'path', [
-        deposit1,
-      ]);
+      const service = new FileDepositService(fsw, 'path', [deposit1]);
 
       const testErr = 'Test Error';
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
@@ -245,570 +177,153 @@ describe('FileDepositService', () => {
   });
 
   describe('writeToFile', () => {
-    test('gets the string, runs truncate and writes to the file handle', async () => {
-      const mockFileHandle = new MockFileHandle();
-      mockOpen.mockImplementationOnce(async () => mockFileHandle);
+    test('gets the string, runs FileHandleService.writeToFile', async () => {
+      const fsw = new FileServiceWriter('baseName', 'json');
+      const wtfSpy = jest.spyOn(fsw, 'writeToFile');
+      wtfSpy.mockImplementationOnce(async () => {});
 
-      const svc = new FileDepositService(await open(''), 'path', [deposit1]);
+      const svc = new FileDepositService(fsw, 'path', [deposit1]);
 
       const str = svc.depositsString;
 
       await svc.writeToFile();
 
-      expect(mockFileHandle.truncate).toHaveBeenCalledTimes(1);
-      expect(mockFileHandle.truncate).toHaveBeenCalledWith(0);
-
-      expect(mockFileHandle.write).toHaveBeenCalledTimes(1);
-      expect(mockFileHandle.write).toHaveBeenCalledWith(str, 0);
+      expect(wtfSpy).toHaveBeenCalledTimes(1);
+      expect(wtfSpy).toHaveBeenCalledWith(str);
     });
 
-    test('Throws an error if truncate throws an error', async () => {
-      const mockFileHandle = new MockFileHandle();
-      mockOpen.mockImplementationOnce(async () => mockFileHandle);
-
-      truncateMock.mockImplementationOnce(async () => {
+    test('Throws an error if FileServiceWriter.writeToFile throws an error', async () => {
+      const fsw = new FileServiceWriter('baseName', 'json');
+      const wtfSpy = jest.spyOn(fsw, 'writeToFile');
+      wtfSpy.mockImplementationOnce(async () => {
         throw new Error(testError);
       });
 
-      const svc = new FileDepositService(await open(''), 'path', [deposit1]);
-
-      await expect(() => svc.writeToFile()).rejects.toThrow(testError);
-
-      expect(mockFileHandle.truncate).toHaveBeenCalledTimes(1);
-      expect(mockFileHandle.truncate).toHaveBeenCalledWith(0);
-
-      expect(mockFileHandle.write).toHaveBeenCalledTimes(0);
-    });
-
-    test('Throws an error if write throws an error', async () => {
-      const mockFileHandle = new MockFileHandle();
-      mockOpen.mockImplementationOnce(async () => mockFileHandle);
-
-      writeMock.mockImplementationOnce(async () => {
-        throw new Error(testError);
-      });
-
-      const svc = new FileDepositService(await open(''), 'path', [deposit1]);
-
+      const svc = new FileDepositService(fsw, 'path', [deposit1]);
       const str = svc.depositsString;
 
       await expect(() => svc.writeToFile()).rejects.toThrow(testError);
 
-      expect(mockFileHandle.truncate).toHaveBeenCalledTimes(1);
-      expect(mockFileHandle.truncate).toHaveBeenCalledWith(0);
-
-      expect(mockFileHandle.write).toHaveBeenCalledTimes(1);
-      expect(mockFileHandle.write).toHaveBeenCalledWith(str, 0);
+      expect(wtfSpy).toHaveBeenCalledTimes(1);
+      expect(wtfSpy).toHaveBeenCalledWith(str);
     });
   });
 
   describe('backup', () => {
     test('runs writeBackup with expected values', async () => {
-      const mockFileHandle1 = new MockFileHandle();
-      const mockFileHandle2 = new MockFileHandle();
-      mockOpen.mockImplementationOnce(async () => mockFileHandle1);
-      mockOpen.mockImplementationOnce(async () => mockFileHandle2);
+      const fsw = new FileServiceWriter('baseName', 'json');
 
-      const svc = new FileDepositService(await open(''), 'path', [deposit1]);
+      const wbSpy = jest.spyOn(fsw, 'writeBackup');
+      wbSpy.mockImplementationOnce(async () => {});
+
+      const svc = new FileDepositService(fsw, 'path', [deposit1]);
       await svc.backup();
 
-      expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
-      expect(makeFileHandleSpy).toHaveBeenCalledWith(
-        'path/backup',
-        expect.stringContaining('deposit_data_backup'),
-      );
-
-      expect(truncateMock).toHaveBeenCalledTimes(1);
-      expect(truncateMock).toHaveBeenCalledWith(0);
-
-      expect(writeMock).toHaveBeenCalledTimes(1);
-      expect(writeMock).toHaveBeenCalledWith(svc.depositsString, 0);
-
-      expect(closeMock).toHaveBeenCalledTimes(1);
+      expect(wbSpy).toHaveBeenCalledTimes(1);
+      expect(wbSpy).toHaveBeenCalledWith('path/backup', svc.depositsString);
     });
 
-    test('throws an error if makeFileHandle throws an error', async () => {
-      const mockFileHandle1 = new MockFileHandle();
-      mockOpen.mockImplementationOnce(async () => mockFileHandle1);
+    test('throws an error if writeBackup throws an error', async () => {
+      const fsw = new FileServiceWriter('baseName', 'json');
 
-      const svc = new FileDepositService(await open(''), 'path', [deposit1]);
+      const svc = new FileDepositService(fsw, 'path', [deposit1]);
 
-      makeFileHandleSpy.mockImplementationOnce(async () => {
+      const wbSpy = jest.spyOn(fsw, 'writeBackup');
+      wbSpy.mockImplementationOnce(async () => {
         throw new Error(testError);
       });
 
       await expect(() => svc.backup()).rejects.toThrow(testError);
 
-      expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
-      expect(makeFileHandleSpy).toHaveBeenCalledWith(
-        'path/backup',
-        expect.stringContaining('deposit_data_backup'),
-      );
-
-      expect(truncateMock).toHaveBeenCalledTimes(0);
-      expect(writeMock).toHaveBeenCalledTimes(0);
-      expect(closeMock).toHaveBeenCalledTimes(0);
-    });
-
-    test('throws an error if truncate throws an error', async () => {
-      const mockFileHandle1 = new MockFileHandle();
-      const mockFileHandle2 = new MockFileHandle();
-      mockOpen.mockImplementationOnce(async () => mockFileHandle1);
-      mockOpen.mockImplementationOnce(async () => mockFileHandle2);
-
-      const svc = new FileDepositService(await open(''), 'path', [deposit1]);
-
-      truncateMock.mockImplementationOnce(async () => {
-        throw new Error(testError);
-      });
-
-      await expect(() => svc.backup()).rejects.toThrow(testError);
-
-      expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
-      expect(makeFileHandleSpy).toHaveBeenCalledWith(
-        'path/backup',
-        expect.stringContaining('deposit_data_backup'),
-      );
-
-      expect(truncateMock).toHaveBeenCalledTimes(1);
-      expect(truncateMock).toHaveBeenCalledWith(0);
-
-      expect(writeMock).toHaveBeenCalledTimes(0);
-
-      expect(closeMock).toHaveBeenCalledTimes(0);
-    });
-
-    test('throws an error if write throws an error', async () => {
-      const mockFileHandle1 = new MockFileHandle();
-      const mockFileHandle2 = new MockFileHandle();
-      mockOpen.mockImplementationOnce(async () => mockFileHandle1);
-      mockOpen.mockImplementationOnce(async () => mockFileHandle2);
-
-      const svc = new FileDepositService(await open(''), 'path', [deposit1]);
-
-      writeMock.mockImplementationOnce(async () => {
-        throw new Error(testError);
-      });
-
-      await expect(() => svc.backup()).rejects.toThrow(testError);
-
-      expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
-      expect(makeFileHandleSpy).toHaveBeenCalledWith(
-        'path/backup',
-        expect.stringContaining('deposit_data_backup'),
-      );
-
-      expect(truncateMock).toHaveBeenCalledTimes(1);
-      expect(truncateMock).toHaveBeenCalledWith(0);
-
-      expect(writeMock).toHaveBeenCalledTimes(1);
-      expect(writeMock).toHaveBeenCalledWith(svc.depositsString, 0);
-
-      expect(closeMock).toHaveBeenCalledTimes(0);
-    });
-
-    test('throws an error if close throws an error', async () => {
-      const mockFileHandle1 = new MockFileHandle();
-      const mockFileHandle2 = new MockFileHandle();
-      mockOpen.mockImplementationOnce(async () => mockFileHandle1);
-      mockOpen.mockImplementationOnce(async () => mockFileHandle2);
-
-      const svc = new FileDepositService(await open(''), 'path', [deposit1]);
-
-      closeMock.mockImplementationOnce(async () => {
-        throw new Error(testError);
-      });
-
-      await expect(() => svc.backup()).rejects.toThrow(testError);
-
-      expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
-      expect(makeFileHandleSpy).toHaveBeenCalledWith(
-        'path/backup',
-        expect.stringContaining('deposit_data_backup'),
-      );
-
-      expect(truncateMock).toHaveBeenCalledTimes(1);
-      expect(truncateMock).toHaveBeenCalledWith(0);
-
-      expect(writeMock).toHaveBeenCalledTimes(1);
-      expect(writeMock).toHaveBeenCalledWith(svc.depositsString, 0);
-
-      expect(closeMock).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe('makeFileHandle', () => {
-    const path = 'path/to/file';
-    const name = 'name.ext';
-
-    test('calls mkdir and open', async () => {
-      const mockFileHandle = new MockFileHandle();
-      mockOpen.mockImplementationOnce(async () => mockFileHandle);
-
-      const result = await FileDepositService.makeFileHandle(path, name);
-
-      expect(result).toBe(mockFileHandle);
-
-      expect(mockMkdir).toHaveBeenCalledTimes(1);
-      expect(mockMkdir).toHaveBeenCalledWith(path, { recursive: true });
-
-      expect(mockOpen).toHaveBeenCalledTimes(1);
-      expect(mockOpen).toHaveBeenCalledWith(join(path, name), 'a+');
-    });
-
-    test('uses the default file name if not provided', async () => {
-      const mockFileHandle = new MockFileHandle();
-      mockOpen.mockImplementationOnce(async () => mockFileHandle);
-
-      const result = await FileDepositService.makeFileHandle(path);
-
-      expect(result).toBe(mockFileHandle);
-
-      expect(mockMkdir).toHaveBeenCalledTimes(1);
-      expect(mockMkdir).toHaveBeenCalledWith(path, { recursive: true });
-
-      expect(mockOpen).toHaveBeenCalledTimes(1);
-      expect(mockOpen).toHaveBeenCalledWith(join(path, FILE_NAME), 'a+');
-    });
-
-    test('throws an error if mkdir throws an error', async () => {
-      mockMkdir.mockImplementationOnce(() => {
-        throw new Error(testError);
-      });
-
-      await expect(() =>
-        FileDepositService.makeFileHandle(path, name),
-      ).rejects.toThrow(testError);
-
-      expect(mockMkdir).toHaveBeenCalledTimes(1);
-      expect(mockMkdir).toHaveBeenCalledWith(path, { recursive: true });
-
-      expect(mockOpen).toHaveBeenCalledTimes(0);
-    });
-
-    test('throws an error if open throws an error', async () => {
-      mockOpen.mockImplementationOnce(() => {
-        throw new Error(testError);
-      });
-
-      await expect(() =>
-        FileDepositService.makeFileHandle(path, name),
-      ).rejects.toThrow(testError);
-
-      expect(mockMkdir).toHaveBeenCalledTimes(1);
-      expect(mockMkdir).toHaveBeenCalledWith(path, { recursive: true });
-
-      expect(mockOpen).toHaveBeenCalledTimes(1);
-      expect(mockOpen).toHaveBeenCalledWith(join(path, name), 'a+');
-    });
-  });
-
-  describe('writeBackup', () => {
-    const stringData = 'string data';
-    const backupPath = 'backupPath';
-    const filename = 'name';
-
-    test('runs functions with expected values', async () => {
-      const mockFileHandle = new MockFileHandle();
-      mockOpen.mockImplementationOnce(async () => mockFileHandle);
-
-      await FileDepositService.writeBackup(backupPath, stringData, 'name');
-
-      expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
-      expect(makeFileHandleSpy).toHaveBeenCalledWith(backupPath, filename);
-
-      expect(truncateMock).toHaveBeenCalledTimes(1);
-      expect(truncateMock).toHaveBeenCalledWith(0);
-
-      expect(writeMock).toHaveBeenCalledTimes(1);
-      expect(writeMock).toHaveBeenCalledWith(stringData, 0);
-
-      expect(closeMock).toHaveBeenCalledTimes(1);
-    });
-
-    test('throws an error if makeFileHandle throws an error', async () => {
-      makeFileHandleSpy.mockImplementationOnce(async () => {
-        throw new Error(testError);
-      });
-
-      await expect(() =>
-        FileDepositService.writeBackup(backupPath, stringData, 'name'),
-      ).rejects.toThrow();
-
-      expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
-      expect(makeFileHandleSpy).toHaveBeenCalledWith(backupPath, filename);
-
-      expect(truncateMock).toHaveBeenCalledTimes(0);
-      expect(writeMock).toHaveBeenCalledTimes(0);
-      expect(closeMock).toHaveBeenCalledTimes(0);
-    });
-
-    test('throws an error if truncate throws an error', async () => {
-      const mockFileHandle = new MockFileHandle();
-      mockOpen.mockImplementationOnce(async () => mockFileHandle);
-
-      truncateMock.mockImplementationOnce(async () => {
-        throw new Error(testError);
-      });
-
-      await expect(() =>
-        FileDepositService.writeBackup(backupPath, stringData, 'name'),
-      ).rejects.toThrow(testError);
-
-      expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
-      expect(makeFileHandleSpy).toHaveBeenCalledWith(backupPath, filename);
-
-      expect(truncateMock).toHaveBeenCalledTimes(1);
-      expect(truncateMock).toHaveBeenCalledWith(0);
-
-      expect(writeMock).toHaveBeenCalledTimes(0);
-
-      expect(closeMock).toHaveBeenCalledTimes(0);
-    });
-
-    test('throws an error if write throws an error', async () => {
-      const mockFileHandle = new MockFileHandle();
-      mockOpen.mockImplementationOnce(async () => mockFileHandle);
-
-      writeMock.mockImplementationOnce(async () => {
-        throw new Error(testError);
-      });
-
-      await expect(() =>
-        FileDepositService.writeBackup(backupPath, stringData, 'name'),
-      ).rejects.toThrow(testError);
-
-      expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
-      expect(makeFileHandleSpy).toHaveBeenCalledWith(backupPath, filename);
-
-      expect(truncateMock).toHaveBeenCalledTimes(1);
-      expect(truncateMock).toHaveBeenCalledWith(0);
-
-      expect(writeMock).toHaveBeenCalledTimes(1);
-      expect(writeMock).toHaveBeenCalledWith(stringData, 0);
-
-      expect(closeMock).toHaveBeenCalledTimes(0);
-    });
-
-    test('throws an error if close throws an error', async () => {
-      const mockFileHandle = new MockFileHandle();
-      mockOpen.mockImplementationOnce(async () => mockFileHandle);
-
-      closeMock.mockImplementationOnce(async () => {
-        throw new Error(testError);
-      });
-
-      await expect(() =>
-        FileDepositService.writeBackup(backupPath, stringData, 'name'),
-      ).rejects.toThrow(testError);
-
-      expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
-      expect(makeFileHandleSpy).toHaveBeenCalledWith(backupPath, filename);
-
-      expect(truncateMock).toHaveBeenCalledTimes(1);
-      expect(truncateMock).toHaveBeenCalledWith(0);
-
-      expect(writeMock).toHaveBeenCalledTimes(1);
-      expect(writeMock).toHaveBeenCalledWith(stringData, 0);
-
-      expect(closeMock).toHaveBeenCalledTimes(1);
+      expect(wbSpy).toHaveBeenCalledTimes(1);
+      expect(wbSpy).toHaveBeenCalledWith('path/backup', svc.depositsString);
     });
   });
 
   describe('init', () => {
-    const blogPath = 'blog path';
+    const depositsPath = 'deposits path';
 
     test('creates a file handle, reads a file, creates blog posts and returns a new FileDepositService', async () => {
-      const mockFileHandle = new MockFileHandle();
-      mockOpen.mockImplementationOnce(async () => mockFileHandle);
-
-      const buf = Buffer.from(
-        JSON.stringify([deposit1, deposit2, deposit3]),
-        'utf-8',
+      const fsw = new FileServiceWriter('baseName', 'json');
+      const readFileSpy = jest.spyOn(fsw, 'readFile');
+      readFileSpy.mockImplementationOnce(async () =>
+        JSON.stringify([deposit1JSON, deposit2JSON, deposit3JSON]),
       );
 
-      readFileMock.mockImplementationOnce(async () => buf);
+      const svc = await FileDepositService.init(depositsPath, {
+        fileServiceWriter: fsw,
+      });
 
-      const svc = await FileDepositService.init(blogPath);
+      expect(svc.depositsList.length).toBe(3);
 
-      expect(readFileMock).toHaveBeenCalledTimes(1);
-      expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
-
-      expect((await svc).depositsList.length).toBe(3);
-
-      expect(truncateMock).toHaveBeenCalledTimes(0);
-      expect(writeMock).toHaveBeenCalledTimes(0);
+      expect(JSON.parse(JSON.stringify(svc.depositsList))).toEqual([
+        deposit1.toJSON(),
+        deposit2.toJSON(),
+        deposit3.toJSON(),
+      ]);
     });
 
     test('Only includes posts that are valid', async () => {
-      const mockFileHandle = new MockFileHandle();
-      mockOpen.mockImplementationOnce(async () => mockFileHandle);
-
-      const buf = Buffer.from(
-        JSON.stringify([deposit1, deposit2, deposit3, {}]),
-        'utf-8',
+      const fsw = new FileServiceWriter('baseName', 'json');
+      const readFileSpy = jest.spyOn(fsw, 'readFile');
+      readFileSpy.mockImplementationOnce(async () =>
+        JSON.stringify([deposit1JSON, deposit2JSON, deposit3JSON, {}]),
       );
 
-      readFileMock.mockImplementationOnce(async () => buf);
-
-      const svc = await FileDepositService.init(blogPath);
-
-      expect(readFileMock).toHaveBeenCalledTimes(1);
-      expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
+      const svc = await FileDepositService.init(depositsPath, {
+        fileServiceWriter: fsw,
+      });
 
       expect((await svc).depositsList.length).toBe(3);
-
-      expect(truncateMock).toHaveBeenCalledTimes(0);
-      expect(writeMock).toHaveBeenCalledTimes(0);
     });
 
-    test('If the raw data buffer is a zero length string, truncate and write are called', async () => {
-      const mockFileHandle = new MockFileHandle();
-      mockOpen.mockImplementationOnce(async () => mockFileHandle);
-
-      const buf = Buffer.from('', 'utf-8');
-
-      readFileMock.mockImplementationOnce(async () => buf);
-
-      const svc = await FileDepositService.init(blogPath);
-
-      expect(readFileMock).toHaveBeenCalledTimes(1);
-      expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
-
-      expect((await svc).depositsList.length).toBe(0);
-    });
-
-    test('If the raw data buffer is a non-zero length non-JSON string, truncate and write are called and a backup is made', async () => {
-      const mockFileHandle = new MockFileHandle();
-      mockOpen.mockImplementationOnce(async () => mockFileHandle);
-
-      const buf = Buffer.from('bad data', 'utf-8');
-
-      readFileMock.mockImplementationOnce(async () => buf);
-      writeBackupSpy.mockImplementationOnce(async () => {});
-
-      const svc = await FileDepositService.init(blogPath);
-
-      expect(readFileMock).toHaveBeenCalledTimes(1);
-      expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
-      expect(writeBackupSpy).toHaveBeenCalledTimes(1);
-
-      expect((await svc).depositsList.length).toBe(0);
-
-      expect(truncateMock).toHaveBeenCalledTimes(1);
-      expect(truncateMock).toHaveBeenCalledWith(0);
-
-      expect(writeMock).toHaveBeenCalledTimes(1);
-      expect(writeMock).toHaveBeenCalledWith('[]', 0);
-    });
-
-    test('throws an error if makeFileHandle throws an error', async () => {
-      makeFileHandleSpy.mockImplementationOnce(async () => {
+    test('returns an empty FilePurhcaseService if readFile throws an error', async () => {
+      const fsw = new FileServiceWriter('baseName', 'json');
+      const rfSpy = jest.spyOn(fsw, 'readFile');
+      rfSpy.mockImplementationOnce(async () => {
         throw new Error(testError);
       });
+      const wbSpy = jest.spyOn(fsw, 'writeBackup');
+      wbSpy.mockImplementationOnce(async () => {});
+      const cfSpy = jest.spyOn(fsw, 'clearFile');
+      cfSpy.mockImplementationOnce(async () => {});
 
-      await expect(() => FileDepositService.init(blogPath)).rejects.toThrow(
-        testError,
-      );
-
-      expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
-
-      expect(readFileMock).toHaveBeenCalledTimes(0);
-      expect(writeBackupSpy).toHaveBeenCalledTimes(0);
-      expect(truncateMock).toHaveBeenCalledTimes(0);
-      expect(writeMock).toHaveBeenCalledTimes(0);
-    });
-
-    test('throws an error if readFile throws an error', async () => {
-      const mockFileHandle = new MockFileHandle();
-      mockOpen.mockImplementationOnce(async () => mockFileHandle);
-
-      readFileMock.mockImplementationOnce(() => {
-        throw new Error(testError);
+      const svc = await FileDepositService.init(depositsPath, {
+        fileServiceWriter: fsw,
       });
 
-      await expect(() => FileDepositService.init(blogPath)).rejects.toThrow(
-        testError,
-      );
+      expect(rfSpy).toHaveBeenCalledTimes(1);
+      expect(rfSpy).toHaveBeenCalledWith(depositsPath);
 
-      expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
-      expect(readFileMock).toHaveBeenCalledTimes(1);
+      expect(svc.depositsList.length).toBe(0);
 
-      expect(writeBackupSpy).toHaveBeenCalledTimes(0);
-      expect(truncateMock).toHaveBeenCalledTimes(0);
-      expect(writeMock).toHaveBeenCalledTimes(0);
+      expect(wbSpy).toHaveBeenCalledTimes(0);
+      expect(cfSpy).toHaveBeenCalledTimes(1);
     });
 
-    test('throws an error if writeBackup throws an error', async () => {
-      const mockFileHandle = new MockFileHandle();
-      mockOpen.mockImplementationOnce(async () => mockFileHandle);
+    test('If the data exists, but it is invalid, a backup is written', async () => {
+      const fsw = new FileServiceWriter('baseName', 'json');
 
-      const buf = Buffer.from('bad data', 'utf-8');
+      const invalidData = 'invalid data';
+      const rfSpy = jest.spyOn(fsw, 'readFile');
+      rfSpy.mockImplementationOnce(async () => invalidData);
+      const wbSpy = jest.spyOn(fsw, 'writeBackup');
+      wbSpy.mockImplementationOnce(async () => {});
+      const cfSpy = jest.spyOn(fsw, 'clearFile');
+      cfSpy.mockImplementationOnce(async () => {});
 
-      readFileMock.mockImplementationOnce(async () => buf);
-      writeBackupSpy.mockImplementationOnce(async () => {
-        throw new Error(testError);
+      const svc = await FileDepositService.init(depositsPath, {
+        fileServiceWriter: fsw,
       });
 
-      await expect(() => FileDepositService.init(blogPath)).rejects.toThrow(
-        testError,
-      );
+      expect(rfSpy).toHaveBeenCalledTimes(1);
+      expect(rfSpy).toHaveBeenCalledWith(depositsPath);
 
-      expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
-      expect(readFileMock).toHaveBeenCalledTimes(1);
-      expect(writeBackupSpy).toHaveBeenCalledTimes(1);
+      expect(svc.depositsList.length).toBe(0);
 
-      expect(truncateMock).toHaveBeenCalledTimes(0);
-      expect(writeMock).toHaveBeenCalledTimes(0);
-    });
-
-    test('throws an error if truncate throws an error', async () => {
-      const mockFileHandle = new MockFileHandle();
-      mockOpen.mockImplementationOnce(async () => mockFileHandle);
-
-      const buf = Buffer.from('bad data', 'utf-8');
-
-      readFileMock.mockImplementationOnce(async () => buf);
-      writeBackupSpy.mockImplementationOnce(async () => {});
-
-      truncateMock.mockImplementationOnce(async () => {
-        throw new Error(testError);
-      });
-
-      await expect(() => FileDepositService.init(blogPath)).rejects.toThrow(
-        testError,
-      );
-
-      expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
-      expect(readFileMock).toHaveBeenCalledTimes(1);
-      expect(writeBackupSpy).toHaveBeenCalledTimes(1);
-      expect(truncateMock).toHaveBeenCalledTimes(1);
-
-      expect(writeMock).toHaveBeenCalledTimes(0);
-    });
-
-    test('throws an error if write throws an error', async () => {
-      const mockFileHandle = new MockFileHandle();
-      mockOpen.mockImplementationOnce(async () => mockFileHandle);
-
-      const buf = Buffer.from('bad data', 'utf-8');
-
-      readFileMock.mockImplementationOnce(async () => buf);
-      writeBackupSpy.mockImplementationOnce(async () => {});
-
-      writeMock.mockImplementationOnce(async () => {
-        throw new Error(testError);
-      });
-
-      await expect(() => FileDepositService.init(blogPath)).rejects.toThrow(
-        testError,
-      );
-
-      expect(makeFileHandleSpy).toHaveBeenCalledTimes(1);
-      expect(readFileMock).toHaveBeenCalledTimes(1);
-      expect(writeBackupSpy).toHaveBeenCalledTimes(1);
-      expect(truncateMock).toHaveBeenCalledTimes(1);
-      expect(writeMock).toHaveBeenCalledTimes(1);
+      expect(wbSpy).toHaveBeenCalledTimes(1);
+      expect(wbSpy).toHaveBeenCalledWith(depositsPath, invalidData);
+      expect(cfSpy).toHaveBeenCalledTimes(1);
     });
   });
 });

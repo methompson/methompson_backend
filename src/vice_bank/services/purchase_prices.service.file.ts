@@ -1,9 +1,9 @@
-import { FileHandle, mkdir, open } from 'fs/promises';
 import { join } from 'path';
 import { Injectable } from '@nestjs/common';
 
 import { InMemoryPurchasePricesService } from './purchase_prices.service.memory';
 import { PurchasePrice } from '@/src/models/vice_bank/purchase_price';
+import { FileServiceWriter } from '@/src/utils/file_service_writer';
 
 const BASE_NAME = 'purchase_prices_data';
 const FILE_EXTENSION = 'json';
@@ -12,7 +12,7 @@ export const FILE_NAME = `${BASE_NAME}.${FILE_EXTENSION}`;
 @Injectable()
 export class FilePurchasePricesService extends InMemoryPurchasePricesService {
   constructor(
-    protected readonly fileHandle: FileHandle,
+    protected readonly fileServiceWriter: FileServiceWriter,
     protected readonly viceBankPath: string,
     input?: PurchasePrice[],
   ) {
@@ -50,64 +50,32 @@ export class FilePurchasePricesService extends InMemoryPurchasePricesService {
   }
 
   async writeToFile(): Promise<void> {
-    const postsJson = this.purchasePricesString;
+    const json = this.purchasePricesString;
 
-    await this.fileHandle.truncate(0);
-    await this.fileHandle.write(postsJson, 0);
+    await this.fileServiceWriter.writeToFile(json);
   }
 
   async backup() {
     const backupPath = join(this.viceBankPath, 'backup');
-    await FilePurchasePricesService.writeBackup(
+    await this.fileServiceWriter.writeBackup(
       backupPath,
       this.purchasePricesString,
     );
   }
 
-  static async makeFileHandle(
+  static async init(
     viceBankPath: string,
-    name?: string,
-  ): Promise<FileHandle> {
-    await mkdir(viceBankPath, { recursive: true });
+    options?: { fileServiceWriter?: FileServiceWriter },
+  ): Promise<FilePurchasePricesService> {
+    const fileServiceWriter =
+      options?.fileServiceWriter ??
+      new FileServiceWriter(BASE_NAME, FILE_EXTENSION);
 
-    const filename = name ?? FILE_NAME;
-
-    const filepath = join(viceBankPath, filename);
-
-    const fileHandle = await open(filepath, 'a+');
-
-    return fileHandle;
-  }
-
-  static async writeBackup(
-    viceBankPath: string,
-    rawData: string,
-    name?: string,
-  ) {
-    const filename =
-      name ??
-      `${BASE_NAME}_backup_${new Date().toISOString()}.${FILE_EXTENSION}`;
-    const fileHandle = await FilePurchasePricesService.makeFileHandle(
-      viceBankPath,
-      filename,
-    );
-
-    await fileHandle.truncate(0);
-    await fileHandle.write(rawData, 0);
-    await fileHandle.close();
-  }
-
-  static async init(viceBankPath: string): Promise<FilePurchasePricesService> {
-    const fileHandle = await FilePurchasePricesService.makeFileHandle(
-      viceBankPath,
-    );
-    const buffer = await fileHandle.readFile();
-
-    const users: PurchasePrice[] = [];
     let rawData = '';
 
+    const users: PurchasePrice[] = [];
     try {
-      rawData = buffer.toString();
+      rawData = await fileServiceWriter.readFile(viceBankPath);
 
       const json = JSON.parse(rawData);
 
@@ -123,14 +91,21 @@ export class FilePurchasePricesService extends InMemoryPurchasePricesService {
     } catch (e) {
       console.error('Invalid or no data when reading file data file', e);
 
-      if (rawData.length > 0) {
-        await FilePurchasePricesService.writeBackup(viceBankPath, rawData);
-      }
+      try {
+        if (rawData.length > 0) {
+          await fileServiceWriter.writeBackup(viceBankPath, rawData);
+        }
 
-      await fileHandle.truncate(0);
-      await fileHandle.write('[]', 0);
+        await fileServiceWriter.clearFile();
+      } catch (e) {
+        console.error('unable to write to disk', e);
+      }
     }
 
-    return new FilePurchasePricesService(fileHandle, viceBankPath, users);
+    return new FilePurchasePricesService(
+      fileServiceWriter,
+      viceBankPath,
+      users,
+    );
   }
 }

@@ -1,9 +1,9 @@
-import { FileHandle, mkdir, open } from 'fs/promises';
 import { join } from 'path';
 import { Injectable } from '@nestjs/common';
 
 import { InMemoryViceBankUserService } from './vice_bank_user.service.memory';
 import { ViceBankUser } from '@/src/models/vice_bank/vice_bank_user';
+import { FileServiceWriter } from '@/src/utils/file_service_writer';
 
 const BASE_NAME = 'vice_bank_user_data';
 const FILE_EXTENSION = 'json';
@@ -12,7 +12,7 @@ export const FILE_NAME = `${BASE_NAME}.${FILE_EXTENSION}`;
 @Injectable()
 export class FileViceBankUserService extends InMemoryViceBankUserService {
   constructor(
-    protected readonly fileHandle: FileHandle,
+    protected readonly fileServiceWriter: FileServiceWriter,
     protected readonly viceBankPath: string,
     users?: ViceBankUser[],
   ) {
@@ -52,66 +52,32 @@ export class FileViceBankUserService extends InMemoryViceBankUserService {
   }
 
   async writeToFile(): Promise<void> {
-    const postsJson = this.viceBankUsersString;
+    const json = this.viceBankUsersString;
 
-    await this.fileHandle.truncate(0);
-    await this.fileHandle.write(postsJson, 0);
+    await this.fileServiceWriter.writeToFile(json);
   }
 
   async backup() {
     const backupPath = join(this.viceBankPath, 'backup');
-    await FileViceBankUserService.writeBackup(
+    await this.fileServiceWriter.writeBackup(
       backupPath,
       this.viceBankUsersString,
     );
   }
 
-  static async makeFileHandle(
+  static async init(
     viceBankPath: string,
-    name?: string,
-  ): Promise<FileHandle> {
-    await mkdir(viceBankPath, { recursive: true });
+    options?: { fileServiceWriter?: FileServiceWriter },
+  ): Promise<FileViceBankUserService> {
+    const fileServiceWriter =
+      options?.fileServiceWriter ??
+      new FileServiceWriter(BASE_NAME, FILE_EXTENSION);
 
-    const filename = name ?? FILE_NAME;
-
-    const filepath = join(viceBankPath, filename);
-
-    const fileHandle = await open(filepath, 'a+');
-
-    return fileHandle;
-  }
-
-  static async writeBackup(
-    viceBankPath: string,
-    rawData: string,
-    name?: string,
-  ) {
-    const filename =
-      name ??
-      `${BASE_NAME}_backup_${new Date().toISOString()}.${FILE_EXTENSION}`;
-    const fileHandle = await FileViceBankUserService.makeFileHandle(
-      viceBankPath,
-      filename,
-    );
-
-    await fileHandle.truncate(0);
-    await fileHandle.write(rawData, 0);
-    await fileHandle.close();
-  }
-
-  static async init(viceBankPath: string): Promise<FileViceBankUserService> {
-    const fileHandle = await FileViceBankUserService.makeFileHandle(
-      viceBankPath,
-    );
-    const buffer = await fileHandle.readFile();
-
-    const users: ViceBankUser[] = [];
     let rawData = '';
 
+    const users: ViceBankUser[] = [];
     try {
-      rawData = buffer.toString();
-
-      console.log('rawData', rawData);
+      rawData = await fileServiceWriter.readFile(viceBankPath);
 
       const json = JSON.parse(rawData);
 
@@ -127,14 +93,17 @@ export class FileViceBankUserService extends InMemoryViceBankUserService {
     } catch (e) {
       console.error('Invalid or no data when reading file data file', e);
 
-      if (rawData.length > 0) {
-        await FileViceBankUserService.writeBackup(viceBankPath, rawData);
-      }
+      try {
+        if (rawData.length > 0) {
+          await fileServiceWriter.writeBackup(viceBankPath, rawData);
+        }
 
-      await fileHandle.truncate(0);
-      await fileHandle.write('[]', 0);
+        await fileServiceWriter.clearFile();
+      } catch (e) {
+        console.error('unable to write to disk', e);
+      }
     }
 
-    return new FileViceBankUserService(fileHandle, viceBankPath, users);
+    return new FileViceBankUserService(fileServiceWriter, viceBankPath, users);
   }
 }
