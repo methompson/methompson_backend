@@ -54,7 +54,7 @@ export class FileViceBankUserService extends InMemoryViceBankUserService {
   async writeToFile(): Promise<void> {
     const json = this.viceBankUsersString;
 
-    await this.fileServiceWriter.writeToFile(json);
+    await this.fileServiceWriter.writeToFile(this.viceBankPath, json);
   }
 
   async backup() {

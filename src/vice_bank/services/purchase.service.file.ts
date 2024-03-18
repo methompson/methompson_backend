@@ -50,7 +50,7 @@ export class FilePurchaseService extends InMemoryPurchaseService {
   async writeToFile(): Promise<void> {
     const json = this.purchasesString;
 
-    await this.fileServiceWriter.writeToFile(json);
+    await this.fileServiceWriter.writeToFile(this.viceBankPath, json);
   }
 
   async backup() {

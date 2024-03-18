@@ -11,16 +11,26 @@ export class FileServiceWriter {
     return `${this.baseName}.${this.fileExtension}`;
   }
 
-  async writeToFile(content: string, fh?: FileHandle) {
-    const fileHandle = fh ?? (await this.makeFileHandle(this.filename));
+  async writeToFile(
+    path: string,
+    content: string,
+    options?: { fh?: FileHandle; name?: string },
+  ) {
+    const filename = options?.name ?? this.filename;
+    const fileHandle =
+      options?.fh ?? (await this.makeFileHandle(path, filename));
+
     await fileHandle.truncate(0);
     await fileHandle.write(content, 0);
+
     await fileHandle.close();
   }
 
   async readFile(path: string, fh?: FileHandle): Promise<string> {
     const fileHandle = fh ?? (await this.makeFileHandle(path));
     const buffer = await fileHandle.readFile();
+
+    fileHandle.close();
 
     return buffer.toString();
   }
@@ -48,11 +58,11 @@ export class FileServiceWriter {
       `${this.baseName}_backup_${new Date().toISOString()}.${
         this.fileExtension
       }`;
-    const fileHandle =
-      options?.fh ?? (await this.makeFileHandle(filePath, filename));
 
-    await this.writeToFile(rawData, fileHandle);
-    await fileHandle.close();
+    await this.writeToFile(filePath, rawData, {
+      fh: options?.fh,
+      name: filename,
+    });
   }
 
   async clearFile(fh?: FileHandle) {

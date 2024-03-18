@@ -50,7 +50,7 @@ export class FileDepositService extends InMemoryDepositService {
   async writeToFile(): Promise<void> {
     const json = this.depositsString;
 
-    await this.fileServiceWriter.writeToFile(json);
+    await this.fileServiceWriter.writeToFile(this.viceBankPath, json);
   }
 
   async backup() {
