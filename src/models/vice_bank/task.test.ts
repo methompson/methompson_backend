@@ -139,7 +139,7 @@ describe('Task', () => {
   });
 
   describe('fromNewTask', () => {
-    test('returns a new Task instance', () => {
+    test('returns a new Task instance with new id', () => {
       const task = Task.fromJSON(validInput);
 
       const newId = 'newId';
