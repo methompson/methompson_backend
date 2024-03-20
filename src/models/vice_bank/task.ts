@@ -1,29 +1,10 @@
 import { InvalidInputError } from '@/src/errors';
 import { isNumber, isRecord, isString } from '@/src/utils/type_guards';
-
-enum Frequency {
-  Day = 'day',
-  Week = 'week',
-  Month = 'month',
-}
-
-export function isFrequency(input: unknown) {
-  const values = ['day', 'week', 'month'];
-  return isString(input) && values.includes(input.toLowerCase());
-}
-
-export function frequencyFromString(input: string) {
-  switch (input.toLowerCase()) {
-    case 'day':
-      return Frequency.Day;
-    case 'week':
-      return Frequency.Week;
-    case 'month':
-      return Frequency.Month;
-    default:
-      throw new Error(`Invalid frequency: ${input}`);
-  }
-}
+import {
+  Frequency,
+  frequencyFromString,
+  isFrequency,
+} from '@/src/vice_bank/types';
 
 export interface TaskJSON {
   id: string;

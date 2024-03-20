@@ -1,4 +1,5 @@
-import { Task, TaskJSON, frequencyFromString } from './task';
+import { frequencyFromString } from '@/src/vice_bank/types';
+import { Task, TaskJSON } from './task';
 
 describe('Task', () => {
   const validInput: TaskJSON = {

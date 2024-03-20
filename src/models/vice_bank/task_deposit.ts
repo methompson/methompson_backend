@@ -1,3 +1,5 @@
+import { DateTime } from 'luxon';
+
 import { InvalidInputError } from '@/src/errors';
 import {
   isNumber,
@@ -5,7 +7,11 @@ import {
   isString,
   isValidDateTimeString,
 } from '@/src/utils/type_guards';
-import { DateTime } from 'luxon';
+import {
+  Frequency,
+  frequencyFromString,
+  isFrequency,
+} from '@/src/vice_bank/types';
 
 export interface TaskDepositJSON {
   id: string;
@@ -13,6 +19,8 @@ export interface TaskDepositJSON {
   date: string;
   taskName: string;
   taskId: string;
+  conversionRate: number;
+  frequency: string;
   tokensEarned: number;
 }
 
@@ -23,6 +31,8 @@ export class TaskDeposit {
     protected _date: DateTime<true>,
     protected _taskName: string,
     protected _taskId: string,
+    protected _conversionRate: number,
+    protected _frequency: Frequency,
     protected _tokensEarned: number,
   ) {}
 
@@ -46,6 +56,14 @@ export class TaskDeposit {
     return this._taskId;
   }
 
+  get conversionRate(): number {
+    return this._conversionRate;
+  }
+
+  get frequency(): Frequency {
+    return this._frequency;
+  }
+
   get tokensEarned(): number {
     return this._tokensEarned;
   }
@@ -57,6 +75,8 @@ export class TaskDeposit {
       date: this.date.toISO(),
       taskName: this.taskName,
       taskId: this.taskId,
+      conversionRate: this.conversionRate,
+      frequency: this.frequency,
       tokensEarned: this.tokensEarned,
     };
   }
@@ -78,6 +98,8 @@ export class TaskDeposit {
       dateTime,
       input.taskName,
       input.taskId,
+      input.conversionRate,
+      frequencyFromString(input.frequency),
       input.tokensEarned,
     );
   }
@@ -100,7 +122,9 @@ export class TaskDeposit {
     if (!isValidDateTimeString(input.date)) output.push('date');
     if (!isString(input.taskName)) output.push('taskName');
     if (!isString(input.taskId)) output.push('taskId');
+    if (!isNumber(input.conversionRate)) output.push('conversionRate');
     if (!isNumber(input.tokensEarned)) output.push('tokensEarned');
+    if (!isFrequency(input.frequency)) output.push('frequency');
 
     return output;
   }
