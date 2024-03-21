@@ -1,6 +1,11 @@
 import { Task } from '@/src/models/vice_bank/task';
 import { Injectable } from '@nestjs/common';
-import { GetTaskOptions } from '@/src/vice_bank/types';
+import {
+  Frequency,
+  GetTaskDepositOptions,
+  GetTaskOptions,
+} from '@/src/vice_bank/types';
+import { TaskDeposit } from '@/src/models/vice_bank/task_deposit';
 
 @Injectable()
 export abstract class TaskService {
@@ -8,4 +13,15 @@ export abstract class TaskService {
   abstract addTask(task: Task): Promise<Task>;
   abstract updateTask(task: Task): Promise<Task>;
   abstract deleteTask(taskId: string): Promise<Task>;
+
+  abstract getTaskDeposits(
+    input: GetTaskDepositOptions,
+  ): Promise<TaskDeposit[]>;
+  abstract getDepositsForFrequency(
+    deposit: TaskDeposit,
+    frequency: Frequency,
+  ): Promise<TaskDeposit[]>;
+  abstract addTaskDeposit(deposit: TaskDeposit): Promise<TaskDeposit>;
+  abstract updateTaskDeposit(deposit: TaskDeposit): Promise<TaskDeposit>;
+  abstract deleteTaskDeposit(depositId: string): Promise<TaskDeposit>;
 }

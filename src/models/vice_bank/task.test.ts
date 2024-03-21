@@ -6,7 +6,7 @@ describe('Task', () => {
     id: 'id',
     vbUserId: 'vbUserId',
     name: 'name',
-    frequency: 'day',
+    frequency: 'daily',
     tokensPer: 1,
   };
 

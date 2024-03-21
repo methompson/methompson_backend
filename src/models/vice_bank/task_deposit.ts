@@ -81,6 +81,13 @@ export class TaskDeposit {
     };
   }
 
+  withTokensEarned(tokensEarned: number): TaskDeposit {
+    return TaskDeposit.fromJSON({
+      ...this.toJSON(),
+      tokensEarned,
+    });
+  }
+
   static fromJSON(input: unknown): TaskDeposit {
     if (!TaskDeposit.isTaskDepositJSON(input)) {
       const errors = TaskDeposit.TaskDepositJSONTest(input);

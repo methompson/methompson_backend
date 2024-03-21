@@ -7,6 +7,8 @@ describe('TaskDeposit', () => {
     date: '2024-03-19T00:00:00.000-05:00',
     taskName: 'taskName',
     taskId: 'taskId',
+    conversionRate: 1,
+    frequency: 'daily',
     tokensEarned: 1,
   };
 
@@ -15,6 +17,27 @@ describe('TaskDeposit', () => {
       const taskDeposit = TaskDeposit.fromJSON(validInput);
 
       expect(taskDeposit.toJSON()).toEqual(validInput);
+    });
+  });
+
+  describe('withTokensEarned', () => {
+    test('creates a new object with tokensEarned set to a value', () => {
+      const deposit = TaskDeposit.fromJSON(validInput);
+
+      const newDeposit = deposit.withTokensEarned(2);
+
+      expect(deposit).not.toBe(newDeposit);
+      expect(newDeposit.tokensEarned).toBe(2);
+      expect(deposit.tokensEarned).toBe(1);
+    });
+
+    test('creates a new object even if the tokensEarned values are the same', () => {
+      const deposit = TaskDeposit.fromJSON(validInput);
+
+      const newDeposit = deposit.withTokensEarned(deposit.tokensEarned);
+
+      expect(deposit).not.toBe(newDeposit);
+      expect(deposit.toJSON()).toEqual(newDeposit.toJSON());
     });
   });
 
