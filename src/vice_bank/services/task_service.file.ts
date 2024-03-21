@@ -31,7 +31,7 @@ export class FileTaskService extends InMemoryTaskService {
   async addTask(task: Task): Promise<Task> {
     const result = await super.addTask(task);
 
-    await this.writeTasksToFile();
+    await this.writeToFile();
 
     return result;
   }
@@ -39,7 +39,7 @@ export class FileTaskService extends InMemoryTaskService {
   async updateTask(task: Task): Promise<Task> {
     const result = await super.updateTask(task);
 
-    await this.writeTasksToFile();
+    await this.writeToFile();
 
     return result;
   }
@@ -47,7 +47,7 @@ export class FileTaskService extends InMemoryTaskService {
   async deleteTask(taskId: string): Promise<Task> {
     const result = await super.deleteTask(taskId);
 
-    await this.writeTasksToFile();
+    await this.writeToFile();
 
     return result;
   }
@@ -55,7 +55,7 @@ export class FileTaskService extends InMemoryTaskService {
   async addTaskDeposit(taskDeposit: TaskDeposit): Promise<TaskDepositResponse> {
     const result = await super.addTaskDeposit(taskDeposit);
 
-    await this.writeTasksToFile();
+    await this.writeToFile();
 
     return result;
   }
@@ -65,7 +65,7 @@ export class FileTaskService extends InMemoryTaskService {
   ): Promise<TaskDepositResponse> {
     const result = await super.updateTaskDeposit(taskDeposit);
 
-    await this.writeTasksToFile();
+    await this.writeToFile();
 
     return result;
   }
@@ -73,12 +73,12 @@ export class FileTaskService extends InMemoryTaskService {
   async deleteTaskDeposit(taskDepositId: string): Promise<TaskDepositResponse> {
     const result = await super.deleteTaskDeposit(taskDepositId);
 
-    await this.writeTasksToFile();
+    await this.writeToFile();
 
     return result;
   }
 
-  async writeTasksToFile(): Promise<void> {
+  async writeToFile(): Promise<void> {
     const json = this.taskString;
 
     await this.fileServiceWriter.writeToFile(this.viceBankPath, json);
