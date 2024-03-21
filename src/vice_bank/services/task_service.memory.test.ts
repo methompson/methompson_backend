@@ -769,7 +769,11 @@ describe('InMemoryTaskService', () => {
 
       const result = await svc.addTaskDeposit(td1);
 
-      expect(result.toJSON()).toEqual({ ...td1.toJSON(), id: newId });
+      expect(result.tokensAdded).toBe(td1.tokensEarned);
+      expect(result.taskDeposit.toJSON()).toEqual({
+        ...td1.toJSON(),
+        id: newId,
+      });
     });
 
     test('Sets the deposit tokens earned to 0 if another deposit exists during frequency period', async () => {
@@ -785,7 +789,8 @@ describe('InMemoryTaskService', () => {
 
       const result = await svc.addTaskDeposit(td1);
 
-      expect(result.toJSON()).toEqual({
+      expect(result.tokensAdded).toBe(0);
+      expect(result.taskDeposit.toJSON()).toEqual({
         ...td1.toJSON(),
         id: newId,
         tokensEarned: 0,
@@ -819,7 +824,9 @@ describe('InMemoryTaskService', () => {
       });
 
       const result = await svc.updateTaskDeposit(updatedDeposit);
-      expect(result).toBe(td1);
+
+      expect(result.tokensAdded).toBe(0);
+      expect(result.taskDeposit).toBe(td1);
 
       expect(svc.taskDepositsList.length).toBe(1);
 
@@ -861,7 +868,7 @@ describe('InMemoryTaskService', () => {
         date: td2.date.plus({ minutes: 1 }).toISO(),
       });
 
-      await svc.updateTaskDeposit(updatedDeposit);
+      const result = await svc.updateTaskDeposit(updatedDeposit);
 
       const deposit = svc.taskDeposits[updatedDeposit.id];
 
@@ -869,6 +876,7 @@ describe('InMemoryTaskService', () => {
         throw new Error('not found');
       }
 
+      expect(result.tokensAdded).toBe(-1 * td1.tokensEarned);
       expect(deposit.tokensEarned).toBe(0);
       expect(updatedDeposit.tokensEarned).not.toBe(0);
     });
@@ -890,7 +898,7 @@ describe('InMemoryTaskService', () => {
         date: td1.date.toISO(),
       });
 
-      await svc.updateTaskDeposit(updatedDeposit);
+      const result = await svc.updateTaskDeposit(updatedDeposit);
 
       const deposit = svc.taskDeposits[updatedDeposit.id];
 
@@ -898,6 +906,7 @@ describe('InMemoryTaskService', () => {
         throw new Error('not found');
       }
 
+      expect(result.tokensAdded).toBe(updatedDeposit.conversionRate);
       expect(deposit.tokensEarned).toBe(updatedDeposit.conversionRate);
     });
 
@@ -912,7 +921,7 @@ describe('InMemoryTaskService', () => {
         deposits: [td4],
       });
 
-      await svc.updateTaskDeposit(td4);
+      const result = await svc.updateTaskDeposit(td4);
 
       const deposit = svc.taskDeposits[td4.id];
 
@@ -920,6 +929,7 @@ describe('InMemoryTaskService', () => {
         throw new Error('not found');
       }
 
+      expect(result.tokensAdded).toBe(td4.conversionRate);
       expect(deposit.tokensEarned).toBe(td4.conversionRate);
     });
 
@@ -934,7 +944,7 @@ describe('InMemoryTaskService', () => {
         deposits: [td4],
       });
 
-      await svc.updateTaskDeposit(td4);
+      const result = await svc.updateTaskDeposit(td4);
 
       const deposit = svc.taskDeposits[td4.id];
 
@@ -942,12 +952,14 @@ describe('InMemoryTaskService', () => {
         throw new Error('not found');
       }
 
+      expect(result.tokensAdded).toBe(-79);
       expect(deposit.tokensEarned).toBe(td4.conversionRate);
     });
 
     test('if the updated deposit is on the same date and other deposits exist during that frequency and another deposit has tokens, it sets the tokens earned to 0', async () => {
       const td4 = TaskDeposit.fromJSON({
         ...td1.toJSON(),
+        id: 'td4',
         date: td1.date.plus({ minutes: 1 }).toISO(),
         tokensEarned: 80,
       });
@@ -957,7 +969,7 @@ describe('InMemoryTaskService', () => {
         deposits: [td1, td4],
       });
 
-      await svc.updateTaskDeposit(td4);
+      const result = await svc.updateTaskDeposit(td4);
 
       const deposit = svc.taskDeposits[td4.id];
 
@@ -965,7 +977,8 @@ describe('InMemoryTaskService', () => {
         throw new Error('not found');
       }
 
-      expect(deposit.tokensEarned).toBe(td4.conversionRate);
+      expect(deposit.tokensEarned).toBe(0);
+      expect(result.tokensAdded).toBe(-80);
     });
 
     test('if the updated deposit is on the same date and other deposits exist during that frequency but no other deposits have tokens, it sets the tokens earned to the conversion rate on the earliest deposit', async () => {
@@ -993,7 +1006,9 @@ describe('InMemoryTaskService', () => {
         deposits: [td4, td5, td6],
       });
 
-      await svc.updateTaskDeposit(td5);
+      const result = await svc.updateTaskDeposit(td5);
+
+      expect(result.tokensAdded).toBe(td4.conversionRate);
 
       expect(svc.taskDepositsList.length).toBe(3);
       expect(svc.taskDepositsList[0]?.tokensEarned).toBe(td4.conversionRate);
@@ -1081,7 +1096,8 @@ describe('InMemoryTaskService', () => {
 
       const result = await svc.deleteTaskDeposit(td1.id);
 
-      expect(result).toBe(td1);
+      expect(result.taskDeposit).toBe(td1);
+      expect(result.tokensAdded).toBe(0 - td1.tokensEarned);
       expect(svc.taskDepositsList.length).toBe(2);
 
       const filter = svc.taskDepositsList.filter((d) => d.id === td1.id);
@@ -1130,8 +1146,9 @@ describe('InMemoryTaskService', () => {
       const filterA = svc.taskDepositsList.filter((d) => d.id === td4.id);
       expect(filterA[0]?.tokensEarned).toBe(0);
 
-      await svc.deleteTaskDeposit(td1.id);
+      const result = await svc.deleteTaskDeposit(td1.id);
 
+      expect(result.tokensAdded).toBe(0);
       expect(svc.taskDepositsList.length).toBe(5);
 
       const filterB = svc.taskDepositsList.filter((d) => d.id === td4.id);

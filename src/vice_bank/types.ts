@@ -1,4 +1,5 @@
 import { isString } from '@/src/utils/type_guards';
+import { TaskDeposit } from '@/src/models/vice_bank/task_deposit';
 
 export interface GetPageOptions {
   page?: number;
@@ -60,4 +61,9 @@ export function frequencyFromString(input: string) {
     default:
       throw new Error(`Invalid frequency: ${input}`);
   }
+}
+
+export interface TaskDepositResponse {
+  taskDeposit: TaskDeposit;
+  tokensAdded: number;
 }

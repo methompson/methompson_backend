@@ -5,6 +5,7 @@ import { DateTime } from 'luxon';
 import { TaskService } from './task.service';
 import { Task } from '@/src/models/vice_bank/task';
 import {
+  TaskDepositResponse,
   Frequency,
   GetTaskDepositOptions,
   GetTaskOptions,
@@ -171,7 +172,7 @@ export class InMemoryTaskService implements TaskService {
     return deposits;
   }
 
-  async addTaskDeposit(deposit: TaskDeposit): Promise<TaskDeposit> {
+  async addTaskDeposit(deposit: TaskDeposit): Promise<TaskDepositResponse> {
     const task = this._tasks[deposit.taskId];
 
     if (isNullOrUndefined(task)) {
@@ -192,10 +193,10 @@ export class InMemoryTaskService implements TaskService {
 
     this._taskDeposits[id] = newDeposit;
 
-    return newDeposit;
+    return { taskDeposit: newDeposit, tokensAdded: newDeposit.tokensEarned };
   }
 
-  async updateTaskDeposit(deposit: TaskDeposit): Promise<TaskDeposit> {
+  async updateTaskDeposit(deposit: TaskDeposit): Promise<TaskDepositResponse> {
     const { id } = deposit;
     const existingDeposit = this._taskDeposits[id];
 
@@ -211,6 +212,7 @@ export class InMemoryTaskService implements TaskService {
     const filtered = existingDeposits.filter((d) => d.id !== id);
 
     let depositToUpload = deposit;
+    let tokensAdded = deposit.tokensEarned;
 
     // If the deposit in question is NOT in the list, we have to set the tokens
     // to 0 if it's not already set. This will happen if the date is different.
@@ -219,24 +221,43 @@ export class InMemoryTaskService implements TaskService {
       if (result > 0) depositToUpload = deposit.withTokensEarned(0);
       else depositToUpload = deposit.withTokensEarned(deposit.conversionRate);
 
+      // tokensAdded is set to the earned tokens minus the existing deposit's
+      // tokens. These are the only values changed, so we can set with those values
+      tokensAdded = depositToUpload.tokensEarned - existingDeposit.tokensEarned;
+
+      this._taskDeposits[id] = depositToUpload;
+
       // They are in the list and the only one. We check if tokens earned is 0.
       // and if it is, we set it to the conversion rate. This will happen if a non-
       // token value was updated.
     } else if (existingDeposits.length === 1) {
       depositToUpload = deposit.withTokensEarned(deposit.conversionRate);
+      tokensAdded = depositToUpload.tokensEarned - existingDeposit.tokensEarned;
+
+      this._taskDeposits[id] = depositToUpload;
 
       // For any situation where this task exists with other tasks.
     } else if (existingDeposits.length > 1) {
-      const deposits = this.updateTaskDepositTokens(existingDeposits);
+      const priorTokens = existingDeposits.reduce(
+        (acc, curr) => acc + curr.tokensEarned,
+        0,
+      );
+
+      const deposits = this.updateTaskDepositTokens([...filtered, deposit]);
+
+      const currentTokens = deposits.reduce(
+        (acc, curr) => acc + curr.tokensEarned,
+        0,
+      );
+
+      tokensAdded = currentTokens - priorTokens;
 
       for (const deposit of deposits) {
         this._taskDeposits[deposit.id] = deposit;
       }
     }
 
-    this._taskDeposits[id] = depositToUpload;
-
-    return existingDeposit;
+    return { taskDeposit: existingDeposit, tokensAdded };
   }
 
   updateTaskDepositTokens(deposits: TaskDeposit[]): TaskDeposit[] {
@@ -252,7 +273,7 @@ export class InMemoryTaskService implements TaskService {
     return output;
   }
 
-  async deleteTaskDeposit(depositId: string): Promise<TaskDeposit> {
+  async deleteTaskDeposit(depositId: string): Promise<TaskDepositResponse> {
     const existingDeposit = this._taskDeposits[depositId];
 
     if (isNullOrUndefined(existingDeposit)) {
@@ -269,7 +290,10 @@ export class InMemoryTaskService implements TaskService {
     // If there are no other deposits for this frequency, we can short
     // circuit and return the existing deposit.
     if (existingDeposits.length === 0) {
-      return existingDeposit;
+      return {
+        taskDeposit: existingDeposit,
+        tokensAdded: existingDeposit.tokensEarned * -1,
+      };
     }
 
     // We'll see if there are any tokens earned for the existing deposits
@@ -297,6 +321,6 @@ export class InMemoryTaskService implements TaskService {
       this._taskDeposits[firstDeposit.id] = updatedDeposit;
     }
 
-    return existingDeposit;
+    return { taskDeposit: existingDeposit, tokensAdded: 0 };
   }
 }
