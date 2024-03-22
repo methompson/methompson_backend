@@ -1,10 +1,10 @@
 import { join } from 'path';
 
-import { FileDepositConversionsService } from './action.service.file';
+import { FileActionService } from './action.service.file';
 import { Action, ActionJSON } from '@/src/models/vice_bank/action';
 import { FileServiceWriter } from '@/src/utils/file_service_writer';
 
-const conversionJSON1: ActionJSON = {
+const actionJSON1: ActionJSON = {
   id: 'id1',
   vbUserId: 'userId1',
   name: 'name1',
@@ -13,7 +13,7 @@ const conversionJSON1: ActionJSON = {
   tokensPer: 1,
   minDeposit: 1,
 };
-const conversionJSON2: ActionJSON = {
+const actionJSON2: ActionJSON = {
   id: 'id2',
   vbUserId: 'userId1',
   name: 'name2',
@@ -22,7 +22,7 @@ const conversionJSON2: ActionJSON = {
   tokensPer: 2,
   minDeposit: 2,
 };
-const conversionJSON3: ActionJSON = {
+const actionJSON3: ActionJSON = {
   id: 'id3',
   vbUserId: 'userId3',
   name: 'name3',
@@ -32,9 +32,9 @@ const conversionJSON3: ActionJSON = {
   minDeposit: 3,
 };
 
-const conversion1 = Action.fromJSON(conversionJSON1);
-const conversion2 = Action.fromJSON(conversionJSON2);
-const conversion3 = Action.fromJSON(conversionJSON3);
+const action1 = Action.fromJSON(actionJSON1);
+const action2 = Action.fromJSON(actionJSON2);
+const action3 = Action.fromJSON(actionJSON3);
 
 const testError = 'test error aiorwhsfjldn';
 
@@ -45,54 +45,54 @@ errorSpy.mockImplementation(() => {});
 
 const filePath = 'path/to/file';
 
-describe('FileDepositConversionsService', () => {
-  describe('purchasesString', () => {
+describe('FileActionService', () => {
+  describe('actionsString', () => {
     test('returns a stringified JSON array', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileDepositConversionsService(fsw, filePath, [
-        conversion1,
-        conversion2,
-        conversion3,
+      const service = new FileActionService(fsw, filePath, [
+        action1,
+        action2,
+        action3,
       ]);
 
-      const str = service.depositConversionsString;
+      const str = service.actionsString;
 
       const json = JSON.parse(str);
-      expect(json).toEqual([conversionJSON1, conversionJSON2, conversionJSON3]);
+      expect(json).toEqual([actionJSON1, actionJSON2, actionJSON3]);
     });
 
     test('returns an empty array if there is no data', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileDepositConversionsService(fsw, filePath, []);
+      const service = new FileActionService(fsw, filePath, []);
 
-      const str = service.depositConversionsString;
+      const str = service.actionsString;
 
       const json = JSON.parse(str);
       expect(json).toEqual([]);
     });
   });
 
-  describe('addPurchase', () => {
+  describe('addAction', () => {
     test('adds a users and calls writeToFile', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
-      const service = new FileDepositConversionsService(fsw, filePath);
+      const service = new FileActionService(fsw, filePath);
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
       writeToFileSpy.mockImplementationOnce(async () => {});
 
-      expect(service.depositConversionsList.length).toBe(0);
+      expect(service.actionsList.length).toBe(0);
 
-      await service.addDepositConversion(conversion1);
+      await service.addAction(action1);
 
-      expect(service.depositConversionsList.length).toBe(1);
+      expect(service.actionsList.length).toBe(1);
       expect(writeToFileSpy).toHaveBeenCalledTimes(1);
     });
 
     test('throws an error if writeToFiles throws an error', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileDepositConversionsService(fsw, filePath);
+      const service = new FileActionService(fsw, filePath);
 
       const testErr = 'Test Error';
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
@@ -100,42 +100,36 @@ describe('FileDepositConversionsService', () => {
         throw new Error(testErr);
       });
 
-      await expect(() =>
-        service.addDepositConversion(conversion1),
-      ).rejects.toThrow();
+      await expect(() => service.addAction(action1)).rejects.toThrow();
 
       expect(writeToFileSpy).toHaveBeenCalledTimes(1);
     });
   });
 
-  describe('updatePurchase', () => {
+  describe('updateAction', () => {
     test('updates a user and calls writeToFile', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileDepositConversionsService(fsw, filePath, [
-        conversion1,
-      ]);
+      const service = new FileActionService(fsw, filePath, [action1]);
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
       writeToFileSpy.mockImplementationOnce(async () => {});
 
       const updatedUser = Action.fromJSON({
-        ...conversion1.toJSON(),
+        ...action1.toJSON(),
         name: 'new name',
       });
 
-      await service.updateDepositConversion(updatedUser);
+      await service.updateAction(updatedUser);
 
-      expect(service.depositConversionsList.length).toBe(1);
-      expect(service.depositConversionsList[0]).toBe(updatedUser);
+      expect(service.actionsList.length).toBe(1);
+      expect(service.actionsList[0]).toBe(updatedUser);
       expect(writeToFileSpy).toHaveBeenCalledTimes(1);
     });
 
     test('throws an error if writeToFiles throws an error', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileDepositConversionsService(fsw, filePath, [
-        conversion1,
-      ]);
+      const service = new FileActionService(fsw, filePath, [action1]);
 
       const testErr = 'Test Error';
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
@@ -144,40 +138,34 @@ describe('FileDepositConversionsService', () => {
       });
 
       const updatedUser = Action.fromJSON({
-        ...conversion1.toJSON(),
+        ...action1.toJSON(),
         name: 'new name',
       });
 
-      await expect(() =>
-        service.updateDepositConversion(updatedUser),
-      ).rejects.toThrow();
+      await expect(() => service.updateAction(updatedUser)).rejects.toThrow();
 
       expect(writeToFileSpy).toHaveBeenCalledTimes(1);
     });
   });
 
-  describe('deletePurchase', () => {
+  describe('deleteAction', () => {
     test('deletes a user and calls writeToFile', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileDepositConversionsService(fsw, filePath, [
-        conversion1,
-      ]);
+      const service = new FileActionService(fsw, filePath, [action1]);
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
       writeToFileSpy.mockImplementationOnce(async () => {});
 
-      await service.deleteDepositConversion(conversion1.id);
+      await service.deleteAction(action1.id);
 
-      expect(service.depositConversionsList.length).toBe(0);
+      expect(service.actionsList.length).toBe(0);
       expect(writeToFileSpy).toHaveBeenCalledTimes(1);
     });
 
     test('throws an error if writeToFiles throws an error', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileDepositConversionsService(fsw, filePath, [
-        conversion1,
-      ]);
+      const service = new FileActionService(fsw, filePath, [action1]);
 
       const testErr = 'Test Error';
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
@@ -185,9 +173,7 @@ describe('FileDepositConversionsService', () => {
         throw new Error(testErr);
       });
 
-      await expect(() =>
-        service.deleteDepositConversion(conversion1.id),
-      ).rejects.toThrow();
+      await expect(() => service.deleteAction(action1.id)).rejects.toThrow();
 
       expect(writeToFileSpy).toHaveBeenCalledTimes(1);
     });
@@ -199,11 +185,9 @@ describe('FileDepositConversionsService', () => {
       const wtfSpy = jest.spyOn(fsw, 'writeToFile');
       wtfSpy.mockImplementationOnce(async () => {});
 
-      const svc = new FileDepositConversionsService(fsw, filePath, [
-        conversion1,
-      ]);
+      const svc = new FileActionService(fsw, filePath, [action1]);
 
-      const str = svc.depositConversionsString;
+      const str = svc.actionsString;
 
       await svc.writeToFile();
 
@@ -218,11 +202,9 @@ describe('FileDepositConversionsService', () => {
         throw new Error(testError);
       });
 
-      const svc = new FileDepositConversionsService(fsw, filePath, [
-        conversion1,
-      ]);
+      const svc = new FileActionService(fsw, filePath, [action1]);
 
-      const str = svc.depositConversionsString;
+      const str = svc.actionsString;
 
       await expect(() => svc.writeToFile()).rejects.toThrow(testError);
 
@@ -237,11 +219,9 @@ describe('FileDepositConversionsService', () => {
       const writeBackupSpy = jest.spyOn(fsw, 'writeBackup');
       writeBackupSpy.mockImplementationOnce(async () => {});
 
-      const svc = new FileDepositConversionsService(fsw, filePath, [
-        conversion1,
-      ]);
+      const svc = new FileActionService(fsw, filePath, [action1]);
 
-      const str = svc.depositConversionsString;
+      const str = svc.actionsString;
 
       await svc.backup();
 
@@ -256,23 +236,23 @@ describe('FileDepositConversionsService', () => {
   describe('init', () => {
     const conversionsPath = 'purchase path';
 
-    test('creates a file handle, reads a file, creates blog posts and returns a new FileDepositConversionsService', async () => {
+    test('creates a file handle, reads a file, creates blog posts and returns a new FileActionService', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
       const readFileSpy = jest.spyOn(fsw, 'readFile');
       readFileSpy.mockImplementationOnce(async () =>
-        JSON.stringify([conversionJSON1, conversionJSON2, conversionJSON3]),
+        JSON.stringify([actionJSON1, actionJSON2, actionJSON3]),
       );
 
-      const svc = await FileDepositConversionsService.init(conversionsPath, {
+      const svc = await FileActionService.init(conversionsPath, {
         fileServiceWriter: fsw,
       });
 
-      expect(svc.depositConversionsList.length).toBe(3);
+      expect(svc.actionsList.length).toBe(3);
 
-      expect(JSON.parse(JSON.stringify(svc.depositConversionsList))).toEqual([
-        conversion1.toJSON(),
-        conversion2.toJSON(),
-        conversion3.toJSON(),
+      expect(JSON.parse(JSON.stringify(svc.actionsList))).toEqual([
+        action1.toJSON(),
+        action2.toJSON(),
+        action3.toJSON(),
       ]);
     });
 
@@ -280,14 +260,14 @@ describe('FileDepositConversionsService', () => {
       const fsw = new FileServiceWriter('baseName', 'json');
       const readFileSpy = jest.spyOn(fsw, 'readFile');
       readFileSpy.mockImplementationOnce(async () =>
-        JSON.stringify([conversionJSON1, conversionJSON2, conversionJSON3, {}]),
+        JSON.stringify([actionJSON1, actionJSON2, actionJSON3, {}]),
       );
 
-      const svc = await FileDepositConversionsService.init(conversionsPath, {
+      const svc = await FileActionService.init(conversionsPath, {
         fileServiceWriter: fsw,
       });
 
-      expect((await svc).depositConversionsList.length).toBe(3);
+      expect((await svc).actionsList.length).toBe(3);
     });
 
     test('returns an empty FilePurhcaseService if readFile throws an error', async () => {
@@ -301,14 +281,14 @@ describe('FileDepositConversionsService', () => {
       const cfSpy = jest.spyOn(fsw, 'clearFile');
       cfSpy.mockImplementationOnce(async () => {});
 
-      const svc = await FileDepositConversionsService.init(conversionsPath, {
+      const svc = await FileActionService.init(conversionsPath, {
         fileServiceWriter: fsw,
       });
 
       expect(rfSpy).toHaveBeenCalledTimes(1);
       expect(rfSpy).toHaveBeenCalledWith(conversionsPath);
 
-      expect(svc.depositConversionsList.length).toBe(0);
+      expect(svc.actionsList.length).toBe(0);
 
       expect(wbSpy).toHaveBeenCalledTimes(0);
       expect(cfSpy).toHaveBeenCalledTimes(1);
@@ -325,14 +305,14 @@ describe('FileDepositConversionsService', () => {
       const cfSpy = jest.spyOn(fsw, 'clearFile');
       cfSpy.mockImplementationOnce(async () => {});
 
-      const svc = await FileDepositConversionsService.init(conversionsPath, {
+      const svc = await FileActionService.init(conversionsPath, {
         fileServiceWriter: fsw,
       });
 
       expect(rfSpy).toHaveBeenCalledTimes(1);
       expect(rfSpy).toHaveBeenCalledWith(conversionsPath);
 
-      expect(svc.depositConversionsList.length).toBe(0);
+      expect(svc.actionsList.length).toBe(0);
 
       expect(wbSpy).toHaveBeenCalledTimes(1);
       expect(wbSpy).toHaveBeenCalledWith(conversionsPath, invalidData);

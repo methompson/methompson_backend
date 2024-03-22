@@ -2,7 +2,7 @@ import { Request } from 'express';
 
 import { Action, ActionJSON } from '@/src/models/vice_bank/action';
 import { LoggerService } from '@/src/logger/logger.service';
-import { InMemoryDepositConversionsService } from '@/src/vice_bank/services/action.service.memory';
+import { InMemoryActionService } from '@/src/vice_bank/services/action.service.memory';
 import { ActionController } from './action.controller';
 import { HttpException, HttpStatus } from '@nestjs/common';
 
@@ -38,14 +38,10 @@ const action1 = Action.fromJSON(actionJSON1);
 const action2 = Action.fromJSON(actionJSON2);
 const action3 = Action.fromJSON(actionJSON3);
 
-describe('DepositConversionsController', () => {
-  describe('getDepositConversions', () => {
-    test('gets deposit conversions from the DepositConversionsService', async () => {
-      const service = new InMemoryDepositConversionsService([
-        action1,
-        action2,
-        action3,
-      ]);
+describe('ActionController', () => {
+  describe('getActions', () => {
+    test('gets actions from the ActionsService', async () => {
+      const service = new InMemoryActionService([action1, action2, action3]);
       const loggerService = new LoggerService();
 
       const controller = new ActionController(service, loggerService);
@@ -56,14 +52,14 @@ describe('DepositConversionsController', () => {
         },
       } as unknown as Request;
 
-      const conversions = await controller.getDepositConversions(req);
+      const conversions = await controller.getActions(req);
       expect(conversions).toEqual({
-        depositConversions: [action1, action2],
+        actions: [action1, action2],
       });
     });
 
     test('throws an error if the userId is not a string', async () => {
-      const service = new InMemoryDepositConversionsService();
+      const service = new InMemoryActionService();
       const loggerService = new LoggerService();
 
       const controller = new ActionController(service, loggerService);
@@ -74,7 +70,7 @@ describe('DepositConversionsController', () => {
         },
       } as unknown as Request;
 
-      await expect(controller.getDepositConversions(req1)).rejects.toThrow(
+      await expect(controller.getActions(req1)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
 
@@ -84,13 +80,13 @@ describe('DepositConversionsController', () => {
         },
       } as unknown as Request;
 
-      await expect(controller.getDepositConversions(req2)).rejects.toThrow(
+      await expect(controller.getActions(req2)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
     });
 
-    test('throws an error if getDepositConversions throws an error', async () => {
-      const service = new InMemoryDepositConversionsService();
+    test('throws an error if getActions throws an error', async () => {
+      const service = new InMemoryActionService();
       const loggerService = new LoggerService();
 
       const controller = new ActionController(service, loggerService);
@@ -101,50 +97,48 @@ describe('DepositConversionsController', () => {
         },
       } as unknown as Request;
 
-      jest
-        .spyOn(service, 'getDepositConversions')
-        .mockRejectedValue(new Error('Error'));
+      jest.spyOn(service, 'getActions').mockRejectedValue(new Error('Error'));
 
-      await expect(controller.getDepositConversions(req)).rejects.toThrow(
+      await expect(controller.getActions(req)).rejects.toThrow(
         new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
       );
     });
   });
 
-  describe('addDepositConversion', () => {
-    test('adds a deposit conversion using the DepositConversionsService', async () => {
-      const service = new InMemoryDepositConversionsService();
+  describe('addAction', () => {
+    test('adds a deposit conversion using the ActionsService', async () => {
+      const service = new InMemoryActionService();
       const loggerService = new LoggerService();
 
       const controller = new ActionController(service, loggerService);
 
       const req = {
         body: {
-          depositConversion: actionJSON1,
+          action: actionJSON1,
         },
       } as unknown as Request;
 
-      jest.spyOn(service, 'addDepositConversion').mockResolvedValue(action1);
+      jest.spyOn(service, 'addAction').mockResolvedValue(action1);
 
-      const conversion = await controller.addDepositConversion(req);
-      expect(conversion).toStrictEqual({ depositConversion: action1 });
+      const action = await controller.addAction(req);
+      expect(action).toStrictEqual({ action: action1 });
     });
 
     test('throws an error if the body is not a record', async () => {
-      const service = new InMemoryDepositConversionsService();
+      const service = new InMemoryActionService();
       const loggerService = new LoggerService();
 
       const controller = new ActionController(service, loggerService);
 
       const req = {} as unknown as Request;
 
-      await expect(controller.addDepositConversion(req)).rejects.toThrow(
+      await expect(controller.addAction(req)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
     });
 
     test('throws an error if the body cannot be parsed', async () => {
-      const service = new InMemoryDepositConversionsService();
+      const service = new InMemoryActionService();
       const loggerService = new LoggerService();
 
       const controller = new ActionController(service, loggerService);
@@ -153,73 +147,69 @@ describe('DepositConversionsController', () => {
         body: {},
       } as unknown as Request;
 
-      await expect(controller.addDepositConversion(req)).rejects.toThrow(
+      await expect(controller.addAction(req)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
     });
 
-    test('throws an error if addDepositConversion throws an error', async () => {
-      const service = new InMemoryDepositConversionsService();
+    test('throws an error if addAction throws an error', async () => {
+      const service = new InMemoryActionService();
       const loggerService = new LoggerService();
 
       const controller = new ActionController(service, loggerService);
 
       const req = {
         body: {
-          depositConversion: actionJSON1,
+          action: actionJSON1,
         },
       } as unknown as Request;
 
-      jest
-        .spyOn(service, 'addDepositConversion')
-        .mockRejectedValue(new Error('Error'));
+      jest.spyOn(service, 'addAction').mockRejectedValue(new Error('Error'));
 
-      await expect(controller.addDepositConversion(req)).rejects.toThrow(
+      await expect(controller.addAction(req)).rejects.toThrow(
         new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
       );
     });
   });
 
-  describe('updateDepositConversion', () => {
-    test('updates a deposit conversion using the DepositConversionsService', async () => {
-      const service = new InMemoryDepositConversionsService([action1]);
+  describe('updateAction', () => {
+    test('updates a deposit conversion using the ActionsService', async () => {
+      const service = new InMemoryActionService([action1]);
       const loggerService = new LoggerService();
 
       const controller = new ActionController(service, loggerService);
 
-      const depositConversionUpdate = {
+      const actionUpdate = {
         ...actionJSON1,
         name: 'newName',
       };
 
       const req = {
         body: {
-          depositConversion: depositConversionUpdate,
+          action: actionUpdate,
         },
       } as unknown as Request;
 
-      const result = await controller.updateDepositConversion(req);
-      expect(result).toStrictEqual({ depositConversion: action1 });
-      expect(service.depositConversionsList[0]?.toJSON()).toEqual(
-        depositConversionUpdate,
-      );
+      const result = await controller.updateAction(req);
+      expect(result).toStrictEqual({ action: action1 });
+      expect(service.actionsList[0]?.toJSON()).toEqual(actionUpdate);
     });
 
     test('throws an error if the body is not a record', async () => {
-      const service = new InMemoryDepositConversionsService();
+      const service = new InMemoryActionService();
       const loggerService = new LoggerService();
 
       const controller = new ActionController(service, loggerService);
 
       const req = {} as unknown as Request;
 
-      await expect(controller.updateDepositConversion(req)).rejects.toThrow(
+      await expect(controller.updateAction(req)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
     });
 
     test('throws an error if the body cannot be parsed', async () => {
-      const service = new InMemoryDepositConversionsService();
+      const service = new InMemoryActionService();
       const loggerService = new LoggerService();
 
       const controller = new ActionController(service, loggerService);
@@ -228,95 +218,91 @@ describe('DepositConversionsController', () => {
         body: {},
       } as unknown as Request;
 
-      await expect(controller.updateDepositConversion(req)).rejects.toThrow(
+      await expect(controller.updateAction(req)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
     });
 
-    test('throws an error if updateDepositConversion throws an error', async () => {
-      const service = new InMemoryDepositConversionsService([action1]);
+    test('throws an error if updateAction throws an error', async () => {
+      const service = new InMemoryActionService([action1]);
       const loggerService = new LoggerService();
 
       const controller = new ActionController(service, loggerService);
 
       const req = {
         body: {
-          depositConversion: actionJSON1,
+          action: actionJSON1,
         },
       } as unknown as Request;
 
-      jest
-        .spyOn(service, 'updateDepositConversion')
-        .mockRejectedValue(new Error('Error'));
+      jest.spyOn(service, 'updateAction').mockRejectedValue(new Error('Error'));
 
-      await expect(controller.updateDepositConversion(req)).rejects.toThrow(
+      await expect(controller.updateAction(req)).rejects.toThrow(
         new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
       );
     });
   });
 
-  describe('deleteDepositConversion', () => {
-    test('deletes a deposit conversion using the DepositConversionsService', async () => {
-      const service = new InMemoryDepositConversionsService([action1]);
+  describe('deleteAction', () => {
+    test('deletes a deposit conversion using the ActionsService', async () => {
+      const service = new InMemoryActionService([action1]);
       const loggerService = new LoggerService();
 
       const controller = new ActionController(service, loggerService);
 
       const req = {
         body: {
-          depositConversionId: action1.id,
+          actionId: action1.id,
         },
       } as unknown as Request;
 
-      const result = await controller.deleteDepositConversion(req);
-      expect(result).toStrictEqual({ depositConversion: action1 });
-      expect(service.depositConversionsList.length).toBe(0);
+      const result = await controller.deleteAction(req);
+      expect(result).toStrictEqual({ action: action1 });
+      expect(service.actionsList.length).toBe(0);
     });
 
     test('throws an error if the userId is not a string', async () => {
-      const service = new InMemoryDepositConversionsService();
+      const service = new InMemoryActionService();
       const loggerService = new LoggerService();
 
       const controller = new ActionController(service, loggerService);
 
       const req1 = {
         body: {
-          depositConversionId: 1,
+          actionId: 1,
         },
       } as unknown as Request;
 
-      await expect(controller.deleteDepositConversion(req1)).rejects.toThrow(
+      await expect(controller.deleteAction(req1)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
 
       const req2 = {
         body: {
-          depositConversionId: true,
+          actionId: true,
         },
       } as unknown as Request;
 
-      await expect(controller.deleteDepositConversion(req2)).rejects.toThrow(
+      await expect(controller.deleteAction(req2)).rejects.toThrow(
         new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
       );
     });
 
-    test('throws an error if deleteDepositConversion throws an error', async () => {
-      const service = new InMemoryDepositConversionsService([action1]);
+    test('throws an error if deleteAction throws an error', async () => {
+      const service = new InMemoryActionService([action1]);
       const loggerService = new LoggerService();
 
       const controller = new ActionController(service, loggerService);
 
       const req = {
         body: {
-          depositConversionId: action1.id,
+          actionId: action1.id,
         },
       } as unknown as Request;
 
-      jest
-        .spyOn(service, 'deleteDepositConversion')
-        .mockRejectedValue(new Error('Error'));
+      jest.spyOn(service, 'deleteAction').mockRejectedValue(new Error('Error'));
 
-      await expect(controller.deleteDepositConversion(req)).rejects.toThrow(
+      await expect(controller.deleteAction(req)).rejects.toThrow(
         new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
       );
     });

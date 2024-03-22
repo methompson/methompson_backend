@@ -3,37 +3,34 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Action } from '@/src/models/vice_bank/action';
 import { GetPageAndUserOptions } from '@/src/vice_bank/types';
-import { DepositConversionsService } from './action.service';
+import { ActionService } from './action.service';
 import { isNullOrUndefined } from '@/src/utils/type_guards';
 
-// Using this to get around prettier formatting the really long line below
-type DCS = DepositConversionsService;
-
 @Injectable()
-export class InMemoryDepositConversionsService implements DCS {
+export class InMemoryActionService implements ActionService {
   // Key is the ID
-  protected _depositConversions: Record<string, Action> = {};
+  protected _actions: Record<string, Action> = {};
 
-  constructor(depositConversions?: Action[]) {
-    if (depositConversions) {
-      for (const conversion of depositConversions) {
-        this._depositConversions[conversion.id] = conversion;
+  constructor(actions?: Action[]) {
+    if (actions) {
+      for (const conversion of actions) {
+        this._actions[conversion.id] = conversion;
       }
     }
   }
 
-  get depositConversions(): Record<string, Action> {
-    return { ...this._depositConversions };
+  get actions(): Record<string, Action> {
+    return { ...this._actions };
   }
 
-  get depositConversionsList(): Action[] {
-    const list = Object.values(this._depositConversions);
+  get actionsList(): Action[] {
+    const list = Object.values(this._actions);
     list.sort((a, b) => a.name.localeCompare(b.name));
 
     return list;
   }
 
-  async getDepositConversions(input: GetPageAndUserOptions): Promise<Action[]> {
+  async getActions(input: GetPageAndUserOptions): Promise<Action[]> {
     const page = input?.page ?? 1;
     const pagination = input?.pagination ?? 10;
 
@@ -42,47 +39,45 @@ export class InMemoryDepositConversionsService implements DCS {
 
     const { userId } = input;
 
-    const list = this.depositConversionsList
+    const list = this.actionsList
       .filter((p) => p.vbUserId === userId)
       .slice(skip, end);
 
     return list;
   }
 
-  async addDepositConversion(depositConversion: Action): Promise<Action> {
+  async addAction(action: Action): Promise<Action> {
     const id = uuidv4();
 
-    const newDeposit = Action.fromNewAction(id, depositConversion);
-    this._depositConversions[id] = newDeposit;
+    const newAction = Action.fromNewAction(id, action);
+    this._actions[id] = newAction;
 
-    return newDeposit;
+    return newAction;
   }
 
-  async updateDepositConversion(depositConversion: Action): Promise<Action> {
-    const { id } = depositConversion;
+  async updateAction(action: Action): Promise<Action> {
+    const { id } = action;
 
-    const existingDeposit = this._depositConversions[id];
+    const existingAction = this._actions[id];
 
-    if (isNullOrUndefined(existingDeposit)) {
-      throw new Error(`Deposit Conversion with ID ${id} not found`);
+    if (isNullOrUndefined(existingAction)) {
+      throw new Error(`Action with ID ${id} not found`);
     }
 
-    this._depositConversions[id] = depositConversion;
+    this._actions[id] = action;
 
-    return existingDeposit;
+    return existingAction;
   }
 
-  async deleteDepositConversion(depositConversionId: string): Promise<Action> {
-    const depositConversion = this._depositConversions[depositConversionId];
+  async deleteAction(actionId: string): Promise<Action> {
+    const action = this._actions[actionId];
 
-    if (isNullOrUndefined(depositConversion)) {
-      throw new Error(
-        `Deposit Conversion with ID ${depositConversionId} not found`,
-      );
+    if (isNullOrUndefined(action)) {
+      throw new Error(`Action with ID ${actionId} not found`);
     }
 
-    delete this._depositConversions[depositConversionId];
+    delete this._actions[actionId];
 
-    return depositConversion;
+    return action;
   }
 }

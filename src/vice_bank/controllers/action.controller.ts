@@ -10,40 +10,38 @@ import { Request } from 'express';
 
 import { RequestLogInterceptor } from '@/src/middleware/request_log.interceptor';
 import { LoggerService } from '@/src/logger/logger.service';
-import { DepositConversionsService } from '@/src/vice_bank/services/action.service';
+import { ActionService } from '@/src/vice_bank/services/action.service';
 import { Action } from '@/src/models/vice_bank/action';
 import { InvalidInputError } from '@/src/errors';
 import { pageAndPagination } from '@/src/utils/page_and_pagination';
 import { isRecord, isString } from '@/src/utils/type_guards';
 import { commonErrorHandler } from '@/src/utils/common_error_handler';
 
-interface GetDepositConversionsResponse {
-  depositConversions: Action[];
+interface GetActionResponse {
+  actions: Action[];
 }
-interface AddDepositConversionResponse {
-  depositConversion: Action;
+interface AddActionResponse {
+  action: Action;
 }
-interface UpdateDepositConversionResponse {
-  depositConversion: Action;
+interface UpdateActionResponse {
+  action: Action;
 }
-interface DeleteDepositConversionResponse {
-  depositConversion: Action;
+interface DeleteActionResponse {
+  action: Action;
 }
 
 @UseInterceptors(RequestLogInterceptor)
 @Controller({ path: 'api/vice_bank' })
 export class ActionController {
   constructor(
-    @Inject('DEPOSIT_CONVERSIONS_SERVICE')
-    private readonly depositConversionsService: DepositConversionsService,
+    @Inject('ACTION_SERVICE')
+    private readonly actionService: ActionService,
     @Inject('LOGGER_SERVICE')
     private readonly loggerService: LoggerService,
   ) {}
 
-  @Get('depositConversions')
-  async getDepositConversions(
-    @Req() request: Request,
-  ): Promise<GetDepositConversionsResponse> {
+  @Get('actions')
+  async getActions(@Req() request: Request): Promise<GetActionResponse> {
     const { page, pagination } = pageAndPagination(request);
 
     const userId = request.query?.userId;
@@ -53,23 +51,20 @@ export class ActionController {
         throw new InvalidInputError('Invalid User Id');
       }
 
-      const depositConversions =
-        await this.depositConversionsService.getDepositConversions({
-          page,
-          pagination,
-          userId,
-        });
+      const actions = await this.actionService.getActions({
+        page,
+        pagination,
+        userId,
+      });
 
-      return { depositConversions };
+      return { actions };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
   }
 
-  @Post('addDepositConversion')
-  async addDepositConversion(
-    @Req() request: Request,
-  ): Promise<AddDepositConversionResponse> {
+  @Post('addAction')
+  async addAction(@Req() request: Request): Promise<AddActionResponse> {
     try {
       const { body } = request;
 
@@ -77,22 +72,18 @@ export class ActionController {
         throw new InvalidInputError('Invalid Deposit Conversion Input');
       }
 
-      const depositConversion = Action.fromJSON(body.depositConversion);
+      const action = Action.fromJSON(body.action);
 
-      const res = await this.depositConversionsService.addDepositConversion(
-        depositConversion,
-      );
+      const res = await this.actionService.addAction(action);
 
-      return { depositConversion: res };
+      return { action: res };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
   }
 
-  @Post('updateDepositConversion')
-  async updateDepositConversion(
-    @Req() request: Request,
-  ): Promise<UpdateDepositConversionResponse> {
+  @Post('updateAction')
+  async updateAction(@Req() request: Request): Promise<UpdateActionResponse> {
     try {
       const { body } = request;
 
@@ -100,34 +91,28 @@ export class ActionController {
         throw new InvalidInputError('Invalid Deposit Conversion Input');
       }
 
-      const depositConversion = Action.fromJSON(body.depositConversion);
+      const action = Action.fromJSON(body.action);
 
-      const res = await this.depositConversionsService.updateDepositConversion(
-        depositConversion,
-      );
+      const res = await this.actionService.updateAction(action);
 
-      return { depositConversion: res };
+      return { action: res };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
   }
 
-  @Post('deleteDepositConversion')
-  async deleteDepositConversion(
-    @Req() request: Request,
-  ): Promise<DeleteDepositConversionResponse> {
+  @Post('deleteAction')
+  async deleteAction(@Req() request: Request): Promise<DeleteActionResponse> {
     try {
       const { body } = request;
 
-      if (!isRecord(body) || !isString(body.depositConversionId)) {
+      if (!isRecord(body) || !isString(body.actionId)) {
         throw new InvalidInputError('Invalid Deposit Conversion Input');
       }
 
-      const res = await this.depositConversionsService.deleteDepositConversion(
-        body.depositConversionId,
-      );
+      const res = await this.actionService.deleteAction(body.actionId);
 
-      return { depositConversion: res };
+      return { action: res };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
