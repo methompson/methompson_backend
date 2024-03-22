@@ -3,7 +3,7 @@ import * as uuid from 'uuid';
 import {
   DepositConversion,
   DepositConversionJSON,
-} from '@/src/models/vice_bank/deposit_conversion';
+} from '@/src/models/vice_bank/action';
 import { InMemoryDepositConversionsService } from './deposit_conversions.service.memory';
 import { isNullOrUndefined } from '@/src/utils/type_guards';
 

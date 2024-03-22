@@ -11,7 +11,7 @@ import { Request } from 'express';
 import { RequestLogInterceptor } from '@/src/middleware/request_log.interceptor';
 import { LoggerService } from '@/src/logger/logger.service';
 import { DepositConversionsService } from '@/src/vice_bank/services/deposit_conversions.service';
-import { DepositConversion } from '@/src/models/vice_bank/deposit_conversion';
+import { DepositConversion } from '@/src/models/vice_bank/action';
 import { InvalidInputError } from '@/src/errors';
 import { pageAndPagination } from '@/src/utils/page_and_pagination';
 import { isRecord, isString } from '@/src/utils/type_guards';

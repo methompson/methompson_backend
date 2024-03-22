@@ -1,4 +1,4 @@
-import { DepositConversion, DepositConversionJSON } from './deposit_conversion';
+import { DepositConversion, DepositConversionJSON } from './action';
 
 describe('DepositConversion', () => {
   const validInput: DepositConversionJSON = {

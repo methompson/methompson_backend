@@ -2,7 +2,7 @@ import { join } from 'path';
 import { Injectable } from '@nestjs/common';
 
 import { InMemoryDepositConversionsService } from '@/src/vice_bank/services/deposit_conversions.service.memory';
-import { DepositConversion } from '@/src/models/vice_bank/deposit_conversion';
+import { DepositConversion } from '@/src/models/vice_bank/action';
 import { FileServiceWriter } from '@/src/utils/file_service_writer';
 
 const BASE_NAME = 'deposit_conversions_data';

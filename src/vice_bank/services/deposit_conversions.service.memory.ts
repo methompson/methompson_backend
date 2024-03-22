@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 
-import { DepositConversion } from '@/src/models/vice_bank/deposit_conversion';
+import { DepositConversion } from '@/src/models/vice_bank/action';
 import { GetPageAndUserOptions } from '@/src/vice_bank/types';
 import { DepositConversionsService } from './deposit_conversions.service';
 import { isNullOrUndefined } from '@/src/utils/type_guards';

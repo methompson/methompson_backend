@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { DepositConversion } from '@/src/models/vice_bank/deposit_conversion';
+import { DepositConversion } from '@/src/models/vice_bank/action';
 import { GetPageAndUserOptions } from '@/src/vice_bank/types';
 
 @Injectable()

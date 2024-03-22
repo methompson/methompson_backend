@@ -4,7 +4,7 @@ import { FileDepositConversionsService } from './deposit_conversions.service.fil
 import {
   DepositConversion,
   DepositConversionJSON,
-} from '@/src/models/vice_bank/deposit_conversion';
+} from '@/src/models/vice_bank/action';
 import { FileServiceWriter } from '@/src/utils/file_service_writer';
 
 const conversionJSON1: DepositConversionJSON = {

@@ -3,7 +3,7 @@ import { Request } from 'express';
 import {
   DepositConversion,
   DepositConversionJSON,
-} from '@/src/models/vice_bank/deposit_conversion';
+} from '@/src/models/vice_bank/action';
 import { LoggerService } from '@/src/logger/logger.service';
 import { InMemoryDepositConversionsService } from '@/src/vice_bank/services/deposit_conversions.service.memory';
 import { DepositConversionsController } from './deposit_conversions.controller';
