@@ -88,7 +88,7 @@ describe('FileTaskService', () => {
       const fsw = new FileServiceWriter('baseName', 'json');
       const service = new FileTaskService(fsw, 'path', {
         tasks: [task1, task2, task3],
-        deposits: [td1, td2, td3],
+        taskDeposits: [td1, td2, td3],
       });
 
       const data = service.taskString;
@@ -148,7 +148,7 @@ describe('FileTaskService', () => {
 
       const service = new FileTaskService(fsw, 'path', {
         tasks: [task1, task2, task3],
-        deposits: [td1, td2, td3],
+        taskDeposits: [td1, td2, td3],
       });
 
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
@@ -171,7 +171,7 @@ describe('FileTaskService', () => {
 
       const service = new FileTaskService(fsw, 'path', {
         tasks: [task1, task2, task3],
-        deposits: [td1, td2, td3],
+        taskDeposits: [td1, td2, td3],
       });
 
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
@@ -191,7 +191,7 @@ describe('FileTaskService', () => {
 
       const service = new FileTaskService(fsw, 'path', {
         tasks: [task1, task2, task3],
-        deposits: [td1, td2, td3],
+        taskDeposits: [td1, td2, td3],
       });
 
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
@@ -210,7 +210,7 @@ describe('FileTaskService', () => {
 
       const service = new FileTaskService(fsw, 'path', {
         tasks: [task1, task2, task3],
-        deposits: [td1, td2, td3],
+        taskDeposits: [td1, td2, td3],
       });
 
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
@@ -248,7 +248,7 @@ describe('FileTaskService', () => {
 
       const service = new FileTaskService(fsw, 'path', {
         tasks: [task1, task2, task3],
-        deposits: [td1, td2, td3],
+        taskDeposits: [td1, td2, td3],
       });
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
       writeToFileSpy.mockImplementationOnce(async () => {
@@ -267,7 +267,7 @@ describe('FileTaskService', () => {
 
       const service = new FileTaskService(fsw, 'path', {
         tasks: [task1, task2, task3],
-        deposits: [td1],
+        taskDeposits: [td1],
       });
 
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
@@ -293,7 +293,7 @@ describe('FileTaskService', () => {
 
       const service = new FileTaskService(fsw, 'path', {
         tasks: [task1, task2, task3],
-        deposits: [td1, td2, td3],
+        taskDeposits: [td1, td2, td3],
       });
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
       writeToFileSpy.mockImplementationOnce(async () => {
@@ -312,7 +312,7 @@ describe('FileTaskService', () => {
 
       const service = new FileTaskService(fsw, 'path', {
         tasks: [task1, task2, task3],
-        deposits: [td1, td2, td3],
+        taskDeposits: [td1, td2, td3],
       });
 
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
@@ -331,7 +331,7 @@ describe('FileTaskService', () => {
 
       const service = new FileTaskService(fsw, 'path', {
         tasks: [task1, task2, task3],
-        deposits: [td1, td2, td3],
+        taskDeposits: [td1, td2, td3],
       });
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
       writeToFileSpy.mockImplementationOnce(async () => {
@@ -354,7 +354,7 @@ describe('FileTaskService', () => {
 
       const svc = new FileTaskService(fsw, 'path', {
         tasks: [task1, task2, task3],
-        deposits: [td1, td2, td3],
+        taskDeposits: [td1, td2, td3],
       });
 
       const str = svc.taskString;
@@ -374,7 +374,7 @@ describe('FileTaskService', () => {
 
       const svc = new FileTaskService(fsw, 'path', {
         tasks: [task1, task2, task3],
-        deposits: [td1, td2, td3],
+        taskDeposits: [td1, td2, td3],
       });
 
       await expect(() => svc.writeToFile()).rejects.toThrow(testError);

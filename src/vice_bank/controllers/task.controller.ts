@@ -338,8 +338,7 @@ export class TaskController {
       }
 
       // Tokens earned will be negative if we are deleting any deposits that have tokens
-      const currentTokens =
-        user.currentTokens + result.taskDeposit.tokensEarned;
+      const currentTokens = user.currentTokens + result.tokensAdded;
       const userToUpdate = user.copyWith({ currentTokens });
 
       await this.viceBankUserService.updateViceBankUser(userToUpdate);

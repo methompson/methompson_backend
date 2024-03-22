@@ -20,12 +20,12 @@ export class InMemoryTaskService implements TaskService {
 
   protected _taskDeposits: Record<string, TaskDeposit> = {};
 
-  constructor(options?: { tasks?: Task[]; deposits?: TaskDeposit[] }) {
+  constructor(options?: { tasks?: Task[]; taskDeposits?: TaskDeposit[] }) {
     if (!isRecord(options)) {
       return;
     }
 
-    const { tasks, deposits } = options;
+    const { tasks, taskDeposits } = options;
 
     if (tasks) {
       for (const task of tasks) {
@@ -33,8 +33,8 @@ export class InMemoryTaskService implements TaskService {
       }
     }
 
-    if (deposits) {
-      for (const i of deposits) {
+    if (taskDeposits) {
+      for (const i of taskDeposits) {
         this._taskDeposits[i.id] = i;
       }
     }

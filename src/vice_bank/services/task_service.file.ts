@@ -16,7 +16,7 @@ export class FileTaskService extends InMemoryTaskService {
   constructor(
     protected readonly fileServiceWriter: FileServiceWriter,
     protected readonly viceBankPath: string,
-    options?: { tasks?: Task[]; deposits?: TaskDeposit[] },
+    options?: { tasks?: Task[]; taskDeposits?: TaskDeposit[] },
   ) {
     super(options);
   }
@@ -95,7 +95,7 @@ export class FileTaskService extends InMemoryTaskService {
     let rawData = '';
 
     const tasks: Task[] = [];
-    const deposits: TaskDeposit[] = [];
+    const taskDeposits: TaskDeposit[] = [];
 
     try {
       rawData = await fileServiceWriter.readFile(viceBankPath);
@@ -119,7 +119,7 @@ export class FileTaskService extends InMemoryTaskService {
       if (Array.isArray(json.taskDeposits)) {
         for (const val of json.taskDeposits) {
           try {
-            deposits.push(TaskDeposit.fromJSON(val));
+            taskDeposits.push(TaskDeposit.fromJSON(val));
           } catch (e) {
             console.error('Invalid BlogPost: ', val, e);
           }
@@ -142,7 +142,7 @@ export class FileTaskService extends InMemoryTaskService {
 
     return new FileTaskService(fileServiceWriter, viceBankPath, {
       tasks,
-      deposits,
+      taskDeposits,
     });
   }
 }

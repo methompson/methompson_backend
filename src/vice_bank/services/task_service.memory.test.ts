@@ -139,7 +139,7 @@ describe('InMemoryTaskService', () => {
 
   describe('taskDeposits', () => {
     test('returns a copy of the deposits', () => {
-      const svc = new InMemoryTaskService({ deposits: [td1, td2, td3] });
+      const svc = new InMemoryTaskService({ taskDeposits: [td1, td2, td3] });
 
       const deposits = svc.taskDeposits;
 
@@ -155,7 +155,7 @@ describe('InMemoryTaskService', () => {
     });
 
     test('revising the Deposits object does not revise the stored version', () => {
-      const svc = new InMemoryTaskService({ deposits: [td1, td2, td3] });
+      const svc = new InMemoryTaskService({ taskDeposits: [td1, td2, td3] });
 
       const deposits = svc.taskDeposits;
       delete deposits.id1;
@@ -167,7 +167,7 @@ describe('InMemoryTaskService', () => {
 
   describe('taskDepositsList', () => {
     test('returns an array of Deposits sorted by date', () => {
-      const svc = new InMemoryTaskService({ deposits: [td1, td2, td3] });
+      const svc = new InMemoryTaskService({ taskDeposits: [td1, td2, td3] });
 
       const deposits = svc.taskDepositsList;
 
@@ -181,7 +181,7 @@ describe('InMemoryTaskService', () => {
     });
 
     test('revising the DepositsList array does not revise the stored version', () => {
-      const svc = new InMemoryTaskService({ deposits: [td1, td2, td3] });
+      const svc = new InMemoryTaskService({ taskDeposits: [td1, td2, td3] });
 
       const deposits = svc.taskDepositsList;
       deposits.pop();
@@ -368,7 +368,7 @@ describe('InMemoryTaskService', () => {
 
   describe('getTaskDeposits', () => {
     test('returns an array of Deposits', async () => {
-      const svc = new InMemoryTaskService({ deposits: [td1, td2, td3] });
+      const svc = new InMemoryTaskService({ taskDeposits: [td1, td2, td3] });
 
       const result1 = await svc.getTaskDeposits({ userId: 'vbUserId1' });
 
@@ -405,7 +405,7 @@ describe('InMemoryTaskService', () => {
       }
 
       const svc = new InMemoryTaskService({
-        deposits: [td1, td2, td3, ...deposits],
+        taskDeposits: [td1, td2, td3, ...deposits],
       });
 
       const deposit4 = deposits[0];
@@ -460,7 +460,7 @@ describe('InMemoryTaskService', () => {
       }
 
       const svc = new InMemoryTaskService({
-        deposits: [td1, td2, td3, ...deposits],
+        taskDeposits: [td1, td2, td3, ...deposits],
       });
 
       const deposit7 = deposits[3];
@@ -513,7 +513,7 @@ describe('InMemoryTaskService', () => {
       }
 
       const svc = new InMemoryTaskService({
-        deposits: [td1, td2, td3, ...deposits],
+        taskDeposits: [td1, td2, td3, ...deposits],
       });
 
       const result = await svc.getTaskDeposits({
@@ -558,7 +558,7 @@ describe('InMemoryTaskService', () => {
       }
 
       const svc = new InMemoryTaskService({
-        deposits: [td1, td2, td3, ...deposits],
+        taskDeposits: [td1, td2, td3, ...deposits],
       });
 
       const deposit4 = deposits[0];
@@ -608,7 +608,7 @@ describe('InMemoryTaskService', () => {
     });
 
     test('returns no values if the start and end dates are the same', async () => {
-      const svc = new InMemoryTaskService({ deposits: [td1, td2, td3] });
+      const svc = new InMemoryTaskService({ taskDeposits: [td1, td2, td3] });
 
       const result = await svc.getTaskDeposits({
         userId: 'vbUserId1',
@@ -620,7 +620,7 @@ describe('InMemoryTaskService', () => {
     });
 
     test('returns a value if the start and end dates are the same', async () => {
-      const svc = new InMemoryTaskService({ deposits: [td1, td2, td3] });
+      const svc = new InMemoryTaskService({ taskDeposits: [td1, td2, td3] });
 
       const result = await svc.getTaskDeposits({
         userId: 'vbUserId1',
@@ -632,7 +632,9 @@ describe('InMemoryTaskService', () => {
     });
 
     test('dates are ignored if they are invalid', async () => {
-      const service = new InMemoryTaskService({ deposits: [td1, td2, td3] });
+      const service = new InMemoryTaskService({
+        taskDeposits: [td1, td2, td3],
+      });
 
       const result1 = await service.getTaskDeposits({
         userId: 'vbUserId1',
@@ -650,7 +652,9 @@ describe('InMemoryTaskService', () => {
     });
 
     test('A good date and a bad date returns the good date', async () => {
-      const service = new InMemoryTaskService({ deposits: [td1, td2, td3] });
+      const service = new InMemoryTaskService({
+        taskDeposits: [td1, td2, td3],
+      });
 
       // TODO Timezone issue. Resolve by setting the TZ in the DateTime objects
 
@@ -703,7 +707,7 @@ describe('InMemoryTaskService', () => {
       });
 
       const svc = new InMemoryTaskService({
-        deposits: [deposit1, deposit2, deposit3, deposit4],
+        taskDeposits: [deposit1, deposit2, deposit3, deposit4],
       });
 
       const result = await svc.getDepositsForFrequency(td1, Frequency.Weekly);
@@ -734,7 +738,7 @@ describe('InMemoryTaskService', () => {
       });
 
       const svc = new InMemoryTaskService({
-        deposits: [deposit1, deposit2, deposit3, deposit4],
+        taskDeposits: [deposit1, deposit2, deposit3, deposit4],
       });
 
       const result = await svc.getDepositsForFrequency(td1, Frequency.Monthly);
@@ -749,7 +753,7 @@ describe('InMemoryTaskService', () => {
       const deposit4 = TaskDeposit.fromJSON({ ...td1JSON, id: 'nid4' });
 
       const svc = new InMemoryTaskService({
-        deposits: [deposit1, deposit2, deposit3, deposit4, td2],
+        taskDeposits: [deposit1, deposit2, deposit3, deposit4, td2],
       });
 
       const result = await svc.getDepositsForFrequency(td1, Frequency.Daily);
@@ -779,7 +783,7 @@ describe('InMemoryTaskService', () => {
     test('Sets the deposit tokens earned to 0 if another deposit exists during frequency period', async () => {
       const svc = new InMemoryTaskService({
         tasks: [task1, task2],
-        deposits: [td1],
+        taskDeposits: [td1],
       });
 
       const newId = 'newId';
@@ -813,7 +817,7 @@ describe('InMemoryTaskService', () => {
     test('updates an existing deposit and returns the old value', async () => {
       const svc = new InMemoryTaskService({
         tasks: [task1],
-        deposits: [td1],
+        taskDeposits: [td1],
       });
 
       expect(svc.taskDepositsList.length).toBe(1);
@@ -842,7 +846,7 @@ describe('InMemoryTaskService', () => {
     test('throws an error if the deposit does not exist', async () => {
       const svc = new InMemoryTaskService({
         tasks: [task1],
-        deposits: [],
+        taskDeposits: [],
       });
 
       expect(svc.taskDepositsList.length).toBe(0);
@@ -860,7 +864,7 @@ describe('InMemoryTaskService', () => {
     test('if the updated deposit is on a different date and other deposits exist during that frequency, it sets the tokens earned to 0', async () => {
       const svc = new InMemoryTaskService({
         tasks: [task1],
-        deposits: [td1, td2],
+        taskDeposits: [td1, td2],
       });
 
       const updatedDeposit = TaskDeposit.fromJSON({
@@ -890,7 +894,7 @@ describe('InMemoryTaskService', () => {
 
       const svc = new InMemoryTaskService({
         tasks: [task1],
-        deposits: [td4, td2],
+        taskDeposits: [td4, td2],
       });
 
       const updatedDeposit = TaskDeposit.fromJSON({
@@ -918,7 +922,7 @@ describe('InMemoryTaskService', () => {
 
       const svc = new InMemoryTaskService({
         tasks: [task1],
-        deposits: [td4],
+        taskDeposits: [td4],
       });
 
       const result = await svc.updateTaskDeposit(td4);
@@ -941,7 +945,7 @@ describe('InMemoryTaskService', () => {
 
       const svc = new InMemoryTaskService({
         tasks: [task1],
-        deposits: [td4],
+        taskDeposits: [td4],
       });
 
       const result = await svc.updateTaskDeposit(td4);
@@ -966,7 +970,7 @@ describe('InMemoryTaskService', () => {
 
       const svc = new InMemoryTaskService({
         tasks: [task1],
-        deposits: [td1, td4],
+        taskDeposits: [td1, td4],
       });
 
       const result = await svc.updateTaskDeposit(td4);
@@ -1003,7 +1007,7 @@ describe('InMemoryTaskService', () => {
 
       const svc = new InMemoryTaskService({
         tasks: [task1],
-        deposits: [td4, td5, td6],
+        taskDeposits: [td4, td5, td6],
       });
 
       const result = await svc.updateTaskDeposit(td5);
@@ -1089,7 +1093,7 @@ describe('InMemoryTaskService', () => {
     test('deletes an existing deposit', async () => {
       const svc = new InMemoryTaskService({
         tasks: [task1],
-        deposits: [td1, td2, td3],
+        taskDeposits: [td1, td2, td3],
       });
 
       expect(svc.taskDepositsList.length).toBe(3);
@@ -1108,7 +1112,7 @@ describe('InMemoryTaskService', () => {
     test('throws an error if the deposit does not exist', async () => {
       const svc = new InMemoryTaskService({
         tasks: [task1],
-        deposits: [td2, td3],
+        taskDeposits: [td2, td3],
       });
 
       await expect(() => svc.deleteTaskDeposit(td1.id)).rejects.toThrow(
@@ -1138,7 +1142,7 @@ describe('InMemoryTaskService', () => {
 
       const svc = new InMemoryTaskService({
         tasks: [task1],
-        deposits: [td1, td2, td3, td4, td5, td6],
+        taskDeposits: [td1, td2, td3, td4, td5, td6],
       });
 
       expect(svc.taskDepositsList.length).toBe(6);
