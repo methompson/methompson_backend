@@ -218,7 +218,30 @@ describe('TaskController', () => {
   });
 
   describe('addTask', () => {
-    test('adds a task to the TaskService', async () => {});
+    test('adds a task to the TaskService', async () => {
+      const logger = new LoggerService();
+
+      const tsvc = new InMemoryTaskService();
+      const controller = new TaskController(tsvc, vbService, logger);
+      const authModel = new NoAuthModel();
+      jest.spyOn(authModel, 'userId', 'get').mockReturnValue('userId');
+
+      const request = {
+        authModel,
+        body: {
+          task: task1JSON,
+        },
+      } as unknown as METIncomingMessage;
+
+      const addSpy = jest.spyOn(tsvc, 'addTask');
+      addSpy.mockResolvedValueOnce(task1);
+
+      const result = await controller.addTask(request);
+
+      expect(result.task).toEqual(task1);
+
+      expect(addSpy).toHaveBeenCalledTimes(1);
+    });
 
     test('throws an error if the body is invalid', async () => {
       const logger = new LoggerService();
@@ -293,7 +316,30 @@ describe('TaskController', () => {
   });
 
   describe('updateTask', () => {
-    test('updates a task with the TaskService', async () => {});
+    test('updates a task with the TaskService', async () => {
+      const logger = new LoggerService();
+
+      const tsvc = new InMemoryTaskService();
+      const controller = new TaskController(tsvc, vbService, logger);
+      const authModel = new NoAuthModel();
+      jest.spyOn(authModel, 'userId', 'get').mockReturnValue('userId');
+
+      const request = {
+        authModel,
+        body: {
+          task: task1JSON,
+        },
+      } as unknown as METIncomingMessage;
+
+      const upSpy = jest.spyOn(tsvc, 'updateTask');
+      upSpy.mockResolvedValueOnce(task1);
+
+      const result = await controller.updateTask(request);
+
+      expect(result.task).toEqual(task1);
+
+      expect(upSpy).toHaveBeenCalledTimes(1);
+    });
 
     test('throws an error if the body is invalid', async () => {
       const logger = new LoggerService();
@@ -368,7 +414,31 @@ describe('TaskController', () => {
   });
 
   describe('deleteTask', () => {
-    test('deletes a task with the TaskService', async () => {});
+    test('deletes a task with the TaskService', async () => {
+      const logger = new LoggerService();
+
+      const tsvc = new InMemoryTaskService();
+      const controller = new TaskController(tsvc, vbService, logger);
+      const authModel = new NoAuthModel();
+      jest.spyOn(authModel, 'userId', 'get').mockReturnValue('userId');
+
+      const request = {
+        authModel,
+        body: {
+          taskId: task1.id,
+        },
+      } as unknown as METIncomingMessage;
+
+      const delSpy = jest.spyOn(tsvc, 'deleteTask');
+      delSpy.mockResolvedValueOnce(task1);
+
+      const result = await controller.deleteTask(request);
+
+      expect(result.task).toEqual(task1);
+
+      expect(delSpy).toHaveBeenCalledTimes(1);
+      expect(delSpy).toHaveBeenCalledWith(task1.id);
+    });
 
     test('throws an error if the body is invalid', async () => {
       const logger = new LoggerService();
@@ -443,13 +513,40 @@ describe('TaskController', () => {
   });
 
   describe('getTaskDeposits', () => {
-    test('gets tasks from the TaskService', async () => {});
+    test('gets tasks from the TaskService', async () => {
+      const logger = new LoggerService();
 
-    test('throws an error if the body is invalid', async () => {});
+      const tsvc = new InMemoryTaskService({
+        tasks: [task1, task2, task3],
+        taskDeposits: [td1, td2, td3],
+      });
+      const controller = new TaskController(tsvc, vbService, logger);
 
-    test('throws an error if the body cannot be parsed', async () => {});
+      const request = {
+        query: {
+          userId: vbUserId1,
+        },
+      } as unknown as METIncomingMessage;
 
-    test('throws an error if getTaskDeposits throws an error', async () => {});
+      const getSpy = jest.spyOn(tsvc, 'getTaskDeposits');
+
+      const result = await controller.getTaskDeposits(request);
+
+      expect(result.taskDeposits).toEqual([td1, td2]);
+
+      expect(getSpy).toHaveBeenCalledTimes(1);
+      expect(getSpy).toHaveBeenCalledWith({
+        userId: vbUserId1,
+        page: 1,
+        pagination: 10,
+      });
+    });
+
+    test.skip('throws an error if the body is invalid', async () => {});
+
+    test.skip('throws an error if the body cannot be parsed', async () => {});
+
+    test.skip('throws an error if getTaskDeposits throws an error', async () => {});
   });
 
   describe('addTaskDeposit', () => {
@@ -497,11 +594,34 @@ describe('TaskController', () => {
       expect(upvbSpy).toHaveBeenCalledWith(user1.copyWith({ currentTokens }));
     });
 
-    test('throws an error if the body is invalid', async () => {});
+    test.skip('throws an error if the body is invalid', async () => {});
 
-    test('throws an error if the body cannot be parsed', async () => {});
+    test.skip('throws an error if the body cannot be parsed', async () => {});
 
-    test('throws an error if addTaskDeposit throws an error', async () => {});
+    test('throws an error if addTaskDeposit throws an error', async () => {
+      const logger = new LoggerService();
+
+      const tsvc = new InMemoryTaskService();
+      const controller = new TaskController(tsvc, vbService, logger);
+      const authModel = new NoAuthModel();
+      jest.spyOn(authModel, 'userId', 'get').mockReturnValue('userId');
+
+      const request = {
+        authModel,
+        body: {
+          taskDeposit: td1JSON,
+        },
+      } as unknown as METIncomingMessage;
+
+      const addSpy = jest.spyOn(tsvc, 'addTaskDeposit');
+      addSpy.mockRejectedValue(new Error('Test Error'));
+
+      await expect(() => controller.addTaskDeposit(request)).rejects.toThrow(
+        new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+      );
+
+      expect(addSpy).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('updateTaskDeposit', () => {
@@ -548,9 +668,9 @@ describe('TaskController', () => {
       expect(upvbSpy).toHaveBeenCalledWith(user1);
     });
 
-    test('throws an error if the body is invalid', async () => {});
+    test.skip('throws an error if the body is invalid', async () => {});
 
-    test('throws an error if the body cannot be parsed', async () => {});
+    test.skip('throws an error if the body cannot be parsed', async () => {});
 
     test('throws an error if updateTaskDeposit throws an error', async () => {
       const logger = new LoggerService();
@@ -624,9 +744,9 @@ describe('TaskController', () => {
       );
     });
 
-    test('throws an error if the body is invalid', async () => {});
+    test.skip('throws an error if the body is invalid', async () => {});
 
-    test('throws an error if the body cannot be parsed', async () => {});
+    test.skip('throws an error if the body cannot be parsed', async () => {});
 
     test('throws an error if deleteTaskDeposit throws an error', async () => {
       const logger = new LoggerService();
