@@ -25,11 +25,7 @@ export class InMemoryDepositService implements DepositService {
   }
 
   get depositsList(): Deposit[] {
-    const list = Object.values(this.deposits);
-
-    list.sort((a, b) => a.date.toMillis() - b.date.toMillis());
-
-    return list;
+    return Object.values(this.deposits);
   }
 
   async getDeposits(input: DepositInputOptions): Promise<Deposit[]> {
@@ -48,17 +44,18 @@ export class InMemoryDepositService implements DepositService {
       zone: 'America/Chicago',
     });
 
-    const deposits = this.depositsList
-      .filter((d) => {
-        if (d.vbUserId !== userId) return false;
-        if (startDate.isValid && d.date < startDate) return false;
-        if (endDate.isValid && d.date > endDate) return false;
+    const deposits = this.depositsList.filter((d) => {
+      if (d.vbUserId !== userId) return false;
+      if (startDate.isValid && d.date < startDate) return false;
+      if (endDate.isValid && d.date > endDate) return false;
 
-        return true;
-      })
-      .slice(skip, end);
+      return true;
+    });
 
-    return deposits;
+    deposits.sort((a, b) => a.date.toMillis() - b.date.toMillis());
+    const output = deposits.slice(skip, end);
+
+    return output;
   }
 
   async addDeposit(deposit: Deposit): Promise<Deposit> {

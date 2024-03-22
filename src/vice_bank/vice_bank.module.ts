@@ -27,6 +27,11 @@ import { DepositConversionsController } from './controllers/deposit_conversions.
 import { PurchasePricesController } from './controllers/purchase_prices.controller';
 import { PurchaseController } from './controllers/purchase.controller';
 
+import { TaskController } from './controllers/task.controller';
+import { TaskService } from './services/task.service';
+import { FileTaskService } from './services/task_service.file';
+import { InMemoryTaskService } from './services/task_service.memory';
+
 import { isString } from '@/src/utils/type_guards';
 
 const viceBankUserFactory = {
@@ -127,6 +132,24 @@ const purchaseFactory = {
   inject: [ConfigService],
 };
 
+const taskFactory = {
+  provide: 'TASK_SERVICE',
+  useFactory: async (configService: ConfigService): Promise<TaskService> => {
+    const type = configService.get('viceBankType');
+
+    if (type === 'file') {
+      const path = configService.get('viceBankFilePath');
+      if (isString(path)) {
+        const service = await FileTaskService.init(path);
+        return service;
+      }
+    }
+
+    return new InMemoryTaskService();
+  },
+  inject: [ConfigService],
+};
+
 @Module({
   imports: [LoggerModule, ConfigModule],
   controllers: [
@@ -135,6 +158,7 @@ const purchaseFactory = {
     DepositConversionsController,
     PurchasePricesController,
     PurchaseController,
+    TaskController,
   ],
   providers: [
     viceBankUserFactory,
@@ -142,6 +166,7 @@ const purchaseFactory = {
     depositFactory,
     purchasePricesFactory,
     purchaseFactory,
+    taskFactory,
   ],
 })
 export class ViceBankModule {}

@@ -16,7 +16,7 @@ const uuidv4 = uuid.v4 as jest.Mock<unknown, unknown[]>;
 const deposit1JSON: DepositJSON = {
   id: 'id1',
   vbUserId: 'userId1',
-  date: '2021-01-01T00:00:00.000-06:00',
+  date: '2024-01-01T00:00:00.000-06:00',
   depositQuantity: 1,
   conversionRate: 1,
   depositConversionName: 'name1',
@@ -25,7 +25,7 @@ const deposit1JSON: DepositJSON = {
 const deposit2JSON: DepositJSON = {
   id: 'id2',
   vbUserId: 'userId1',
-  date: '2021-01-12T00:00:00.000-06:00',
+  date: '2024-01-12T00:00:00.000-06:00',
   depositQuantity: 1,
   conversionRate: 1,
   depositConversionName: 'name1',
@@ -34,7 +34,7 @@ const deposit2JSON: DepositJSON = {
 const deposit3JSON: DepositJSON = {
   id: 'id3',
   vbUserId: 'userId2',
-  date: '2021-02-01T00:00:00.000-06:00',
+  date: '2024-02-01T00:00:00.000-06:00',
   depositQuantity: 1,
   conversionRate: 1,
   depositConversionName: 'name2',
@@ -94,10 +94,10 @@ describe('InMemoryDepositService', () => {
   });
 
   describe('depositsList', () => {
-    test('returns an array of Deposits sorted by date', () => {
+    test('returns an array of Deposits', () => {
       const service = new InMemoryDepositService([
-        deposit2,
         deposit1,
+        deposit2,
         deposit3,
       ]);
 
@@ -156,7 +156,7 @@ describe('InMemoryDepositService', () => {
 
     test('returns paginated Deposits if there are more Deposits than the pagination', async () => {
       const deposits: Deposit[] = [];
-      const baseDate = DateTime.fromISO('2021-02-05T00:00:00.000Z', {
+      const baseDate = DateTime.fromISO('2024-02-05T00:00:00.000Z', {
         zone: 'America/Chicago',
       });
 
@@ -213,7 +213,7 @@ describe('InMemoryDepositService', () => {
 
     test('goes to the proper page if a page and pagination are provided', async () => {
       const deposits: Deposit[] = [];
-      const baseDate = DateTime.fromISO('2021-02-05T00:00:00.000-06:00', {
+      const baseDate = DateTime.fromISO('2024-02-05T00:00:00.000-06:00', {
         zone: 'America/Chicago',
       });
 
@@ -268,7 +268,7 @@ describe('InMemoryDepositService', () => {
 
     test('returns an empty array if the page is beyond the range of Deposits', async () => {
       const deposits: Deposit[] = [];
-      const baseDate = DateTime.fromISO('2021-02-05T00:00:00.000Z', {
+      const baseDate = DateTime.fromISO('2024-02-05T00:00:00.000Z', {
         zone: 'America/Chicago',
       });
 
@@ -331,7 +331,7 @@ describe('InMemoryDepositService', () => {
 
     test('returns a date constrained array of Deposits', async () => {
       const deposits: Deposit[] = [];
-      const baseDate = DateTime.fromISO('2021-02-05T00:00:00.000Z', {
+      const baseDate = DateTime.fromISO('2024-02-05T00:00:00.000Z', {
         zone: 'America/Chicago',
       });
 
@@ -371,7 +371,7 @@ describe('InMemoryDepositService', () => {
 
       const result1 = await service.getDeposits({
         userId: 'userId1',
-        startDate: '2021-01-01T00:00:00.000Z',
+        startDate: '2024-01-01T00:00:00.000Z',
       });
 
       expect(result1).toEqual([
@@ -385,22 +385,22 @@ describe('InMemoryDepositService', () => {
 
       const result2 = await service.getDeposits({
         userId: 'userId1',
-        startDate: '2021-01-13T00:00:00.000Z',
+        startDate: '2024-01-13T00:00:00.000Z',
       });
 
       expect(result2).toEqual([deposit4, deposit5, deposit6, deposit7]);
 
       const result3 = await service.getDeposits({
         userId: 'userId1',
-        endDate: '2021-01-30T00:00:00.000Z',
+        endDate: '2024-01-30T00:00:00.000Z',
       });
 
       expect(result3).toEqual([deposit1, deposit2]);
 
       const result4 = await service.getDeposits({
         userId: 'userId1',
-        startDate: '2021-01-08T00:00:00.000Z',
-        endDate: '2021-02-09T00:00:00.000Z',
+        startDate: '2024-01-08T00:00:00.000Z',
+        endDate: '2024-02-09T00:00:00.000Z',
       });
 
       expect(result4).toEqual([deposit2, deposit4]);
@@ -435,11 +435,11 @@ describe('InMemoryDepositService', () => {
         deposit3,
       ]);
 
-      // TODO Timezone issue. Reolve by setting the TZ in the DateTime objects
+      // TODO Timezone issue. Resolve by setting the TZ in the DateTime objects
 
       const result1 = await service.getDeposits({
         userId: 'userId1',
-        startDate: '2021-01-10T00:00:00.000Z',
+        startDate: '2024-01-10T00:00:00.000Z',
         endDate: 'bad',
       });
 
@@ -448,7 +448,7 @@ describe('InMemoryDepositService', () => {
       const result2 = await service.getDeposits({
         userId: 'userId1',
         startDate: 'bad',
-        endDate: '2021-01-10T00:00:00.000Z',
+        endDate: '2024-01-10T00:00:00.000Z',
       });
 
       expect(result2).toEqual([deposit1]);
