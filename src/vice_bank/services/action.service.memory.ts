@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Action } from '@/src/models/vice_bank/action';
 import { GetPageAndUserOptions } from '@/src/vice_bank/types';
-import { DepositConversionsService } from './deposit_conversions.service';
+import { DepositConversionsService } from './action.service';
 import { isNullOrUndefined } from '@/src/utils/type_guards';
 
 // Using this to get around prettier formatting the really long line below

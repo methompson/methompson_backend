@@ -1,6 +1,6 @@
 import { join } from 'path';
 
-import { FileDepositConversionsService } from './deposit_conversions.service.file';
+import { FileDepositConversionsService } from './action.service.file';
 import { Action, ActionJSON } from '@/src/models/vice_bank/action';
 import { FileServiceWriter } from '@/src/utils/file_service_writer';
 

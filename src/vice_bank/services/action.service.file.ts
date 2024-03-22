@@ -1,7 +1,7 @@
 import { join } from 'path';
 import { Injectable } from '@nestjs/common';
 
-import { InMemoryDepositConversionsService } from '@/src/vice_bank/services/deposit_conversions.service.memory';
+import { InMemoryDepositConversionsService } from '@/src/vice_bank/services/action.service.memory';
 import { Action } from '@/src/models/vice_bank/action';
 import { FileServiceWriter } from '@/src/utils/file_service_writer';
 

@@ -10,7 +10,7 @@ import { Request } from 'express';
 
 import { RequestLogInterceptor } from '@/src/middleware/request_log.interceptor';
 import { LoggerService } from '@/src/logger/logger.service';
-import { DepositConversionsService } from '@/src/vice_bank/services/deposit_conversions.service';
+import { DepositConversionsService } from '@/src/vice_bank/services/action.service';
 import { Action } from '@/src/models/vice_bank/action';
 import { InvalidInputError } from '@/src/errors';
 import { pageAndPagination } from '@/src/utils/page_and_pagination';
@@ -32,7 +32,7 @@ interface DeleteDepositConversionResponse {
 
 @UseInterceptors(RequestLogInterceptor)
 @Controller({ path: 'api/vice_bank' })
-export class DepositConversionsController {
+export class ActionController {
   constructor(
     @Inject('DEPOSIT_CONVERSIONS_SERVICE')
     private readonly depositConversionsService: DepositConversionsService,

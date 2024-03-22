@@ -2,8 +2,8 @@ import { Request } from 'express';
 
 import { Action, ActionJSON } from '@/src/models/vice_bank/action';
 import { LoggerService } from '@/src/logger/logger.service';
-import { InMemoryDepositConversionsService } from '@/src/vice_bank/services/deposit_conversions.service.memory';
-import { DepositConversionsController } from './deposit_conversions.controller';
+import { InMemoryDepositConversionsService } from '@/src/vice_bank/services/action.service.memory';
+import { ActionController } from './action.controller';
 import { HttpException, HttpStatus } from '@nestjs/common';
 
 const actionJSON1: ActionJSON = {
@@ -48,10 +48,7 @@ describe('DepositConversionsController', () => {
       ]);
       const loggerService = new LoggerService();
 
-      const controller = new DepositConversionsController(
-        service,
-        loggerService,
-      );
+      const controller = new ActionController(service, loggerService);
 
       const req = {
         query: {
@@ -69,10 +66,7 @@ describe('DepositConversionsController', () => {
       const service = new InMemoryDepositConversionsService();
       const loggerService = new LoggerService();
 
-      const controller = new DepositConversionsController(
-        service,
-        loggerService,
-      );
+      const controller = new ActionController(service, loggerService);
 
       const req1 = {
         query: {
@@ -99,10 +93,7 @@ describe('DepositConversionsController', () => {
       const service = new InMemoryDepositConversionsService();
       const loggerService = new LoggerService();
 
-      const controller = new DepositConversionsController(
-        service,
-        loggerService,
-      );
+      const controller = new ActionController(service, loggerService);
 
       const req = {
         query: {
@@ -125,10 +116,7 @@ describe('DepositConversionsController', () => {
       const service = new InMemoryDepositConversionsService();
       const loggerService = new LoggerService();
 
-      const controller = new DepositConversionsController(
-        service,
-        loggerService,
-      );
+      const controller = new ActionController(service, loggerService);
 
       const req = {
         body: {
@@ -146,10 +134,7 @@ describe('DepositConversionsController', () => {
       const service = new InMemoryDepositConversionsService();
       const loggerService = new LoggerService();
 
-      const controller = new DepositConversionsController(
-        service,
-        loggerService,
-      );
+      const controller = new ActionController(service, loggerService);
 
       const req = {} as unknown as Request;
 
@@ -162,10 +147,7 @@ describe('DepositConversionsController', () => {
       const service = new InMemoryDepositConversionsService();
       const loggerService = new LoggerService();
 
-      const controller = new DepositConversionsController(
-        service,
-        loggerService,
-      );
+      const controller = new ActionController(service, loggerService);
 
       const req = {
         body: {},
@@ -180,10 +162,7 @@ describe('DepositConversionsController', () => {
       const service = new InMemoryDepositConversionsService();
       const loggerService = new LoggerService();
 
-      const controller = new DepositConversionsController(
-        service,
-        loggerService,
-      );
+      const controller = new ActionController(service, loggerService);
 
       const req = {
         body: {
@@ -206,10 +185,7 @@ describe('DepositConversionsController', () => {
       const service = new InMemoryDepositConversionsService([action1]);
       const loggerService = new LoggerService();
 
-      const controller = new DepositConversionsController(
-        service,
-        loggerService,
-      );
+      const controller = new ActionController(service, loggerService);
 
       const depositConversionUpdate = {
         ...actionJSON1,
@@ -233,10 +209,7 @@ describe('DepositConversionsController', () => {
       const service = new InMemoryDepositConversionsService();
       const loggerService = new LoggerService();
 
-      const controller = new DepositConversionsController(
-        service,
-        loggerService,
-      );
+      const controller = new ActionController(service, loggerService);
 
       const req = {} as unknown as Request;
 
@@ -249,10 +222,7 @@ describe('DepositConversionsController', () => {
       const service = new InMemoryDepositConversionsService();
       const loggerService = new LoggerService();
 
-      const controller = new DepositConversionsController(
-        service,
-        loggerService,
-      );
+      const controller = new ActionController(service, loggerService);
 
       const req = {
         body: {},
@@ -267,10 +237,7 @@ describe('DepositConversionsController', () => {
       const service = new InMemoryDepositConversionsService([action1]);
       const loggerService = new LoggerService();
 
-      const controller = new DepositConversionsController(
-        service,
-        loggerService,
-      );
+      const controller = new ActionController(service, loggerService);
 
       const req = {
         body: {
@@ -293,10 +260,7 @@ describe('DepositConversionsController', () => {
       const service = new InMemoryDepositConversionsService([action1]);
       const loggerService = new LoggerService();
 
-      const controller = new DepositConversionsController(
-        service,
-        loggerService,
-      );
+      const controller = new ActionController(service, loggerService);
 
       const req = {
         body: {
@@ -313,10 +277,7 @@ describe('DepositConversionsController', () => {
       const service = new InMemoryDepositConversionsService();
       const loggerService = new LoggerService();
 
-      const controller = new DepositConversionsController(
-        service,
-        loggerService,
-      );
+      const controller = new ActionController(service, loggerService);
 
       const req1 = {
         body: {
@@ -343,10 +304,7 @@ describe('DepositConversionsController', () => {
       const service = new InMemoryDepositConversionsService([action1]);
       const loggerService = new LoggerService();
 
-      const controller = new DepositConversionsController(
-        service,
-        loggerService,
-      );
+      const controller = new ActionController(service, loggerService);
 
       const req = {
         body: {

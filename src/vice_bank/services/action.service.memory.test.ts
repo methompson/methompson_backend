@@ -1,7 +1,7 @@
 import * as uuid from 'uuid';
 
 import { Action, ActionJSON } from '@/src/models/vice_bank/action';
-import { InMemoryDepositConversionsService } from './deposit_conversions.service.memory';
+import { InMemoryDepositConversionsService } from './action.service.memory';
 import { isNullOrUndefined } from '@/src/utils/type_guards';
 
 jest.mock('uuid', () => {
