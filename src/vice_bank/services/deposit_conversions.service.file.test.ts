@@ -1,13 +1,10 @@
 import { join } from 'path';
 
 import { FileDepositConversionsService } from './deposit_conversions.service.file';
-import {
-  DepositConversion,
-  DepositConversionJSON,
-} from '@/src/models/vice_bank/action';
+import { Action, ActionJSON } from '@/src/models/vice_bank/action';
 import { FileServiceWriter } from '@/src/utils/file_service_writer';
 
-const conversionJSON1: DepositConversionJSON = {
+const conversionJSON1: ActionJSON = {
   id: 'id1',
   vbUserId: 'userId1',
   name: 'name1',
@@ -16,7 +13,7 @@ const conversionJSON1: DepositConversionJSON = {
   tokensPer: 1,
   minDeposit: 1,
 };
-const conversionJSON2: DepositConversionJSON = {
+const conversionJSON2: ActionJSON = {
   id: 'id2',
   vbUserId: 'userId1',
   name: 'name2',
@@ -25,7 +22,7 @@ const conversionJSON2: DepositConversionJSON = {
   tokensPer: 2,
   minDeposit: 2,
 };
-const conversionJSON3: DepositConversionJSON = {
+const conversionJSON3: ActionJSON = {
   id: 'id3',
   vbUserId: 'userId3',
   name: 'name3',
@@ -35,9 +32,9 @@ const conversionJSON3: DepositConversionJSON = {
   minDeposit: 3,
 };
 
-const conversion1 = DepositConversion.fromJSON(conversionJSON1);
-const conversion2 = DepositConversion.fromJSON(conversionJSON2);
-const conversion3 = DepositConversion.fromJSON(conversionJSON3);
+const conversion1 = Action.fromJSON(conversionJSON1);
+const conversion2 = Action.fromJSON(conversionJSON2);
+const conversion3 = Action.fromJSON(conversionJSON3);
 
 const testError = 'test error aiorwhsfjldn';
 
@@ -121,7 +118,7 @@ describe('FileDepositConversionsService', () => {
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
       writeToFileSpy.mockImplementationOnce(async () => {});
 
-      const updatedUser = DepositConversion.fromJSON({
+      const updatedUser = Action.fromJSON({
         ...conversion1.toJSON(),
         name: 'new name',
       });
@@ -146,7 +143,7 @@ describe('FileDepositConversionsService', () => {
         throw new Error(testErr);
       });
 
-      const updatedUser = DepositConversion.fromJSON({
+      const updatedUser = Action.fromJSON({
         ...conversion1.toJSON(),
         name: 'new name',
       });

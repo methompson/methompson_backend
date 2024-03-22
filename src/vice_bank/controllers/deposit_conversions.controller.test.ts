@@ -1,15 +1,12 @@
 import { Request } from 'express';
 
-import {
-  DepositConversion,
-  DepositConversionJSON,
-} from '@/src/models/vice_bank/action';
+import { Action, ActionJSON } from '@/src/models/vice_bank/action';
 import { LoggerService } from '@/src/logger/logger.service';
 import { InMemoryDepositConversionsService } from '@/src/vice_bank/services/deposit_conversions.service.memory';
 import { DepositConversionsController } from './deposit_conversions.controller';
 import { HttpException, HttpStatus } from '@nestjs/common';
 
-const conversionJSON1: DepositConversionJSON = {
+const actionJSON1: ActionJSON = {
   id: 'id1',
   vbUserId: 'userId1',
   name: 'name1',
@@ -18,7 +15,7 @@ const conversionJSON1: DepositConversionJSON = {
   tokensPer: 1,
   minDeposit: 1,
 };
-const conversionJSON2: DepositConversionJSON = {
+const actionJSON2: ActionJSON = {
   id: 'id2',
   vbUserId: 'userId1',
   name: 'name2',
@@ -27,7 +24,7 @@ const conversionJSON2: DepositConversionJSON = {
   tokensPer: 2,
   minDeposit: 2,
 };
-const conversionJSON3: DepositConversionJSON = {
+const actionJSON3: ActionJSON = {
   id: 'id3',
   vbUserId: 'userId3',
   name: 'name3',
@@ -37,17 +34,17 @@ const conversionJSON3: DepositConversionJSON = {
   minDeposit: 3,
 };
 
-const conversion1 = DepositConversion.fromJSON(conversionJSON1);
-const conversion2 = DepositConversion.fromJSON(conversionJSON2);
-const conversion3 = DepositConversion.fromJSON(conversionJSON3);
+const action1 = Action.fromJSON(actionJSON1);
+const action2 = Action.fromJSON(actionJSON2);
+const action3 = Action.fromJSON(actionJSON3);
 
 describe('DepositConversionsController', () => {
   describe('getDepositConversions', () => {
     test('gets deposit conversions from the DepositConversionsService', async () => {
       const service = new InMemoryDepositConversionsService([
-        conversion1,
-        conversion2,
-        conversion3,
+        action1,
+        action2,
+        action3,
       ]);
       const loggerService = new LoggerService();
 
@@ -64,7 +61,7 @@ describe('DepositConversionsController', () => {
 
       const conversions = await controller.getDepositConversions(req);
       expect(conversions).toEqual({
-        depositConversions: [conversion1, conversion2],
+        depositConversions: [action1, action2],
       });
     });
 
@@ -135,16 +132,14 @@ describe('DepositConversionsController', () => {
 
       const req = {
         body: {
-          depositConversion: conversionJSON1,
+          depositConversion: actionJSON1,
         },
       } as unknown as Request;
 
-      jest
-        .spyOn(service, 'addDepositConversion')
-        .mockResolvedValue(conversion1);
+      jest.spyOn(service, 'addDepositConversion').mockResolvedValue(action1);
 
       const conversion = await controller.addDepositConversion(req);
-      expect(conversion).toStrictEqual({ depositConversion: conversion1 });
+      expect(conversion).toStrictEqual({ depositConversion: action1 });
     });
 
     test('throws an error if the body is not a record', async () => {
@@ -192,7 +187,7 @@ describe('DepositConversionsController', () => {
 
       const req = {
         body: {
-          depositConversion: conversionJSON1,
+          depositConversion: actionJSON1,
         },
       } as unknown as Request;
 
@@ -208,7 +203,7 @@ describe('DepositConversionsController', () => {
 
   describe('updateDepositConversion', () => {
     test('updates a deposit conversion using the DepositConversionsService', async () => {
-      const service = new InMemoryDepositConversionsService([conversion1]);
+      const service = new InMemoryDepositConversionsService([action1]);
       const loggerService = new LoggerService();
 
       const controller = new DepositConversionsController(
@@ -217,7 +212,7 @@ describe('DepositConversionsController', () => {
       );
 
       const depositConversionUpdate = {
-        ...conversionJSON1,
+        ...actionJSON1,
         name: 'newName',
       };
 
@@ -228,7 +223,7 @@ describe('DepositConversionsController', () => {
       } as unknown as Request;
 
       const result = await controller.updateDepositConversion(req);
-      expect(result).toStrictEqual({ depositConversion: conversion1 });
+      expect(result).toStrictEqual({ depositConversion: action1 });
       expect(service.depositConversionsList[0]?.toJSON()).toEqual(
         depositConversionUpdate,
       );
@@ -269,7 +264,7 @@ describe('DepositConversionsController', () => {
     });
 
     test('throws an error if updateDepositConversion throws an error', async () => {
-      const service = new InMemoryDepositConversionsService([conversion1]);
+      const service = new InMemoryDepositConversionsService([action1]);
       const loggerService = new LoggerService();
 
       const controller = new DepositConversionsController(
@@ -279,7 +274,7 @@ describe('DepositConversionsController', () => {
 
       const req = {
         body: {
-          depositConversion: conversionJSON1,
+          depositConversion: actionJSON1,
         },
       } as unknown as Request;
 
@@ -295,7 +290,7 @@ describe('DepositConversionsController', () => {
 
   describe('deleteDepositConversion', () => {
     test('deletes a deposit conversion using the DepositConversionsService', async () => {
-      const service = new InMemoryDepositConversionsService([conversion1]);
+      const service = new InMemoryDepositConversionsService([action1]);
       const loggerService = new LoggerService();
 
       const controller = new DepositConversionsController(
@@ -305,12 +300,12 @@ describe('DepositConversionsController', () => {
 
       const req = {
         body: {
-          depositConversionId: conversion1.id,
+          depositConversionId: action1.id,
         },
       } as unknown as Request;
 
       const result = await controller.deleteDepositConversion(req);
-      expect(result).toStrictEqual({ depositConversion: conversion1 });
+      expect(result).toStrictEqual({ depositConversion: action1 });
       expect(service.depositConversionsList.length).toBe(0);
     });
 
@@ -345,7 +340,7 @@ describe('DepositConversionsController', () => {
     });
 
     test('throws an error if deleteDepositConversion throws an error', async () => {
-      const service = new InMemoryDepositConversionsService([conversion1]);
+      const service = new InMemoryDepositConversionsService([action1]);
       const loggerService = new LoggerService();
 
       const controller = new DepositConversionsController(
@@ -355,7 +350,7 @@ describe('DepositConversionsController', () => {
 
       const req = {
         body: {
-          depositConversionId: conversion1.id,
+          depositConversionId: action1.id,
         },
       } as unknown as Request;
 

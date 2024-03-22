@@ -11,23 +11,23 @@ import { Request } from 'express';
 import { RequestLogInterceptor } from '@/src/middleware/request_log.interceptor';
 import { LoggerService } from '@/src/logger/logger.service';
 import { DepositConversionsService } from '@/src/vice_bank/services/deposit_conversions.service';
-import { DepositConversion } from '@/src/models/vice_bank/action';
+import { Action } from '@/src/models/vice_bank/action';
 import { InvalidInputError } from '@/src/errors';
 import { pageAndPagination } from '@/src/utils/page_and_pagination';
 import { isRecord, isString } from '@/src/utils/type_guards';
 import { commonErrorHandler } from '@/src/utils/common_error_handler';
 
 interface GetDepositConversionsResponse {
-  depositConversions: DepositConversion[];
+  depositConversions: Action[];
 }
 interface AddDepositConversionResponse {
-  depositConversion: DepositConversion;
+  depositConversion: Action;
 }
 interface UpdateDepositConversionResponse {
-  depositConversion: DepositConversion;
+  depositConversion: Action;
 }
 interface DeleteDepositConversionResponse {
-  depositConversion: DepositConversion;
+  depositConversion: Action;
 }
 
 @UseInterceptors(RequestLogInterceptor)
@@ -77,9 +77,7 @@ export class DepositConversionsController {
         throw new InvalidInputError('Invalid Deposit Conversion Input');
       }
 
-      const depositConversion = DepositConversion.fromJSON(
-        body.depositConversion,
-      );
+      const depositConversion = Action.fromJSON(body.depositConversion);
 
       const res = await this.depositConversionsService.addDepositConversion(
         depositConversion,
@@ -102,9 +100,7 @@ export class DepositConversionsController {
         throw new InvalidInputError('Invalid Deposit Conversion Input');
       }
 
-      const depositConversion = DepositConversion.fromJSON(
-        body.depositConversion,
-      );
+      const depositConversion = Action.fromJSON(body.depositConversion);
 
       const res = await this.depositConversionsService.updateDepositConversion(
         depositConversion,

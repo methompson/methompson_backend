@@ -2,7 +2,7 @@ import { join } from 'path';
 import { Injectable } from '@nestjs/common';
 
 import { InMemoryDepositConversionsService } from '@/src/vice_bank/services/deposit_conversions.service.memory';
-import { DepositConversion } from '@/src/models/vice_bank/action';
+import { Action } from '@/src/models/vice_bank/action';
 import { FileServiceWriter } from '@/src/utils/file_service_writer';
 
 const BASE_NAME = 'deposit_conversions_data';
@@ -14,7 +14,7 @@ export class FileDepositConversionsService extends InMemoryDepositConversionsSer
   constructor(
     protected readonly fileServiceWriter: FileServiceWriter,
     protected readonly viceBankPath: string,
-    depositConversions?: DepositConversion[],
+    depositConversions?: Action[],
   ) {
     super(depositConversions);
   }
@@ -23,9 +23,7 @@ export class FileDepositConversionsService extends InMemoryDepositConversionsSer
     return JSON.stringify(Object.values(this.depositConversions));
   }
 
-  async addDepositConversion(
-    depositConversion: DepositConversion,
-  ): Promise<DepositConversion> {
+  async addDepositConversion(depositConversion: Action): Promise<Action> {
     const result = super.addDepositConversion(depositConversion);
 
     await this.writeToFile();
@@ -33,9 +31,7 @@ export class FileDepositConversionsService extends InMemoryDepositConversionsSer
     return result;
   }
 
-  async updateDepositConversion(
-    depositConversion: DepositConversion,
-  ): Promise<DepositConversion> {
+  async updateDepositConversion(depositConversion: Action): Promise<Action> {
     const result = await super.updateDepositConversion(depositConversion);
 
     await this.writeToFile();
@@ -43,9 +39,7 @@ export class FileDepositConversionsService extends InMemoryDepositConversionsSer
     return result;
   }
 
-  async deleteDepositConversion(
-    depositConversionId: string,
-  ): Promise<DepositConversion> {
+  async deleteDepositConversion(depositConversionId: string): Promise<Action> {
     const result = await super.deleteDepositConversion(depositConversionId);
 
     await this.writeToFile();
@@ -77,7 +71,7 @@ export class FileDepositConversionsService extends InMemoryDepositConversionsSer
 
     let rawData = '';
 
-    const users: DepositConversion[] = [];
+    const users: Action[] = [];
     try {
       rawData = await fileServiceWriter.readFile(viceBankPath);
 
@@ -86,7 +80,7 @@ export class FileDepositConversionsService extends InMemoryDepositConversionsSer
       if (Array.isArray(json)) {
         for (const val of json) {
           try {
-            users.push(DepositConversion.fromJSON(val));
+            users.push(Action.fromJSON(val));
           } catch (e) {
             console.error('Invalid BlogPost: ', val, e);
           }

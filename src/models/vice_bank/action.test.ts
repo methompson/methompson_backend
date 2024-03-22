@@ -1,7 +1,7 @@
-import { DepositConversion, DepositConversionJSON } from './action';
+import { Action, ActionJSON } from './action';
 
-describe('DepositConversion', () => {
-  const validInput: DepositConversionJSON = {
+describe('Action', () => {
+  const validInput: ActionJSON = {
     id: 'id',
     vbUserId: 'vbUserId',
     name: 'name',
@@ -13,18 +13,18 @@ describe('DepositConversion', () => {
 
   describe('toJSON', () => {
     test('returns an expected value', () => {
-      const depositConversion = DepositConversion.fromJSON(validInput);
+      const action = Action.fromJSON(validInput);
 
-      const result = depositConversion.toJSON();
+      const result = action.toJSON();
 
       expect(result).toEqual(validInput);
     });
   });
 
   describe('fromJSON', () => {
-    test('returns a new DepositConversion based on valid input', () => {
-      const result = DepositConversion.fromJSON(validInput);
-      expect(result instanceof DepositConversion).toBe(true);
+    test('returns a new Action based on valid input', () => {
+      const result = Action.fromJSON(validInput);
+      expect(result instanceof Action).toBe(true);
       expect(result.id).toBe('id');
       expect(result.vbUserId).toBe('vbUserId');
       expect(result.name).toBe('name');
@@ -39,45 +39,45 @@ describe('DepositConversion', () => {
 
       invalidInput = { ...validInput };
       delete invalidInput.id;
-      expect(() => DepositConversion.fromJSON(invalidInput)).toThrow();
+      expect(() => Action.fromJSON(invalidInput)).toThrow();
 
       invalidInput = { ...validInput };
       delete invalidInput.vbUserId;
-      expect(() => DepositConversion.fromJSON(invalidInput)).toThrow();
+      expect(() => Action.fromJSON(invalidInput)).toThrow();
 
       invalidInput = { ...validInput };
       delete invalidInput.name;
-      expect(() => DepositConversion.fromJSON(invalidInput)).toThrow();
+      expect(() => Action.fromJSON(invalidInput)).toThrow();
 
       invalidInput = { ...validInput };
       delete invalidInput.conversionUnit;
-      expect(() => DepositConversion.fromJSON(invalidInput)).toThrow();
+      expect(() => Action.fromJSON(invalidInput)).toThrow();
 
       invalidInput = { ...validInput };
       delete invalidInput.depositsPer;
-      expect(() => DepositConversion.fromJSON(invalidInput)).toThrow();
+      expect(() => Action.fromJSON(invalidInput)).toThrow();
 
       invalidInput = { ...validInput };
       delete invalidInput.tokensPer;
-      expect(() => DepositConversion.fromJSON(invalidInput)).toThrow();
+      expect(() => Action.fromJSON(invalidInput)).toThrow();
 
       invalidInput = { ...validInput };
       delete invalidInput.minDeposit;
-      expect(() => DepositConversion.fromJSON(invalidInput)).toThrow();
+      expect(() => Action.fromJSON(invalidInput)).toThrow();
     });
 
     test('throws an error if the input is not an object', () => {
-      expect(() => DepositConversion.fromJSON('invalidInput')).toThrow();
-      expect(() => DepositConversion.fromJSON(1)).toThrow();
-      expect(() => DepositConversion.fromJSON(true)).toThrow();
-      expect(() => DepositConversion.fromJSON([])).toThrow();
-      expect(() => DepositConversion.fromJSON(null)).toThrow();
+      expect(() => Action.fromJSON('invalidInput')).toThrow();
+      expect(() => Action.fromJSON(1)).toThrow();
+      expect(() => Action.fromJSON(true)).toThrow();
+      expect(() => Action.fromJSON([])).toThrow();
+      expect(() => Action.fromJSON(null)).toThrow();
     });
   });
 
-  describe('isDepositConversionJSON', () => {
+  describe('isActionJSON', () => {
     test('returns true if the input is valid', () => {
-      expect(DepositConversion.isDepositConversionJSON(validInput)).toBe(true);
+      expect(Action.isActionJSON(validInput)).toBe(true);
     });
 
     test('returns false if the input is missing any value from a valid input', () => {
@@ -85,63 +85,45 @@ describe('DepositConversion', () => {
 
       invalidInput = { ...validInput };
       delete invalidInput.id;
-      expect(DepositConversion.isDepositConversionJSON(invalidInput)).toBe(
-        false,
-      );
+      expect(Action.isActionJSON(invalidInput)).toBe(false);
 
       invalidInput = { ...validInput };
       delete invalidInput.vbUserId;
-      expect(DepositConversion.isDepositConversionJSON(invalidInput)).toBe(
-        false,
-      );
+      expect(Action.isActionJSON(invalidInput)).toBe(false);
 
       invalidInput = { ...validInput };
       delete invalidInput.name;
-      expect(DepositConversion.isDepositConversionJSON(invalidInput)).toBe(
-        false,
-      );
+      expect(Action.isActionJSON(invalidInput)).toBe(false);
 
       invalidInput = { ...validInput };
       delete invalidInput.conversionUnit;
-      expect(DepositConversion.isDepositConversionJSON(invalidInput)).toBe(
-        false,
-      );
+      expect(Action.isActionJSON(invalidInput)).toBe(false);
 
       invalidInput = { ...validInput };
       delete invalidInput.depositsPer;
-      expect(DepositConversion.isDepositConversionJSON(invalidInput)).toBe(
-        false,
-      );
+      expect(Action.isActionJSON(invalidInput)).toBe(false);
 
       invalidInput = { ...validInput };
       delete invalidInput.tokensPer;
-      expect(DepositConversion.isDepositConversionJSON(invalidInput)).toBe(
-        false,
-      );
+      expect(Action.isActionJSON(invalidInput)).toBe(false);
 
       invalidInput = { ...validInput };
       delete invalidInput.minDeposit;
-      expect(DepositConversion.isDepositConversionJSON(invalidInput)).toBe(
-        false,
-      );
+      expect(Action.isActionJSON(invalidInput)).toBe(false);
     });
 
     test('returns false if the input is not an object', () => {
-      expect(DepositConversion.isDepositConversionJSON('invalidInput')).toBe(
-        false,
-      );
-      expect(DepositConversion.isDepositConversionJSON(1)).toBe(false);
-      expect(DepositConversion.isDepositConversionJSON(true)).toBe(false);
-      expect(DepositConversion.isDepositConversionJSON([])).toBe(false);
-      expect(DepositConversion.isDepositConversionJSON(null)).toBe(false);
+      expect(Action.isActionJSON('invalidInput')).toBe(false);
+      expect(Action.isActionJSON(1)).toBe(false);
+      expect(Action.isActionJSON(true)).toBe(false);
+      expect(Action.isActionJSON([])).toBe(false);
+      expect(Action.isActionJSON(null)).toBe(false);
     });
   });
 
-  describe('DepositConversionJSONTest', () => {
+  describe('ActionJSONTest', () => {
     test('returns an empty array if the input is valid', () => {
-      expect(DepositConversion.DepositConversionJSONTest(validInput)).toEqual(
-        [],
-      );
+      expect(Action.ActionJSONTest(validInput)).toEqual([]);
     });
 
     test('returns an array of strings if the input is missing any value from a valid input', () => {
@@ -149,69 +131,49 @@ describe('DepositConversion', () => {
 
       invalidInput = { ...validInput };
       delete invalidInput.id;
-      expect(DepositConversion.DepositConversionJSONTest(invalidInput)).toEqual(
-        ['id'],
-      );
+      expect(Action.ActionJSONTest(invalidInput)).toEqual(['id']);
 
       invalidInput = { ...validInput };
       delete invalidInput.vbUserId;
-      expect(DepositConversion.DepositConversionJSONTest(invalidInput)).toEqual(
-        ['vbUserId'],
-      );
+      expect(Action.ActionJSONTest(invalidInput)).toEqual(['vbUserId']);
 
       invalidInput = { ...validInput };
       delete invalidInput.name;
-      expect(DepositConversion.DepositConversionJSONTest(invalidInput)).toEqual(
-        ['name'],
-      );
+      expect(Action.ActionJSONTest(invalidInput)).toEqual(['name']);
 
       invalidInput = { ...validInput };
       delete invalidInput.conversionUnit;
-      expect(DepositConversion.DepositConversionJSONTest(invalidInput)).toEqual(
-        ['conversionUnit'],
-      );
+      expect(Action.ActionJSONTest(invalidInput)).toEqual(['conversionUnit']);
 
       invalidInput = { ...validInput };
       delete invalidInput.depositsPer;
-      expect(DepositConversion.DepositConversionJSONTest(invalidInput)).toEqual(
-        ['depositsPer'],
-      );
+      expect(Action.ActionJSONTest(invalidInput)).toEqual(['depositsPer']);
 
       invalidInput = { ...validInput };
       delete invalidInput.tokensPer;
-      expect(DepositConversion.DepositConversionJSONTest(invalidInput)).toEqual(
-        ['tokensPer'],
-      );
+      expect(Action.ActionJSONTest(invalidInput)).toEqual(['tokensPer']);
 
       invalidInput = { ...validInput };
       delete invalidInput.minDeposit;
-      expect(DepositConversion.DepositConversionJSONTest(invalidInput)).toEqual(
-        ['minDeposit'],
-      );
+      expect(Action.ActionJSONTest(invalidInput)).toEqual(['minDeposit']);
     });
 
     test('returns root if the input is not an object', () => {
-      expect(
-        DepositConversion.DepositConversionJSONTest('invalidInput'),
-      ).toEqual(['root']);
-      expect(DepositConversion.DepositConversionJSONTest(1)).toEqual(['root']);
-      expect(DepositConversion.DepositConversionJSONTest(true)).toEqual([
-        'root',
-      ]);
-      expect(DepositConversion.DepositConversionJSONTest([])).toEqual(['root']);
-      expect(DepositConversion.DepositConversionJSONTest(null)).toEqual([
-        'root',
-      ]);
+      expect(Action.ActionJSONTest('invalidInput')).toEqual(['root']);
+      expect(Action.ActionJSONTest(1)).toEqual(['root']);
+      expect(Action.ActionJSONTest(true)).toEqual(['root']);
+      expect(Action.ActionJSONTest([])).toEqual(['root']);
+      expect(Action.ActionJSONTest(null)).toEqual(['root']);
     });
   });
 
-  describe('fromNewDepositConversion', () => {
-    test('returns a new DepositConversion based on valid input', () => {
-      const input = DepositConversion.fromJSON(validInput);
+  describe('fromNewAction', () => {
+    test('returns a new Action based on valid input', () => {
+      const input = Action.fromJSON(validInput);
       const newId = 'newId';
-      const result = DepositConversion.fromNewDepositConversion(newId, input);
+      const result = Action.fromNewAction(newId, input);
 
-      expect(result instanceof DepositConversion).toBe(true);
+      expect(result instanceof Action).toBe(true);
       expect(result.id).toBe(newId);
       expect(result.vbUserId).toBe(input.vbUserId);
       expect(result.name).toBe(input.name);

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 
-import { DepositConversion } from '@/src/models/vice_bank/action';
+import { Action } from '@/src/models/vice_bank/action';
 import { GetPageAndUserOptions } from '@/src/vice_bank/types';
 import { DepositConversionsService } from './deposit_conversions.service';
 import { isNullOrUndefined } from '@/src/utils/type_guards';
@@ -12,9 +12,9 @@ type DCS = DepositConversionsService;
 @Injectable()
 export class InMemoryDepositConversionsService implements DCS {
   // Key is the ID
-  protected _depositConversions: Record<string, DepositConversion> = {};
+  protected _depositConversions: Record<string, Action> = {};
 
-  constructor(depositConversions?: DepositConversion[]) {
+  constructor(depositConversions?: Action[]) {
     if (depositConversions) {
       for (const conversion of depositConversions) {
         this._depositConversions[conversion.id] = conversion;
@@ -22,20 +22,18 @@ export class InMemoryDepositConversionsService implements DCS {
     }
   }
 
-  get depositConversions(): Record<string, DepositConversion> {
+  get depositConversions(): Record<string, Action> {
     return { ...this._depositConversions };
   }
 
-  get depositConversionsList(): DepositConversion[] {
+  get depositConversionsList(): Action[] {
     const list = Object.values(this._depositConversions);
     list.sort((a, b) => a.name.localeCompare(b.name));
 
     return list;
   }
 
-  async getDepositConversions(
-    input: GetPageAndUserOptions,
-  ): Promise<DepositConversion[]> {
+  async getDepositConversions(input: GetPageAndUserOptions): Promise<Action[]> {
     const page = input?.page ?? 1;
     const pagination = input?.pagination ?? 10;
 
@@ -51,23 +49,16 @@ export class InMemoryDepositConversionsService implements DCS {
     return list;
   }
 
-  async addDepositConversion(
-    depositConversion: DepositConversion,
-  ): Promise<DepositConversion> {
+  async addDepositConversion(depositConversion: Action): Promise<Action> {
     const id = uuidv4();
 
-    const newDeposit = DepositConversion.fromNewDepositConversion(
-      id,
-      depositConversion,
-    );
+    const newDeposit = Action.fromNewAction(id, depositConversion);
     this._depositConversions[id] = newDeposit;
 
     return newDeposit;
   }
 
-  async updateDepositConversion(
-    depositConversion: DepositConversion,
-  ): Promise<DepositConversion> {
+  async updateDepositConversion(depositConversion: Action): Promise<Action> {
     const { id } = depositConversion;
 
     const existingDeposit = this._depositConversions[id];
@@ -81,9 +72,7 @@ export class InMemoryDepositConversionsService implements DCS {
     return existingDeposit;
   }
 
-  async deleteDepositConversion(
-    depositConversionId: string,
-  ): Promise<DepositConversion> {
+  async deleteDepositConversion(depositConversionId: string): Promise<Action> {
     const depositConversion = this._depositConversions[depositConversionId];
 
     if (isNullOrUndefined(depositConversion)) {

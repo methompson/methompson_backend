@@ -1,9 +1,6 @@
 import * as uuid from 'uuid';
 
-import {
-  DepositConversion,
-  DepositConversionJSON,
-} from '@/src/models/vice_bank/action';
+import { Action, ActionJSON } from '@/src/models/vice_bank/action';
 import { InMemoryDepositConversionsService } from './deposit_conversions.service.memory';
 import { isNullOrUndefined } from '@/src/utils/type_guards';
 
@@ -17,7 +14,7 @@ jest.mock('uuid', () => {
 
 const uuidv4 = uuid.v4 as jest.Mock<unknown, unknown[]>;
 
-const conversionJSON1: DepositConversionJSON = {
+const conversionJSON1: ActionJSON = {
   id: 'id1',
   vbUserId: 'userId1',
   name: 'name1',
@@ -26,7 +23,7 @@ const conversionJSON1: DepositConversionJSON = {
   tokensPer: 1,
   minDeposit: 1,
 };
-const conversionJSON2: DepositConversionJSON = {
+const conversionJSON2: ActionJSON = {
   id: 'id2',
   vbUserId: 'userId1',
   name: 'name2',
@@ -35,7 +32,7 @@ const conversionJSON2: DepositConversionJSON = {
   tokensPer: 2,
   minDeposit: 2,
 };
-const conversionJSON3: DepositConversionJSON = {
+const conversionJSON3: ActionJSON = {
   id: 'id3',
   vbUserId: 'userId3',
   name: 'name3',
@@ -45,9 +42,9 @@ const conversionJSON3: DepositConversionJSON = {
   minDeposit: 3,
 };
 
-const conversion1 = DepositConversion.fromJSON(conversionJSON1);
-const conversion2 = DepositConversion.fromJSON(conversionJSON2);
-const conversion3 = DepositConversion.fromJSON(conversionJSON3);
+const conversion1 = Action.fromJSON(conversionJSON1);
+const conversion2 = Action.fromJSON(conversionJSON2);
+const conversion3 = Action.fromJSON(conversionJSON3);
 
 describe('InMemoryDepositConversionsService', () => {
   describe('depositConversions', () => {
@@ -172,10 +169,10 @@ describe('InMemoryDepositConversionsService', () => {
     });
 
     test('returns paginated depositConversions if there are more conversions than the pagination', async () => {
-      const conversions: DepositConversion[] = [];
+      const conversions: Action[] = [];
       for (let i = 4; i < 10; i++) {
         conversions.push(
-          DepositConversion.fromJSON({
+          Action.fromJSON({
             id: `id${i}`,
             vbUserId: 'userId1',
             name: `name${i}`,
@@ -219,10 +216,10 @@ describe('InMemoryDepositConversionsService', () => {
     });
 
     test('goes to the proper page if a page and pagination are provided', async () => {
-      const conversions: DepositConversion[] = [];
+      const conversions: Action[] = [];
       for (let i = 4; i < 10; i++) {
         conversions.push(
-          DepositConversion.fromJSON({
+          Action.fromJSON({
             id: `id${i}`,
             vbUserId: 'userId1',
             name: `name${i}`,
@@ -333,7 +330,7 @@ describe('InMemoryDepositConversionsService', () => {
     test('replaces the depositConversion with a new depositConversion and returns the old conversion', async () => {
       const service = new InMemoryDepositConversionsService([conversion1]);
 
-      const newConversion = DepositConversion.fromJSON({
+      const newConversion = Action.fromJSON({
         ...conversion1.toJSON(),
         maxDeposit: 100,
       });
@@ -348,7 +345,7 @@ describe('InMemoryDepositConversionsService', () => {
     test('throws an error if the depositConversion does not exist', async () => {
       const service = new InMemoryDepositConversionsService();
 
-      const newConversion = DepositConversion.fromJSON({
+      const newConversion = Action.fromJSON({
         ...conversion1.toJSON(),
         id: 'invalid id',
       });
