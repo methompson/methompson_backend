@@ -7,7 +7,7 @@ describe('Deposit', () => {
     date: '2023-02-25T00:00:00.000-06:00',
     depositQuantity: 1,
     conversionRate: 1,
-    depositConversionName: 'depositConversionName',
+    actionName: 'actionName',
     conversionUnit: 'minutes',
   };
 
@@ -30,9 +30,7 @@ describe('Deposit', () => {
       expect(result.date.toISO()).toBe(validInput.date);
       expect(result.depositQuantity).toBe(validInput.depositQuantity);
       expect(result.conversionRate).toBe(validInput.conversionRate);
-      expect(result.depositConversionName).toBe(
-        validInput.depositConversionName,
-      );
+      expect(result.actionName).toBe(validInput.actionName);
     });
 
     test('throws an error if values are missing from the input', () => {
@@ -59,7 +57,7 @@ describe('Deposit', () => {
       expect(() => Deposit.fromJSON(invalidInput)).toThrow();
 
       invalidInput = { ...validInput };
-      delete invalidInput.depositConversionName;
+      delete invalidInput.actionName;
       expect(() => Deposit.fromJSON(invalidInput)).toThrow();
     });
 
@@ -137,10 +135,8 @@ describe('Deposit', () => {
       expect(Deposit.DepositJSONTest(invalidInput)).toEqual(['conversionRate']);
 
       invalidInput = { ...validInput };
-      delete invalidInput.depositConversionName;
-      expect(Deposit.DepositJSONTest(invalidInput)).toEqual([
-        'depositConversionName',
-      ]);
+      delete invalidInput.actionName;
+      expect(Deposit.DepositJSONTest(invalidInput)).toEqual(['actionName']);
     });
 
     test('returns root if the input is not an object', () => {
@@ -164,9 +160,7 @@ describe('Deposit', () => {
       expect(result.date.toISO()).toBe(depositInput.date.toISO());
       expect(result.depositQuantity).toBe(depositInput.depositQuantity);
       expect(result.conversionRate).toBe(depositInput.conversionRate);
-      expect(result.depositConversionName).toBe(
-        depositInput.depositConversionName,
-      );
+      expect(result.actionName).toBe(depositInput.actionName);
     });
   });
 });
