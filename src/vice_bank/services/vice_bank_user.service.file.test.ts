@@ -248,7 +248,7 @@ describe('FileViceBankUserService', () => {
   describe('init', () => {
     const purchasePath = 'purchase path';
 
-    test('creates a file handle, reads a file, creates blog posts and returns a new FileViceBankUserService', async () => {
+    test('creates a file handle, reads a file, creates ViceBankUser objects and returns a new FileViceBankUserService', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
       const readFileSpy = jest.spyOn(fsw, 'readFile');
       readFileSpy.mockImplementationOnce(async () =>
@@ -268,7 +268,7 @@ describe('FileViceBankUserService', () => {
       ]);
     });
 
-    test('Only includes posts that are valid', async () => {
+    test('Only includes users that are valid', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
       const readFileSpy = jest.spyOn(fsw, 'readFile');
       readFileSpy.mockImplementationOnce(async () =>

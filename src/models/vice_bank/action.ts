@@ -1,7 +1,7 @@
 import { InvalidInputError } from '@/src/errors';
 import { isNumber, isRecord, isString } from '@/src/utils/type_guards';
 
-export interface DepositConversionJSON {
+export interface ActionJSON {
   id: string;
   vbUserId: string;
   name: string;
@@ -12,7 +12,7 @@ export interface DepositConversionJSON {
 }
 
 /**
- * This class represents a deposit conversion.
+ * This class represents an action
  * This allows a user to define a type of conversion, the quantity to deposit of the
  * user's action and the amount of tokens you get from this deposit. This allows a
  * user the flexibility to deposit values and get whole tokens or fractions of tokens.
@@ -22,7 +22,7 @@ export interface DepositConversionJSON {
  * a day getting you 0.25 tokens, but not allowing you to deposit 5 photos and get 0.125
  * or 40 photos and get 1 token.
  */
-export class DepositConversion {
+export class Action {
   constructor(
     protected _id: string,
     protected _vbUserId: string,
@@ -61,7 +61,7 @@ export class DepositConversion {
     return this._minDeposit;
   }
 
-  toJSON(): DepositConversionJSON {
+  toJSON(): ActionJSON {
     return {
       id: this.id,
       vbUserId: this.vbUserId,
@@ -73,13 +73,13 @@ export class DepositConversion {
     };
   }
 
-  static fromJSON(input: unknown): DepositConversion {
-    if (!DepositConversion.isDepositConversionJSON(input)) {
-      const errors = DepositConversion.DepositConversionJSONTest(input);
+  static fromJSON(input: unknown): Action {
+    if (!Action.isActionJSON(input)) {
+      const errors = Action.ActionJSONTest(input);
       throw new InvalidInputError(`Invalid JSON ${errors.join(', ')}`);
     }
 
-    return new DepositConversion(
+    return new Action(
       input.id,
       input.vbUserId,
       input.name,
@@ -90,15 +90,13 @@ export class DepositConversion {
     );
   }
 
-  static isDepositConversionJSON(
-    input: unknown,
-  ): input is DepositConversionJSON {
-    const test = DepositConversion.DepositConversionJSONTest(input);
+  static isActionJSON(input: unknown): input is ActionJSON {
+    const test = Action.ActionJSONTest(input);
 
     return test.length === 0;
   }
 
-  static DepositConversionJSONTest(input: unknown): string[] {
+  static ActionJSONTest(input: unknown): string[] {
     if (!isRecord(input)) {
       return ['root'];
     }
@@ -116,11 +114,8 @@ export class DepositConversion {
     return output;
   }
 
-  static fromNewDepositConversion(
-    id: string,
-    input: DepositConversion,
-  ): DepositConversion {
-    return DepositConversion.fromJSON({
+  static fromNewAction(id: string, input: Action): Action {
+    return Action.fromJSON({
       ...input.toJSON(),
       id,
     });

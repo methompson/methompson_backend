@@ -1,52 +1,46 @@
 import { join } from 'path';
 import { Injectable } from '@nestjs/common';
 
-import { InMemoryDepositConversionsService } from '@/src/vice_bank/services/deposit_conversions.service.memory';
-import { DepositConversion } from '@/src/models/vice_bank/deposit_conversion';
+import { InMemoryActionService } from '@/src/vice_bank/services/action.service.memory';
+import { Action } from '@/src/models/vice_bank/action';
 import { FileServiceWriter } from '@/src/utils/file_service_writer';
 
-const BASE_NAME = 'deposit_conversions_data';
+const BASE_NAME = 'action_data';
 const FILE_EXTENSION = 'json';
 export const FILE_NAME = `${BASE_NAME}.${FILE_EXTENSION}`;
 
 @Injectable()
-export class FileDepositConversionsService extends InMemoryDepositConversionsService {
+export class FileActionService extends InMemoryActionService {
   constructor(
     protected readonly fileServiceWriter: FileServiceWriter,
     protected readonly viceBankPath: string,
-    depositConversions?: DepositConversion[],
+    actions?: Action[],
   ) {
-    super(depositConversions);
+    super(actions);
   }
 
-  get depositConversionsString(): string {
-    return JSON.stringify(Object.values(this.depositConversions));
+  get actionsString(): string {
+    return JSON.stringify(Object.values(this.actions));
   }
 
-  async addDepositConversion(
-    depositConversion: DepositConversion,
-  ): Promise<DepositConversion> {
-    const result = super.addDepositConversion(depositConversion);
+  async addAction(action: Action): Promise<Action> {
+    const result = super.addAction(action);
 
     await this.writeToFile();
 
     return result;
   }
 
-  async updateDepositConversion(
-    depositConversion: DepositConversion,
-  ): Promise<DepositConversion> {
-    const result = await super.updateDepositConversion(depositConversion);
+  async updateAction(action: Action): Promise<Action> {
+    const result = await super.updateAction(action);
 
     await this.writeToFile();
 
     return result;
   }
 
-  async deleteDepositConversion(
-    depositConversionId: string,
-  ): Promise<DepositConversion> {
-    const result = await super.deleteDepositConversion(depositConversionId);
+  async deleteAction(actionId: string): Promise<Action> {
+    const result = await super.deleteAction(actionId);
 
     await this.writeToFile();
 
@@ -54,30 +48,27 @@ export class FileDepositConversionsService extends InMemoryDepositConversionsSer
   }
 
   async writeToFile(): Promise<void> {
-    const json = this.depositConversionsString;
+    const json = this.actionsString;
 
     await this.fileServiceWriter.writeToFile(this.viceBankPath, json);
   }
 
   async backup() {
     const backupPath = join(this.viceBankPath, 'backup');
-    await this.fileServiceWriter.writeBackup(
-      backupPath,
-      this.depositConversionsString,
-    );
+    await this.fileServiceWriter.writeBackup(backupPath, this.actionsString);
   }
 
   static async init(
     viceBankPath: string,
     options?: { fileServiceWriter?: FileServiceWriter },
-  ): Promise<FileDepositConversionsService> {
+  ): Promise<FileActionService> {
     const fileServiceWriter =
       options?.fileServiceWriter ??
       new FileServiceWriter(BASE_NAME, FILE_EXTENSION);
 
     let rawData = '';
 
-    const users: DepositConversion[] = [];
+    const actions: Action[] = [];
     try {
       rawData = await fileServiceWriter.readFile(viceBankPath);
 
@@ -86,7 +77,7 @@ export class FileDepositConversionsService extends InMemoryDepositConversionsSer
       if (Array.isArray(json)) {
         for (const val of json) {
           try {
-            users.push(DepositConversion.fromJSON(val));
+            actions.push(Action.fromJSON(val));
           } catch (e) {
             console.error('Invalid BlogPost: ', val, e);
           }
@@ -107,10 +98,6 @@ export class FileDepositConversionsService extends InMemoryDepositConversionsSer
       }
     }
 
-    return new FileDepositConversionsService(
-      fileServiceWriter,
-      viceBankPath,
-      users,
-    );
+    return new FileActionService(fileServiceWriter, viceBankPath, actions);
   }
 }

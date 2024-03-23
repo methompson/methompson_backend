@@ -14,7 +14,7 @@ export interface DepositJSON {
   date: string;
   depositQuantity: number;
   conversionRate: number;
-  depositConversionName: string;
+  actionName: string;
   conversionUnit: string;
 }
 
@@ -25,7 +25,7 @@ export class Deposit {
     protected _date: DateTime<true>,
     protected _depositQuantity: number,
     protected _conversionRate: number,
-    protected _depositConversionName: string,
+    protected _actionName: string,
     protected _conversionUnit: string,
   ) {}
 
@@ -49,8 +49,8 @@ export class Deposit {
     return this._conversionRate;
   }
 
-  get depositConversionName(): string {
-    return this._depositConversionName;
+  get actionName(): string {
+    return this._actionName;
   }
 
   get conversionUnit(): string {
@@ -68,7 +68,7 @@ export class Deposit {
       date: this.date.toISO(),
       depositQuantity: this.depositQuantity,
       conversionRate: this.conversionRate,
-      depositConversionName: this.depositConversionName,
+      actionName: this.actionName,
       conversionUnit: this.conversionUnit,
     };
   }
@@ -90,7 +90,7 @@ export class Deposit {
       dateTime,
       input.depositQuantity,
       input.conversionRate,
-      input.depositConversionName,
+      input.actionName,
       input.conversionUnit,
     );
   }
@@ -113,8 +113,7 @@ export class Deposit {
     if (!isValidDateTimeString(input.date)) output.push('date');
     if (!isNumber(input.depositQuantity)) output.push('depositQuantity');
     if (!isNumber(input.conversionRate)) output.push('conversionRate');
-    if (!isString(input.depositConversionName))
-      output.push('depositConversionName');
+    if (!isString(input.actionName)) output.push('actionName');
     if (!isString(input.conversionUnit)) output.push('conversionUnit');
 
     return output;
