@@ -1,20 +1,38 @@
 import { Injectable } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
+import { DateTime } from 'luxon';
 
 import { Action } from '@/src/models/vice_bank/action';
-import { GetPageAndUserOptions } from '@/src/vice_bank/types';
+import {
+  DepositInputOptions,
+  GetPageAndUserOptions,
+} from '@/src/vice_bank/types';
 import { ActionService } from './action.service';
-import { isNullOrUndefined } from '@/src/utils/type_guards';
+import { isNullOrUndefined, isRecord } from '@/src/utils/type_guards';
+import { Deposit } from '@/src/models/vice_bank/deposit';
 
 @Injectable()
 export class InMemoryActionService implements ActionService {
   // Key is the ID
   protected _actions: Record<string, Action> = {};
+  protected _deposits: Record<string, Deposit> = {};
 
-  constructor(actions?: Action[]) {
+  constructor(options?: { actions?: Action[]; deposits?: Deposit[] }) {
+    if (!isRecord(options)) {
+      return;
+    }
+
+    const { actions, deposits } = options;
+
     if (actions) {
-      for (const conversion of actions) {
-        this._actions[conversion.id] = conversion;
+      for (const action of actions) {
+        this._actions[action.id] = action;
+      }
+    }
+
+    if (deposits) {
+      for (const deposit of deposits) {
+        this._deposits[deposit.id] = deposit;
       }
     }
   }
@@ -28,6 +46,14 @@ export class InMemoryActionService implements ActionService {
     list.sort((a, b) => a.name.localeCompare(b.name));
 
     return list;
+  }
+
+  get deposits(): Record<string, Deposit> {
+    return { ...this._deposits };
+  }
+
+  get depositsList(): Deposit[] {
+    return Object.values(this.deposits);
   }
 
   async getActions(input: GetPageAndUserOptions): Promise<Action[]> {
@@ -79,5 +105,70 @@ export class InMemoryActionService implements ActionService {
     delete this._actions[actionId];
 
     return action;
+  }
+
+  async getDeposits(input: DepositInputOptions): Promise<Deposit[]> {
+    const page = input?.page ?? 1;
+    const pagination = input?.pagination ?? 10;
+
+    const skip = pagination * (page - 1);
+    const end = pagination * page;
+
+    const userId = input.userId;
+
+    const startDate = DateTime.fromISO(input?.startDate ?? 'bad', {
+      zone: 'America/Chicago',
+    });
+    const endDate = DateTime.fromISO(input?.endDate ?? 'bad', {
+      zone: 'America/Chicago',
+    });
+
+    const deposits = this.depositsList.filter((d) => {
+      if (d.vbUserId !== userId) return false;
+      if (startDate.isValid && d.date < startDate) return false;
+      if (endDate.isValid && d.date > endDate) return false;
+
+      return true;
+    });
+
+    deposits.sort((a, b) => a.date.toMillis() - b.date.toMillis());
+    const output = deposits.slice(skip, end);
+
+    return output;
+  }
+
+  async addDeposit(deposit: Deposit): Promise<Deposit> {
+    const id = uuidv4();
+
+    const newDeposit = Deposit.fromNewDeposit(id, deposit);
+    this._deposits[id] = newDeposit;
+
+    return newDeposit;
+  }
+
+  async updateDeposit(deposit: Deposit): Promise<Deposit> {
+    const { id } = deposit;
+
+    const existingDeposit = this._deposits[id];
+
+    if (isNullOrUndefined(existingDeposit)) {
+      throw new Error(`Deposit with ID ${id} not found`);
+    }
+
+    this._deposits[id] = deposit;
+
+    return existingDeposit;
+  }
+
+  async deleteDeposit(depositId: string): Promise<Deposit> {
+    const deposit = this._deposits[depositId];
+
+    if (isNullOrUndefined(deposit)) {
+      throw new Error(`Deposit with ID ${depositId} not found`);
+    }
+
+    delete this._deposits[depositId];
+
+    return deposit;
   }
 }
