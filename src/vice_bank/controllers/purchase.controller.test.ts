@@ -472,7 +472,7 @@ describe('Purchase Controller', () => {
       const result = await controller.deletePurchase(request);
 
       const currentTokens =
-        user1.currentTokens + purchase1.purchasedQuantity * pp1.price * -1;
+        user1.currentTokens + purchase1.purchasedQuantity * pp1.price;
 
       expect(result).toEqual({ purchase: purchase1.toJSON(), currentTokens });
       expect(service.purchasesList.length).toBe(0);

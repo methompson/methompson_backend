@@ -218,7 +218,7 @@ export class PurchaseController {
         this.viceBankUserService.getViceBankUser(purchaseToDelete.vbUserId),
       ]);
 
-      const tokenDif = purchaseToDelete.purchasedQuantity * price.price * -1;
+      const tokenDif = purchaseToDelete.purchasedQuantity * price.price;
       const currentTokens = user.currentTokens + tokenDif;
 
       await this.viceBankUserService.updateViceBankUser(
