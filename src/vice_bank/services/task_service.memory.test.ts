@@ -885,6 +885,22 @@ describe('InMemoryTaskService', () => {
       expect(updatedDeposit.tokensEarned).not.toBe(0);
     });
 
+    test('if the updated deposit earns zero on one date and earns zero on another date, the earned tokens will be the same', async () => {
+      expect(true).toBe(false);
+    });
+
+    test('if the updated deposit earns zero on one date and earns tokens on another date, the earned tokens will go up', async () => {
+      expect(true).toBe(false);
+    });
+
+    test('If the updated deposit earns tokens on one date and earns zero on another date, the earned tokens will go down', async () => {
+      expect(true).toBe(false);
+    });
+
+    test('If the updated deposit earns tokens on one date and earns tokens on another date, the earned tokens will be the same', async () => {
+      expect(true).toBe(false);
+    });
+
     test('if the updated deposit is on a different date and is the only deposit during that frequency, tokens earned is set to the conversion rate', async () => {
       const td4 = TaskDeposit.fromJSON({
         ...td1.toJSON(),

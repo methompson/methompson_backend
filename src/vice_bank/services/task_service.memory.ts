@@ -214,9 +214,12 @@ export class InMemoryTaskService implements TaskService {
     let depositToUpload = deposit;
     let tokensAdded = deposit.tokensEarned;
 
-    // If the deposit in question is NOT in the list, we have to set the tokens
-    // to 0 if it's not already set. This will happen if the date is different.
+    // If the deposit in question is NOT in the list, it's because the date was.
+    // We have to set the tokens to 0 if it's not already set.
     if (existingDeposits.length === filtered.length) {
+      // We add up existing tokens to see if we need to set the tokens in the
+      // updated task. A value of 0 means that no tokens were earned for this
+      // task yet.
       const result = filtered.reduce((acc, curr) => acc + curr.tokensEarned, 0);
       if (result > 0) depositToUpload = deposit.withTokensEarned(0);
       else depositToUpload = deposit.withTokensEarned(deposit.conversionRate);
@@ -250,6 +253,9 @@ export class InMemoryTaskService implements TaskService {
         0,
       );
 
+      // If current tokens is less than prior tokens, we have to subtract from
+      // the user's tokens. So we return a negative number. Adding a negative
+      // will subtract from the value,
       tokensAdded = currentTokens - priorTokens;
 
       for (const deposit of deposits) {
@@ -257,15 +263,21 @@ export class InMemoryTaskService implements TaskService {
       }
     }
 
+    // We return the tokens added so that the user's tokens can be updated.
     return { taskDeposit: existingDeposit, tokensAdded };
   }
 
+  // Takes a list of deposits and sets the first deposit to the tokens
+  // earned and the rest to 0. This makes sure that only the first deposit
+  // has tokens earned.
   updateTaskDepositTokens(deposits: TaskDeposit[]): TaskDeposit[] {
     const output: TaskDeposit[] = [];
 
     deposits
       .sort((a, b) => a.date.toMillis() - b.date.toMillis())
       .forEach((task, index) => {
+        // If the index is 0, we set the tokens earned to the conversion rate
+        // every other index gets a 0 value for tokens earned
         const tokensEarned = index === 0 ? task.conversionRate : 0;
         output.push(task.withTokensEarned(tokensEarned));
       });
