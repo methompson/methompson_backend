@@ -575,7 +575,7 @@ describe('TaskController', () => {
         tokensAdded: td1.tokensEarned,
       });
 
-      const getvbSpy = jest.spyOn(vbService, 'getViceBankUsers');
+      const getvbSpy = jest.spyOn(vbService, 'getViceBankUser');
       const upvbSpy = jest.spyOn(vbService, 'updateViceBankUser');
 
       const result = await controller.addTaskDeposit(request);
@@ -588,7 +588,7 @@ describe('TaskController', () => {
       expect(addSpy).toHaveBeenCalledTimes(1);
 
       expect(getvbSpy).toHaveBeenCalledTimes(1);
-      expect(getvbSpy).toHaveBeenCalledWith('userId', { userId: vbUserId1 });
+      expect(getvbSpy).toHaveBeenCalledWith(vbUserId1);
 
       expect(upvbSpy).toHaveBeenCalledTimes(1);
       expect(upvbSpy).toHaveBeenCalledWith(user1.copyWith({ currentTokens }));
@@ -649,7 +649,7 @@ describe('TaskController', () => {
         tokensAdded: 0,
       });
 
-      const getvbSpy = jest.spyOn(vbService, 'getViceBankUsers');
+      const getvbSpy = jest.spyOn(vbService, 'getViceBankUser');
       const upvbSpy = jest.spyOn(vbService, 'updateViceBankUser');
 
       const result = await controller.updateTaskDeposit(request);
@@ -662,7 +662,7 @@ describe('TaskController', () => {
       expect(upSpy).toHaveBeenCalledTimes(1);
 
       expect(getvbSpy).toHaveBeenCalledTimes(1);
-      expect(getvbSpy).toHaveBeenCalledWith('userId', { userId: vbUserId1 });
+      expect(getvbSpy).toHaveBeenCalledWith(vbUserId1);
 
       expect(upvbSpy).toHaveBeenCalledTimes(1);
       expect(upvbSpy).toHaveBeenCalledWith(user1);
@@ -723,7 +723,7 @@ describe('TaskController', () => {
         tokensAdded: -1,
       });
 
-      const getvbSpy = jest.spyOn(vbService, 'getViceBankUsers');
+      const getvbSpy = jest.spyOn(vbService, 'getViceBankUser');
       const upvbSpy = jest.spyOn(vbService, 'updateViceBankUser');
 
       const result = await controller.deleteTaskDeposit(request);
@@ -736,7 +736,7 @@ describe('TaskController', () => {
       expect(delSpy).toHaveBeenCalledTimes(1);
 
       expect(getvbSpy).toHaveBeenCalledTimes(1);
-      expect(getvbSpy).toHaveBeenCalledWith('userId', { userId: vbUserId1 });
+      expect(getvbSpy).toHaveBeenCalledWith(vbUserId1);
 
       expect(upvbSpy).toHaveBeenCalledTimes(1);
       expect(upvbSpy).toHaveBeenCalledWith(

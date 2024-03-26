@@ -7,6 +7,7 @@ describe('Deposit', () => {
     date: '2023-02-25T00:00:00.000-06:00',
     depositQuantity: 1,
     conversionRate: 1,
+    actionId: 'actionId',
     actionName: 'actionName',
     conversionUnit: 'minutes',
   };
@@ -57,6 +58,10 @@ describe('Deposit', () => {
       expect(() => Deposit.fromJSON(invalidInput)).toThrow();
 
       invalidInput = { ...validInput };
+      delete invalidInput.actionId;
+      expect(() => Deposit.fromJSON(invalidInput)).toThrow();
+
+      invalidInput = { ...validInput };
       delete invalidInput.actionName;
       expect(() => Deposit.fromJSON(invalidInput)).toThrow();
     });
@@ -92,6 +97,18 @@ describe('Deposit', () => {
 
       invalidInput = { ...validInput };
       delete invalidInput.depositQuantity;
+      expect(Deposit.isDepositJSON(invalidInput)).toBe(false);
+
+      invalidInput = { ...validInput };
+      delete invalidInput.conversionRate;
+      expect(Deposit.isDepositJSON(invalidInput)).toBe(false);
+
+      invalidInput = { ...validInput };
+      delete invalidInput.actionId;
+      expect(Deposit.isDepositJSON(invalidInput)).toBe(false);
+
+      invalidInput = { ...validInput };
+      delete invalidInput.actionName;
       expect(Deposit.isDepositJSON(invalidInput)).toBe(false);
     });
 
@@ -133,6 +150,10 @@ describe('Deposit', () => {
       invalidInput = { ...validInput };
       delete invalidInput.conversionRate;
       expect(Deposit.DepositJSONTest(invalidInput)).toEqual(['conversionRate']);
+
+      invalidInput = { ...validInput };
+      delete invalidInput.actionId;
+      expect(Deposit.DepositJSONTest(invalidInput)).toEqual(['actionId']);
 
       invalidInput = { ...validInput };
       delete invalidInput.actionName;

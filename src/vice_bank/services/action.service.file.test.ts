@@ -46,7 +46,8 @@ const deposit1JSON: DepositJSON = {
   date: '2024-01-01T00:00:00.000-06:00',
   depositQuantity: 1,
   conversionRate: 1,
-  actionName: 'name1',
+  actionId: action1.id,
+  actionName: action1.name,
   conversionUnit: 'minutes',
 };
 const deposit2JSON: DepositJSON = {
@@ -55,7 +56,8 @@ const deposit2JSON: DepositJSON = {
   date: '2024-01-12T00:00:00.000-06:00',
   depositQuantity: 1,
   conversionRate: 1,
-  actionName: 'name1',
+  actionId: action1.id,
+  actionName: action1.name,
   conversionUnit: 'minutes',
 };
 const deposit3JSON: DepositJSON = {
@@ -64,7 +66,8 @@ const deposit3JSON: DepositJSON = {
   date: '2024-02-01T00:00:00.000-06:00',
   depositQuantity: 1,
   conversionRate: 1,
-  actionName: 'name2',
+  actionId: action3.id,
+  actionName: action3.name,
   conversionUnit: 'minutes',
 };
 

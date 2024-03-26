@@ -6,6 +6,7 @@ import { Action } from '@/src/models/vice_bank/action';
 import { FileServiceWriter } from '@/src/utils/file_service_writer';
 import { Deposit } from '@/src/models/vice_bank/deposit';
 import { isRecord } from '@/src/utils/type_guards';
+import { DepositResponse } from '@/src/vice_bank/types';
 
 const BASE_NAME = 'action_data';
 const FILE_EXTENSION = 'json';
@@ -52,7 +53,7 @@ export class FileActionService extends InMemoryActionService {
     return result;
   }
 
-  async addDeposit(deposit: Deposit): Promise<Deposit> {
+  async addDeposit(deposit: Deposit): Promise<DepositResponse> {
     const result = await super.addDeposit(deposit);
 
     await this.writeToFile();
@@ -60,7 +61,7 @@ export class FileActionService extends InMemoryActionService {
     return result;
   }
 
-  async updateDeposit(deposit: Deposit): Promise<Deposit> {
+  async updateDeposit(deposit: Deposit): Promise<DepositResponse> {
     const result = await super.updateDeposit(deposit);
 
     await this.writeToFile();
@@ -68,7 +69,7 @@ export class FileActionService extends InMemoryActionService {
     return result;
   }
 
-  async deleteDeposit(depositId: string): Promise<Deposit> {
+  async deleteDeposit(depositId: string): Promise<DepositResponse> {
     const result = await super.deleteDeposit(depositId);
 
     await this.writeToFile();

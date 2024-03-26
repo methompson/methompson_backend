@@ -5,6 +5,7 @@ import { DateTime } from 'luxon';
 import { Action } from '@/src/models/vice_bank/action';
 import {
   DepositInputOptions,
+  DepositResponse,
   GetPageAndUserOptions,
 } from '@/src/vice_bank/types';
 import { ActionService } from './action.service';
@@ -72,6 +73,22 @@ export class InMemoryActionService implements ActionService {
     return list;
   }
 
+  async getAction(actionId: string): Promise<Action> {
+    const list = this.actionsList.filter((p) => p.id === actionId);
+
+    const action = list[0];
+
+    if (isNullOrUndefined(action)) {
+      throw new Error(`Action with ID ${actionId} not found`);
+    }
+
+    if (list.length > 1) {
+      throw new Error(`Multiple actions with ID ${actionId} found`);
+    }
+
+    return action;
+  }
+
   async addAction(action: Action): Promise<Action> {
     const id = uuidv4();
 
@@ -137,16 +154,19 @@ export class InMemoryActionService implements ActionService {
     return output;
   }
 
-  async addDeposit(deposit: Deposit): Promise<Deposit> {
+  async addDeposit(deposit: Deposit): Promise<DepositResponse> {
     const id = uuidv4();
 
     const newDeposit = Deposit.fromNewDeposit(id, deposit);
     this._deposits[id] = newDeposit;
 
-    return newDeposit;
+    return {
+      deposit: newDeposit,
+      tokensAdded: newDeposit.tokensEarned,
+    };
   }
 
-  async updateDeposit(deposit: Deposit): Promise<Deposit> {
+  async updateDeposit(deposit: Deposit): Promise<DepositResponse> {
     const { id } = deposit;
 
     const existingDeposit = this._deposits[id];
@@ -157,10 +177,13 @@ export class InMemoryActionService implements ActionService {
 
     this._deposits[id] = deposit;
 
-    return existingDeposit;
+    return {
+      deposit: existingDeposit,
+      tokensAdded: deposit.tokensEarned - existingDeposit.tokensEarned,
+    };
   }
 
-  async deleteDeposit(depositId: string): Promise<Deposit> {
+  async deleteDeposit(depositId: string): Promise<DepositResponse> {
     const deposit = this._deposits[depositId];
 
     if (isNullOrUndefined(deposit)) {
@@ -169,6 +192,9 @@ export class InMemoryActionService implements ActionService {
 
     delete this._deposits[depositId];
 
-    return deposit;
+    return {
+      deposit: deposit,
+      tokensAdded: -1 * deposit.tokensEarned,
+    };
   }
 }

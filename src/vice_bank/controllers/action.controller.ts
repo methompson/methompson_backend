@@ -194,19 +194,33 @@ export class ActionController {
         throw new InvalidInputError('Invalid Body');
       }
 
-      const newDeposit = Deposit.fromJSON(body.deposit);
+      // Here, we parse the raw deposit from the request body
+      const rawDeposit = Deposit.fromJSON(body.deposit);
 
-      const users = await this.viceBankUserService.getViceBankUsers(
-        auth.userId,
-        { userId: newDeposit.vbUserId },
-      );
+      // We get the users and action from the database
+      const [user, action] = await Promise.all([
+        this.viceBankUserService.getViceBankUser(rawDeposit.vbUserId),
+        this.actionService.getAction(rawDeposit.actionId),
+      ]);
 
-      const user = users[0];
       if (isNullOrUndefined(user)) {
         throw new NotFoundError(
-          `User with ID ${newDeposit.vbUserId} not found`,
+          `User with ID ${rawDeposit.vbUserId} not found`,
         );
       }
+
+      if (isNullOrUndefined(action)) {
+        throw new NotFoundError(
+          `Action with ID ${rawDeposit.vbUserId} not found`,
+        );
+      }
+
+      const newDeposit = rawDeposit.copyWith({
+        actionId: action.id,
+        actionName: action.name,
+        conversionRate: action.conversionRate,
+        tokensEarned: rawDeposit.depositQuantity * action.conversionRate,
+      });
 
       const tokensEarned = newDeposit.tokensEarned;
 
@@ -214,14 +228,17 @@ export class ActionController {
         currentTokens: user.currentTokens + tokensEarned,
       });
 
-      const [deposit] = await Promise.all([
+      const [response] = await Promise.all([
         this.actionService.addDeposit(newDeposit),
         this.viceBankUserService.updateViceBankUser(userToUpdate),
       ]);
 
       // const deposit = await this.actionService.addDeposit(newDeposit);
 
-      return { deposit, currentTokens: userToUpdate.currentTokens };
+      return {
+        deposit: response.deposit,
+        currentTokens: userToUpdate.currentTokens,
+      };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
@@ -238,8 +255,8 @@ export class ActionController {
 
       const updatedDeposit = Deposit.fromJSON(body.deposit);
 
-      const deposit = await this.actionService.updateDeposit(updatedDeposit);
-      return { deposit };
+      const response = await this.actionService.updateDeposit(updatedDeposit);
+      return { deposit: response.deposit };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
@@ -254,8 +271,8 @@ export class ActionController {
         throw new InvalidInputError('Invalid Deposit Id');
       }
 
-      const deposit = await this.actionService.deleteDeposit(body.depositId);
-      return { deposit };
+      const response = await this.actionService.deleteDeposit(body.depositId);
+      return { deposit: response.deposit };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }

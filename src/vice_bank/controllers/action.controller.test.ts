@@ -58,7 +58,8 @@ const deposit1JSON: DepositJSON = {
   date: '2021-01-01T00:00:00.000-06:00',
   depositQuantity: 1,
   conversionRate: 1,
-  actionName: 'name1',
+  actionId: action1.id,
+  actionName: action1.name,
   conversionUnit: 'minutes',
 };
 const deposit2JSON: DepositJSON = {
@@ -67,7 +68,8 @@ const deposit2JSON: DepositJSON = {
   date: '2021-01-12T00:00:00.000-06:00',
   depositQuantity: 1,
   conversionRate: 1,
-  actionName: 'name1',
+  actionId: action1.id,
+  actionName: action1.name,
   conversionUnit: 'minutes',
 };
 const deposit3JSON: DepositJSON = {
@@ -76,7 +78,8 @@ const deposit3JSON: DepositJSON = {
   date: '2021-02-01T00:00:00.000-06:00',
   depositQuantity: 1,
   conversionRate: 1,
-  actionName: 'name2',
+  actionId: action1.id,
+  actionName: action1.name,
   conversionUnit: 'minutes',
 };
 
@@ -548,7 +551,9 @@ describe('ActionController', () => {
 
   describe('addDeposit', () => {
     test('adds a deposit to the DepositService', async () => {
-      const service = new InMemoryActionService();
+      const service = new InMemoryActionService({
+        actions: [action1],
+      });
       const logger = new LoggerService();
 
       const controller = new ActionController(service, vbService, logger);
@@ -563,7 +568,9 @@ describe('ActionController', () => {
         },
       } as unknown as METIncomingMessage;
 
-      jest.spyOn(service, 'addDeposit').mockResolvedValue(deposit1);
+      jest
+        .spyOn(service, 'addDeposit')
+        .mockResolvedValue({ deposit: deposit1, tokensAdded: 2 });
 
       const deposit = await controller.addDeposit(req);
 

@@ -229,11 +229,9 @@ export class TaskController {
 
       const newDeposit = TaskDeposit.fromJSON(body.taskDeposit);
 
-      const user = (
-        await this.viceBankUserService.getViceBankUsers(auth.userId, {
-          userId: newDeposit.vbUserId,
-        })
-      )[0];
+      const user = await this.viceBankUserService.getViceBankUser(
+        newDeposit.vbUserId,
+      );
 
       if (isNullOrUndefined(user)) {
         throw new NotFoundError(
@@ -276,11 +274,9 @@ export class TaskController {
 
       const taskDeposit = TaskDeposit.fromJSON(body.taskDeposit);
 
-      const user = (
-        await this.viceBankUserService.getViceBankUsers(auth.userId, {
-          userId: taskDeposit.vbUserId,
-        })
-      )[0];
+      const user = await this.viceBankUserService.getViceBankUser(
+        taskDeposit.vbUserId,
+      );
 
       if (isNullOrUndefined(user)) {
         throw new NotFoundError(
@@ -325,11 +321,9 @@ export class TaskController {
         body.taskDepositId,
       );
 
-      const user = (
-        await this.viceBankUserService.getViceBankUsers(auth.userId, {
-          userId: result.taskDeposit.vbUserId,
-        })
-      )[0];
+      const user = await this.viceBankUserService.getViceBankUser(
+        result.taskDeposit.vbUserId,
+      );
 
       if (isNullOrUndefined(user)) {
         throw new NotFoundError(

@@ -57,7 +57,8 @@ const deposit1JSON: DepositJSON = {
   date: '2024-01-01T00:00:00.000-06:00',
   depositQuantity: 1,
   conversionRate: 1,
-  actionName: 'name1',
+  actionId: action1.id,
+  actionName: action1.name,
   conversionUnit: 'minutes',
 };
 const deposit2JSON: DepositJSON = {
@@ -66,7 +67,8 @@ const deposit2JSON: DepositJSON = {
   date: '2024-01-12T00:00:00.000-06:00',
   depositQuantity: 1,
   conversionRate: 1,
-  actionName: 'name1',
+  actionId: action1.id,
+  actionName: action1.name,
   conversionUnit: 'minutes',
 };
 const deposit3JSON: DepositJSON = {
@@ -75,7 +77,8 @@ const deposit3JSON: DepositJSON = {
   date: '2024-02-01T00:00:00.000-06:00',
   depositQuantity: 1,
   conversionRate: 1,
-  actionName: 'name2',
+  actionId: action3.id,
+  actionName: action3.name,
   conversionUnit: 'minutes',
 };
 
@@ -314,6 +317,35 @@ describe('InMemoryActionsService', () => {
     });
   });
 
+  describe('getAction', () => {
+    test('returns the action', async () => {
+      const service = new InMemoryActionService({
+        actions: [action1, action2, action3],
+      });
+
+      const result1 = await service.getAction(action1.id);
+      expect(result1).toBe(action1);
+
+      const result2 = await service.getAction(action2.id);
+      expect(result2).toBe(action2);
+
+      const result3 = await service.getAction(action3.id);
+      expect(result3).toBe(action3);
+    });
+
+    test('throws an error if the action does not exist', async () => {
+      const service = new InMemoryActionService({
+        actions: [action1, action2, action3],
+      });
+
+      const badId = 'bad id';
+
+      await expect(() => service.getAction(badId)).rejects.toThrow(
+        `Action with ID ${badId} not found`,
+      );
+    });
+  });
+
   describe('addAction', () => {
     test('adds a action to the actions', async () => {
       const someId = 'someId';
@@ -516,7 +548,8 @@ describe('InMemoryActionsService', () => {
           date: baseDate.plus({ days: i }).toISO(),
           depositQuantity: i,
           conversionRate: i,
-          actionName: `name${i}`,
+          actionId: action1.id,
+          actionName: action1.name,
           conversionUnit: 'minutes',
         };
 
@@ -570,7 +603,8 @@ describe('InMemoryActionsService', () => {
           date: baseDate.plus({ days: i }).toISO(),
           depositQuantity: i,
           conversionRate: i,
-          actionName: `name${i}`,
+          actionId: action1.id,
+          actionName: action1.name,
           conversionUnit: 'minutes',
         };
 
@@ -622,7 +656,8 @@ describe('InMemoryActionsService', () => {
           date: baseDate.plus({ days: i }).toISO(),
           depositQuantity: i,
           conversionRate: i,
-          actionName: `name${i}`,
+          actionId: action1.id,
+          actionName: action1.name,
           conversionUnit: 'minutes',
         };
 
@@ -680,7 +715,8 @@ describe('InMemoryActionsService', () => {
           date: baseDate.plus({ days: i }).toISO(),
           depositQuantity: i,
           conversionRate: i,
-          actionName: `name${i}`,
+          actionId: action1.id,
+          actionName: action1.name,
           conversionUnit: 'minutes',
         };
 
@@ -792,12 +828,13 @@ describe('InMemoryActionsService', () => {
 
       const result = await service.addDeposit(deposit1);
 
-      expect(result.toJSON()).toEqual({
+      expect(result.tokensAdded).toBe(deposit1.tokensEarned);
+      expect(result.deposit.toJSON()).toEqual({
         ...deposit1.toJSON(),
         id: someId,
       });
       expect(service.depositsList.length).toBe(1);
-      expect(service.depositsList[0]).toBe(result);
+      expect(service.depositsList[0]).toBe(result.deposit);
     });
   });
 
@@ -814,7 +851,10 @@ describe('InMemoryActionsService', () => {
 
       const result = await service.updateDeposit(newDeposit);
 
-      expect(result).toEqual(deposit1);
+      expect(result.tokensAdded).toBe(
+        newDeposit.tokensEarned - deposit1.tokensEarned,
+      );
+      expect(result.deposit).toEqual(deposit1);
       expect(service.depositsList.length).toBe(3);
       expect(service.depositsList[0]).toBe(newDeposit);
     });
@@ -845,7 +885,8 @@ describe('InMemoryActionsService', () => {
 
       const result = await service.deleteDeposit(deposit1.id);
 
-      expect(result).toEqual(deposit1);
+      expect(result.tokensAdded).toBe(-1 * deposit1.tokensEarned);
+      expect(result.deposit).toEqual(deposit1);
       expect(service.depositsList.length).toBe(2);
       expect(service.depositsList.includes(deposit1)).toBeFalsy();
     });
