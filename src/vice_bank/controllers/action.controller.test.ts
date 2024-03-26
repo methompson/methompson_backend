@@ -449,6 +449,9 @@ describe('ActionController', () => {
       const service = new InMemoryActionService({
         deposits: [deposit1, deposit2, deposit3],
       });
+
+      const getSpy = jest.spyOn(service, 'getDeposits');
+
       const logger = new LoggerService();
 
       const controller = new ActionController(service, vbService, logger);
@@ -462,6 +465,16 @@ describe('ActionController', () => {
       const deposits = await controller.getDeposits(req);
 
       expect(deposits).toEqual({ deposits: [deposit1, deposit2] });
+
+      expect(getSpy).toHaveBeenCalledTimes(1);
+      expect(getSpy).toHaveBeenCalledWith({
+        page: 1,
+        pagination: 10,
+        userId: vbUserId1,
+        startDate: undefined,
+        endDate: undefined,
+        depositConversionId: undefined,
+      });
     });
 
     test('start date and end date get passed to the DepositService', async () => {
@@ -643,6 +656,7 @@ describe('ActionController', () => {
   describe('updateDeposit', () => {
     test('updates a deposit in the DepositService', async () => {
       const service = new InMemoryActionService({
+        actions: [action1],
         deposits: [deposit1],
       });
       const logger = new LoggerService();
@@ -657,10 +671,31 @@ describe('ActionController', () => {
         },
       } as unknown as Request;
 
+      const getSpy = jest.spyOn(vbService, 'getViceBankUser');
+      const updateSpy = jest.spyOn(vbService, 'updateViceBankUser');
+
       const result = await controller.updateDeposit(req);
 
-      expect(result).toEqual({ deposit: deposit1 });
+      expect(result.oldDeposit).toBe(deposit1);
+      expect(result.deposit.toJSON()).toEqual(updatedDeposit);
+
+      const tokenDiff =
+        (updatedDeposit.depositQuantity - deposit1.depositQuantity) *
+        action1.tokensPer;
+      const currentTokens = user1.currentTokens + tokenDiff;
+
+      expect(result.currentTokens).toBe(currentTokens);
+
       expect(service.depositsList[0]?.toJSON()).toEqual(updatedDeposit);
+
+      expect(getSpy).toHaveBeenCalledTimes(1);
+      expect(getSpy).toHaveBeenCalledWith(vbUserId1);
+      expect(updateSpy).toHaveBeenCalledTimes(1);
+
+      const userToUpdate = user1.copyWith({
+        currentTokens,
+      });
+      expect(updateSpy).toHaveBeenCalledWith(userToUpdate);
     });
 
     test('throws an error if the body is invalid', async () => {
@@ -722,6 +757,7 @@ describe('ActionController', () => {
   describe('deleteDeposit', () => {
     test('deletes a deposit from the DepositService', async () => {
       const service = new InMemoryActionService({
+        actions: [action1],
         deposits: [deposit1],
       });
       const logger = new LoggerService();
@@ -734,10 +770,26 @@ describe('ActionController', () => {
         },
       } as unknown as Request;
 
+      const getSpy = jest.spyOn(vbService, 'getViceBankUser');
+      const updateSpy = jest.spyOn(vbService, 'updateViceBankUser');
+
       const result = await controller.deleteDeposit(req);
 
-      expect(result).toEqual({ deposit: deposit1 });
+      expect(result.deposit).toBe(deposit1);
+
+      const currentTokens = user1.currentTokens + deposit1.tokensEarned * -1;
+      expect(result.currentTokens).toBe(currentTokens);
+
       expect(service.depositsList).toEqual([]);
+
+      expect(getSpy).toHaveBeenCalledTimes(1);
+      expect(getSpy).toHaveBeenCalledWith(vbUserId1);
+      expect(updateSpy).toHaveBeenCalledTimes(1);
+
+      const userToUpdate = user1.copyWith({
+        currentTokens,
+      });
+      expect(updateSpy).toHaveBeenCalledWith(userToUpdate);
     });
 
     test('throws an error if the body is invalid', async () => {

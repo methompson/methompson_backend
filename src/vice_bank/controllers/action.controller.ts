@@ -45,9 +45,12 @@ interface AddDepositResponse {
 }
 interface UpdateDepositResponse {
   deposit: Deposit;
+  oldDeposit: Deposit;
+  currentTokens: number;
 }
 interface DeleteDepositResponse {
   deposit: Deposit;
+  currentTokens: number;
 }
 
 @UseInterceptors(RequestLogInterceptor)
@@ -253,10 +256,50 @@ export class ActionController {
         throw new InvalidInputError('Invalid Body');
       }
 
-      const updatedDeposit = Deposit.fromJSON(body.deposit);
+      // Here, we parse the raw deposit from the request body
+      const rawDeposit = Deposit.fromJSON(body.deposit);
+
+      // We get the users and action from the database
+      const [user, action] = await Promise.all([
+        this.viceBankUserService.getViceBankUser(rawDeposit.vbUserId),
+        this.actionService.getAction(rawDeposit.actionId),
+      ]);
+
+      if (isNullOrUndefined(user)) {
+        throw new NotFoundError(
+          `User with ID ${rawDeposit.vbUserId} not found`,
+        );
+      }
+
+      if (isNullOrUndefined(action)) {
+        throw new NotFoundError(
+          `Action with ID ${rawDeposit.vbUserId} not found`,
+        );
+      }
+
+      const updatedDeposit = rawDeposit.copyWith({
+        actionId: action.id,
+        actionName: action.name,
+        conversionRate: action.conversionRate,
+        tokensEarned: rawDeposit.depositQuantity * action.conversionRate,
+      });
 
       const response = await this.actionService.updateDeposit(updatedDeposit);
-      return { deposit: response.deposit };
+
+      const tokensEarned =
+        updatedDeposit.tokensEarned - response.deposit.tokensEarned;
+
+      const userToUpdate = user.copyWith({
+        currentTokens: user.currentTokens + tokensEarned,
+      });
+
+      await this.viceBankUserService.updateViceBankUser(userToUpdate);
+
+      return {
+        deposit: updatedDeposit,
+        oldDeposit: response.deposit,
+        currentTokens: userToUpdate.currentTokens,
+      };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
@@ -272,7 +315,21 @@ export class ActionController {
       }
 
       const response = await this.actionService.deleteDeposit(body.depositId);
-      return { deposit: response.deposit };
+
+      const user = await this.viceBankUserService.getViceBankUser(
+        response.deposit.vbUserId,
+      );
+
+      const userToUpdate = user.copyWith({
+        currentTokens: user.currentTokens + response.tokensAdded,
+      });
+
+      await this.viceBankUserService.updateViceBankUser(userToUpdate);
+
+      return {
+        deposit: response.deposit,
+        currentTokens: userToUpdate.currentTokens,
+      };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
