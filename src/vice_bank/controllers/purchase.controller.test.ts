@@ -474,6 +474,8 @@ describe('Purchase Controller', () => {
       const currentTokens =
         user1.currentTokens + purchase1.purchasedQuantity * pp1.price;
 
+      expect(currentTokens).toBe(2);
+
       expect(result).toEqual({ purchase: purchase1.toJSON(), currentTokens });
       expect(service.purchasesList.length).toBe(0);
       expect(deleteSpy).toHaveBeenCalledTimes(1);
