@@ -372,7 +372,11 @@ describe('Purchase Controller', () => {
 
       const result = await controller.updatePurchase(request);
 
-      expect(result).toEqual({ purchase: purchase1.toJSON(), currentTokens });
+      expect(result).toEqual({
+        purchase: updatedPurchase,
+        oldPurchase: purchase1.toJSON(),
+        currentTokens,
+      });
       expect(updateSpy).toHaveBeenCalledTimes(1);
 
       expect(getUserSpy).toHaveBeenCalledTimes(1);

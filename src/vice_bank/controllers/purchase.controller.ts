@@ -33,6 +33,7 @@ interface AddPurchaseResponse {
 }
 interface UpdatePurchaseResponse {
   purchase: PurchaseJSON;
+  oldPurchase: PurchaseJSON;
   currentTokens: number;
 }
 interface DeletePurchaseResponse {
@@ -185,7 +186,11 @@ export class PurchaseController {
         user.copyWith({ currentTokens }),
       );
 
-      return { purchase: res.toJSON(), currentTokens };
+      return {
+        purchase: purchaseToUpdate.toJSON(),
+        oldPurchase: res.toJSON(),
+        currentTokens,
+      };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
