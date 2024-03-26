@@ -14,38 +14,43 @@ import { LoggerService } from '@/src/logger/logger.service';
 import { PurchaseService } from '@/src/vice_bank/services/purchase.service';
 import { ViceBankUserService } from '@/src/vice_bank/services/vice_bank_user.service';
 import { pageAndPagination } from '@/src/utils/page_and_pagination';
-import { Purchase } from '@/src/models/vice_bank/purchase';
+import { Purchase, PurchaseJSON } from '@/src/models/vice_bank/purchase';
 import { InvalidInputError, NotFoundError } from '@/src/errors';
 import { isNullOrUndefined, isRecord, isString } from '@/src/utils/type_guards';
 import { commonErrorHandler } from '@/src/utils/common_error_handler';
 import { type METIncomingMessage } from '@/src/utils/met_incoming_message';
-import { PurchasePrice } from '@/src/models/vice_bank/purchase_price';
+import {
+  PurchasePrice,
+  PurchasePriceJSON,
+} from '@/src/models/vice_bank/purchase_price';
 
 interface GetPurchasesResponse {
-  purchases: Purchase[];
+  purchases: PurchaseJSON[];
 }
 interface AddPurchaseResponse {
-  purchase: Purchase;
+  purchase: PurchaseJSON;
   currentTokens: number;
 }
 interface UpdatePurchaseResponse {
-  purchase: Purchase;
+  purchase: PurchaseJSON;
+  currentTokens: number;
 }
 interface DeletePurchaseResponse {
-  purchase: Purchase;
+  purchase: PurchaseJSON;
+  currentTokens: number;
 }
 
 interface GetPurchasePricesResponse {
-  purchasePrices: PurchasePrice[];
+  purchasePrices: PurchasePriceJSON[];
 }
 interface AddPurchasePriceResponse {
-  purchasePrice: PurchasePrice;
+  purchasePrice: PurchasePriceJSON;
 }
 interface UpdatePurchasePriceResponse {
-  purchasePrice: PurchasePrice;
+  purchasePrice: PurchasePriceJSON;
 }
 interface DeletePurchasePriceResponse {
-  purchasePrice: PurchasePrice;
+  purchasePrice: PurchasePriceJSON;
 }
 
 @UseInterceptors(RequestLogInterceptor)
@@ -76,14 +81,16 @@ export class PurchaseController {
         throw new InvalidInputError('Invalid User Id');
       }
 
-      const purchases = await this.purchasesService.getPurchases({
-        page,
-        pagination,
-        userId,
-        startDate,
-        endDate,
-        purchasePriceId,
-      });
+      const purchases = (
+        await this.purchasesService.getPurchases({
+          page,
+          pagination,
+          userId,
+          startDate,
+          endDate,
+          purchasePriceId,
+        })
+      ).map((purchase) => purchase.toJSON());
 
       return { purchases };
     } catch (e) {
@@ -137,7 +144,10 @@ export class PurchaseController {
 
       // const res = await this.purchesService.addPurchase(newPurchase);
 
-      return { purchase, currentTokens: userToUpdate.currentTokens };
+      return {
+        purchase: purchase.toJSON(),
+        currentTokens: userToUpdate.currentTokens,
+      };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
@@ -154,11 +164,28 @@ export class PurchaseController {
         throw new InvalidInputError('Invalid Purchase Body');
       }
 
-      const purchase = Purchase.fromJSON(body.purchase);
+      const purchaseToUpdate = Purchase.fromJSON(body.purchase);
 
-      const res = await this.purchasesService.updatePurchase(purchase);
+      const [price, user] = await Promise.all([
+        this.purchasesService.getPurchasePrice(
+          purchaseToUpdate.purchasePriceId,
+        ),
+        this.viceBankUserService.getViceBankUser(purchaseToUpdate.vbUserId),
+      ]);
 
-      return { purchase: res };
+      const res = await this.purchasesService.updatePurchase(purchaseToUpdate);
+
+      const quantDif =
+        purchaseToUpdate.purchasedQuantity - res.purchasedQuantity;
+      const tokensDif = quantDif * price.price;
+
+      const currentTokens = user.currentTokens + tokensDif;
+
+      await this.viceBankUserService.updateViceBankUser(
+        user.copyWith({ currentTokens }),
+      );
+
+      return { purchase: res.toJSON(), currentTokens };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
@@ -175,9 +202,25 @@ export class PurchaseController {
         throw new InvalidInputError('Invalid Purchase Id');
       }
 
-      const res = await this.purchasesService.deletePurchase(body.purchaseId);
+      const purchaseToDelete = await this.purchasesService.deletePurchase(
+        body.purchaseId,
+      );
 
-      return { purchase: res };
+      const [price, user] = await Promise.all([
+        this.purchasesService.getPurchasePrice(
+          purchaseToDelete.purchasePriceId,
+        ),
+        this.viceBankUserService.getViceBankUser(purchaseToDelete.vbUserId),
+      ]);
+
+      const tokenDif = purchaseToDelete.purchasedQuantity * price.price * -1;
+      const currentTokens = user.currentTokens + tokenDif;
+
+      await this.viceBankUserService.updateViceBankUser(
+        user.copyWith({ currentTokens }),
+      );
+
+      return { purchase: purchaseToDelete.toJSON(), currentTokens };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
@@ -223,7 +266,7 @@ export class PurchaseController {
 
       const res = await this.purchasesService.addPurchasePrice(purchasePrice);
 
-      return { purchasePrice: res };
+      return { purchasePrice: res.toJSON() };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
@@ -246,7 +289,7 @@ export class PurchaseController {
         purchasePrice,
       );
 
-      return { purchasePrice: res };
+      return { purchasePrice: res.toJSON() };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
@@ -267,7 +310,7 @@ export class PurchaseController {
         body.purchasePriceId,
       );
 
-      return { purchasePrice: res };
+      return { purchasePrice: res.toJSON() };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }

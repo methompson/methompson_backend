@@ -144,6 +144,16 @@ export class InMemoryPurchaseService implements PurchaseService {
     return list;
   }
 
+  async getPurchasePrice(purchasePriceId: string): Promise<PurchasePrice> {
+    const price = this._purchasePrices[purchasePriceId];
+
+    if (isNullOrUndefined(price)) {
+      throw new Error(`Purchase Price with ID ${purchasePriceId} not found`);
+    }
+
+    return price;
+  }
+
   async addPurchasePrice(purchasePrice: PurchasePrice): Promise<PurchasePrice> {
     const id = uuidv4();
 

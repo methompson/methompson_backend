@@ -17,6 +17,7 @@ export abstract class PurchaseService {
   abstract getPurchasePrices(
     input: GetPageAndUserOptions,
   ): Promise<PurchasePrice[]>;
+  abstract getPurchasePrice(purchasePriceId: string): Promise<PurchasePrice>;
   abstract addPurchasePrice(
     purchasePrice: PurchasePrice,
   ): Promise<PurchasePrice>;

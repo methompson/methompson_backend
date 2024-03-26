@@ -52,7 +52,7 @@ const p1JSON: PurchaseJSON = {
   id: 'id1',
   vbUserId: vbUserId1,
   purchasedName,
-  purchasePriceId: 'purchasePriceId1',
+  purchasePriceId: pp1.id,
   date: '2021-01-01T00:00:00.000-06:00',
   purchasedQuantity: 1,
 };
@@ -60,7 +60,7 @@ const p2JSON: PurchaseJSON = {
   id: 'id2',
   vbUserId: vbUserId1,
   purchasedName,
-  purchasePriceId: 'purchasePriceId2',
+  purchasePriceId: pp2.id,
   date: '2021-01-12T00:00:00.000-06:00',
   purchasedQuantity: 2,
 };
@@ -68,7 +68,7 @@ const p3JSON: PurchaseJSON = {
   id: 'id3',
   vbUserId: vbUserId2,
   purchasedName,
-  purchasePriceId: 'purchasePriceId3',
+  purchasePriceId: pp3.id,
   date: '2021-01-25T00:00:00.000-06:00',
   purchasedQuantity: 3,
 };
@@ -126,7 +126,7 @@ describe('Purchase Controller', () => {
 
       const result = await controller.getPurchases(request);
 
-      expect(result).toEqual({ purchases: [purchase1, purchase2] });
+      expect(result).toEqual({ purchases: [p1JSON, p2JSON] });
       expect(getSpy).toHaveBeenCalledTimes(1);
       expect(getSpy).toHaveBeenCalledWith({
         page: 1,
@@ -158,7 +158,7 @@ describe('Purchase Controller', () => {
 
       const result1 = await controller.getPurchases(request1);
 
-      expect(result1).toEqual({ purchases: [purchase1] });
+      expect(result1).toEqual({ purchases: [p1JSON] });
 
       expect(getSpy).toHaveBeenCalledTimes(1);
       expect(getSpy).toHaveBeenCalledWith({
@@ -179,7 +179,7 @@ describe('Purchase Controller', () => {
       } as unknown as Request;
       const result2 = await controller.getPurchases(request2);
 
-      expect(result2).toEqual({ purchases: [purchase2] });
+      expect(result2).toEqual({ purchases: [p2JSON] });
     });
 
     test('throws an error if the query is invalid', async () => {
@@ -263,7 +263,10 @@ describe('Purchase Controller', () => {
 
       const result = await controller.addPurchase(request);
 
-      expect(result).toEqual({ purchase: purchase1, currentTokens: 0 });
+      expect(result).toEqual({
+        purchase: purchase1.toJSON(),
+        currentTokens: 0,
+      });
       expect(addSpy).toHaveBeenCalledTimes(1);
     });
 
@@ -340,6 +343,7 @@ describe('Purchase Controller', () => {
     test('updates a purchase in the PurchaseService', async () => {
       const service = new InMemoryPurchaseService({
         purchases: [purchase1, purchase2, purchase3],
+        purchasePrices: [pp1, pp2, pp3],
       });
       const logger = new LoggerService();
 
@@ -350,18 +354,34 @@ describe('Purchase Controller', () => {
         purchasedQuantity: 100,
       };
 
+      const getUserSpy = jest.spyOn(vbService, 'getViceBankUser');
+      const updateUserSpy = jest.spyOn(vbService, 'updateViceBankUser');
+
       const request = {
         body: {
           purchase: updatedPurchase,
         },
       } as unknown as Request;
 
+      const currentTokens =
+        user1.currentTokens +
+        updatedPurchase.purchasedQuantity * pp1.price -
+        purchase1.purchasedQuantity * pp1.price;
+
       const updateSpy = jest.spyOn(service, 'updatePurchase');
 
       const result = await controller.updatePurchase(request);
 
-      expect(result).toEqual({ purchase: purchase1 });
+      expect(result).toEqual({ purchase: purchase1.toJSON(), currentTokens });
       expect(updateSpy).toHaveBeenCalledTimes(1);
+
+      expect(getUserSpy).toHaveBeenCalledTimes(1);
+      expect(getUserSpy).toHaveBeenCalledWith(vbUserId1);
+
+      expect(updateUserSpy).toHaveBeenCalledTimes(1);
+      expect(updateUserSpy).toHaveBeenCalledWith(
+        user1.copyWith({ currentTokens }),
+      );
     });
 
     test('throws an error if the body is invalid', async () => {
@@ -426,10 +446,16 @@ describe('Purchase Controller', () => {
 
   describe('deletePurchase', () => {
     test('deletes a purchase from the PurchaseService', async () => {
-      const service = new InMemoryPurchaseService({ purchases: [purchase1] });
+      const service = new InMemoryPurchaseService({
+        purchases: [purchase1],
+        purchasePrices: [pp1, pp2, pp3],
+      });
       const logger = new LoggerService();
 
       const controller = new PurchaseController(service, vbService, logger);
+
+      const getUserSpy = jest.spyOn(vbService, 'getViceBankUser');
+      const updateUserSpy = jest.spyOn(vbService, 'updateViceBankUser');
 
       const request = {
         body: {
@@ -441,9 +467,20 @@ describe('Purchase Controller', () => {
 
       const result = await controller.deletePurchase(request);
 
-      expect(result).toEqual({ purchase: purchase1 });
+      const currentTokens =
+        user1.currentTokens + purchase1.purchasedQuantity * pp1.price * -1;
+
+      expect(result).toEqual({ purchase: purchase1.toJSON(), currentTokens });
       expect(service.purchasesList.length).toBe(0);
       expect(deleteSpy).toHaveBeenCalledTimes(1);
+
+      expect(getUserSpy).toHaveBeenCalledTimes(1);
+      expect(getUserSpy).toHaveBeenCalledWith(vbUserId1);
+
+      expect(updateUserSpy).toHaveBeenCalledTimes(1);
+      expect(updateUserSpy).toHaveBeenCalledWith(
+        user1.copyWith({ currentTokens }),
+      );
     });
 
     test('throws an error if the body is invalid', async () => {
@@ -668,7 +705,7 @@ describe('Purchase Controller', () => {
 
       const purchasePrice = await controller.addPurchasePrice(req);
 
-      expect(purchasePrice).toStrictEqual({ purchasePrice: pp1 });
+      expect(purchasePrice).toStrictEqual({ purchasePrice: pp1JSON });
     });
 
     test('throws an error if the body is not a record', async () => {
@@ -759,7 +796,7 @@ describe('Purchase Controller', () => {
 
       const purchasePrice = await controller.updatePurchasePrice(req);
 
-      expect(purchasePrice).toStrictEqual({ purchasePrice: pp1 });
+      expect(purchasePrice).toStrictEqual({ purchasePrice: pp1JSON });
       expect(service.purchasePricesList[0]?.toJSON()).toEqual(updatedpp1JSON);
     });
 
@@ -846,7 +883,7 @@ describe('Purchase Controller', () => {
 
       const purchasePrice = await controller.deletePurchasePrice(req);
 
-      expect(purchasePrice).toStrictEqual({ purchasePrice: pp1 });
+      expect(purchasePrice).toStrictEqual({ purchasePrice: pp1JSON });
       expect(service.purchasePricesList.length).toBe(0);
     });
 
