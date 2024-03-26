@@ -130,7 +130,7 @@ describe('TaskController', () => {
 
       const result = await controller.getTasks(request);
 
-      expect(result.tasks).toEqual([task1, task2]);
+      expect(result.tasks).toEqual([task1JSON, task2JSON]);
 
       expect(getSpy).toHaveBeenCalledTimes(1);
       expect(getSpy).toHaveBeenCalledWith({
@@ -238,7 +238,7 @@ describe('TaskController', () => {
 
       const result = await controller.addTask(request);
 
-      expect(result.task).toEqual(task1);
+      expect(result.task).toEqual(task1.toJSON());
 
       expect(addSpy).toHaveBeenCalledTimes(1);
     });
@@ -336,7 +336,7 @@ describe('TaskController', () => {
 
       const result = await controller.updateTask(request);
 
-      expect(result.task).toEqual(task1);
+      expect(result.task).toEqual(task1.toJSON());
 
       expect(upSpy).toHaveBeenCalledTimes(1);
     });
@@ -434,7 +434,7 @@ describe('TaskController', () => {
 
       const result = await controller.deleteTask(request);
 
-      expect(result.task).toEqual(task1);
+      expect(result.task).toEqual(task1.toJSON());
 
       expect(delSpy).toHaveBeenCalledTimes(1);
       expect(delSpy).toHaveBeenCalledWith(task1.id);
@@ -649,7 +649,7 @@ describe('TaskController', () => {
       const result = await controller.addTaskDeposit(request);
 
       expect(result).toEqual({
-        taskDeposit: td1,
+        taskDeposit: td1.toJSON(),
         currentTokens,
       });
 
@@ -839,10 +839,15 @@ describe('TaskController', () => {
       const authModel = new NoAuthModel();
       jest.spyOn(authModel, 'userId', 'get').mockReturnValue('userId');
 
+      const updatedTaskDeposit = {
+        ...td1JSON,
+        date: td1.date.plus({ days: 1 }).toISO(),
+      };
+
       const request = {
         authModel,
         body: {
-          taskDeposit: td1JSON,
+          taskDeposit: updatedTaskDeposit,
         },
       } as unknown as METIncomingMessage;
 
@@ -858,7 +863,8 @@ describe('TaskController', () => {
       const result = await controller.updateTaskDeposit(request);
 
       expect(result).toEqual({
-        taskDeposit: td1,
+        oldTaskDeposit: td1.toJSON(),
+        taskDeposit: updatedTaskDeposit,
         currentTokens: user1.currentTokens,
       });
 
@@ -1075,7 +1081,7 @@ describe('TaskController', () => {
       const result = await controller.deleteTaskDeposit(request);
 
       expect(result).toEqual({
-        taskDeposit: td1,
+        taskDeposit: td1.toJSON(),
         currentTokens: 0,
       });
 

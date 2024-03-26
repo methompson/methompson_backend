@@ -18,38 +18,38 @@ import { type METIncomingMessage } from '@/src/utils/met_incoming_message';
 import { pageAndPagination } from '@/src/utils/page_and_pagination';
 import { isNullOrUndefined, isRecord, isString } from '@/src/utils/type_guards';
 
-import { Action } from '@/src/models/vice_bank/action';
-import { Deposit } from '@/src/models/vice_bank/deposit';
+import { Action, ActionJSON } from '@/src/models/vice_bank/action';
+import { Deposit, DepositJSON } from '@/src/models/vice_bank/deposit';
 import { ActionService } from '@/src/vice_bank/services/action.service';
 import { ViceBankUserService } from '@/src/vice_bank/services/vice_bank_user.service';
 
 interface GetActionResponse {
-  actions: Action[];
+  actions: ActionJSON[];
 }
 interface AddActionResponse {
-  action: Action;
+  action: ActionJSON;
 }
 interface UpdateActionResponse {
-  action: Action;
+  action: ActionJSON;
 }
 interface DeleteActionResponse {
-  action: Action;
+  action: ActionJSON;
 }
 
 interface GetDepositsResponse {
-  deposits: Deposit[];
+  deposits: DepositJSON[];
 }
 interface AddDepositResponse {
-  deposit: Deposit;
+  deposit: DepositJSON;
   currentTokens: number;
 }
 interface UpdateDepositResponse {
-  deposit: Deposit;
-  oldDeposit: Deposit;
+  deposit: DepositJSON;
+  oldDeposit: DepositJSON;
   currentTokens: number;
 }
 interface DeleteDepositResponse {
-  deposit: Deposit;
+  deposit: DepositJSON;
   currentTokens: number;
 }
 
@@ -76,11 +76,13 @@ export class ActionController {
         throw new InvalidInputError('Invalid User Id');
       }
 
-      const actions = await this.actionService.getActions({
-        page,
-        pagination,
-        userId,
-      });
+      const actions = (
+        await this.actionService.getActions({
+          page,
+          pagination,
+          userId,
+        })
+      ).map((action) => action.toJSON());
 
       return { actions };
     } catch (e) {
@@ -101,7 +103,7 @@ export class ActionController {
 
       const res = await this.actionService.addAction(action);
 
-      return { action: res };
+      return { action: res.toJSON() };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
@@ -120,7 +122,7 @@ export class ActionController {
 
       const res = await this.actionService.updateAction(action);
 
-      return { action: res };
+      return { action: res.toJSON() };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
@@ -137,7 +139,7 @@ export class ActionController {
 
       const res = await this.actionService.deleteAction(body.actionId);
 
-      return { action: res };
+      return { action: res.toJSON() };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
@@ -165,7 +167,7 @@ export class ActionController {
         ? depositConversionId
         : undefined;
 
-      const deposits = await this.actionService.getDeposits({
+      const depositsResponse = await this.actionService.getDeposits({
         page,
         pagination,
         userId,
@@ -173,6 +175,8 @@ export class ActionController {
         endDate,
         depositConversionId,
       });
+
+      const deposits = depositsResponse.map((deposit) => deposit.toJSON());
 
       return { deposits };
     } catch (e) {
@@ -239,7 +243,7 @@ export class ActionController {
       // const deposit = await this.actionService.addDeposit(newDeposit);
 
       return {
-        deposit: response.deposit,
+        deposit: response.deposit.toJSON(),
         currentTokens: userToUpdate.currentTokens,
       };
     } catch (e) {
@@ -296,8 +300,8 @@ export class ActionController {
       await this.viceBankUserService.updateViceBankUser(userToUpdate);
 
       return {
-        deposit: updatedDeposit,
-        oldDeposit: response.deposit,
+        deposit: updatedDeposit.toJSON(),
+        oldDeposit: response.deposit.toJSON(),
         currentTokens: userToUpdate.currentTokens,
       };
     } catch (e) {
@@ -327,7 +331,7 @@ export class ActionController {
       await this.viceBankUserService.updateViceBankUser(userToUpdate);
 
       return {
-        deposit: response.deposit,
+        deposit: response.deposit.toJSON(),
         currentTokens: userToUpdate.currentTokens,
       };
     } catch (e) {

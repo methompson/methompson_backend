@@ -16,24 +16,27 @@ import { pageAndPagination } from '@/src/utils/page_and_pagination';
 import { commonErrorHandler } from '@/src/utils/common_error_handler';
 import { isNullOrUndefined, isRecord, isString } from '@/src/utils/type_guards';
 import { InvalidInputError, NotFoundError } from '@/src/errors';
-import { Task } from '@/src/models/vice_bank/task';
-import { TaskDeposit } from '@/src/models/vice_bank/task_deposit';
+import { Task, TaskJSON } from '@/src/models/vice_bank/task';
+import {
+  TaskDeposit,
+  TaskDepositJSON,
+} from '@/src/models/vice_bank/task_deposit';
 import { ViceBankUserService } from '@/src/vice_bank/services/vice_bank_user.service';
 
 interface GetTasksResponse {
-  tasks: Task[];
+  tasks: TaskJSON[];
 }
 
 interface AddTaskResponse {
-  task: Task;
+  task: TaskJSON;
 }
 
 interface UpdateTaskResponse {
-  task: Task;
+  task: TaskJSON;
 }
 
 interface DeleteTaskResponse {
-  task: Task;
+  task: TaskJSON;
 }
 
 interface GetTaskDepositsResponse {
@@ -41,17 +44,18 @@ interface GetTaskDepositsResponse {
 }
 
 interface AddTaskDepositResponse {
-  taskDeposit: TaskDeposit;
+  taskDeposit: TaskDepositJSON;
   currentTokens: number;
 }
 
 interface UpdateTaskDepositResponse {
-  taskDeposit: TaskDeposit;
+  taskDeposit: TaskDepositJSON;
+  oldTaskDeposit: TaskDepositJSON;
   currentTokens: number;
 }
 
 interface DeleteTaskDepositResponse {
-  taskDeposit: TaskDeposit;
+  taskDeposit: TaskDepositJSON;
   currentTokens: number;
 }
 
@@ -84,11 +88,13 @@ export class TaskController {
         throw new InvalidInputError('Invalid User Id');
       }
 
-      const tasks = await this.taskService.getTasks({
-        userId,
-        page,
-        pagination,
-      });
+      const tasks = (
+        await this.taskService.getTasks({
+          userId,
+          page,
+          pagination,
+        })
+      ).map((task) => task.toJSON());
 
       return { tasks };
     } catch (e) {
@@ -115,7 +121,7 @@ export class TaskController {
 
       const uploadedTask = await this.taskService.addTask(newTask);
 
-      return { task: uploadedTask };
+      return { task: uploadedTask.toJSON() };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
@@ -142,7 +148,7 @@ export class TaskController {
 
       const result = await this.taskService.updateTask(task);
 
-      return { task: result };
+      return { task: result.toJSON() };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
@@ -167,7 +173,7 @@ export class TaskController {
 
       const result = await this.taskService.deleteTask(body.taskId);
 
-      return { task: result };
+      return { task: result.toJSON() };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
@@ -247,7 +253,7 @@ export class TaskController {
       await this.viceBankUserService.updateViceBankUser(userToUpdate);
 
       return {
-        taskDeposit: result.taskDeposit,
+        taskDeposit: result.taskDeposit.toJSON(),
         currentTokens,
       };
     } catch (e) {
@@ -292,7 +298,8 @@ export class TaskController {
       await this.viceBankUserService.updateViceBankUser(userToUpdate);
 
       return {
-        taskDeposit: result.taskDeposit,
+        taskDeposit: taskDeposit.toJSON(),
+        oldTaskDeposit: result.taskDeposit.toJSON(),
         currentTokens,
       };
     } catch (e) {
@@ -338,7 +345,7 @@ export class TaskController {
       await this.viceBankUserService.updateViceBankUser(userToUpdate);
 
       return {
-        taskDeposit: result.taskDeposit,
+        taskDeposit: result.taskDeposit.toJSON(),
         currentTokens,
       };
     } catch (e) {

@@ -138,7 +138,7 @@ describe('ActionController', () => {
 
       const conversions = await controller.getActions(req);
       expect(conversions).toEqual({
-        actions: [action1, action2],
+        actions: [actionJSON1, actionJSON2],
       });
     });
 
@@ -217,7 +217,7 @@ describe('ActionController', () => {
       jest.spyOn(service, 'addAction').mockResolvedValue(action1);
 
       const action = await controller.addAction(req);
-      expect(action).toStrictEqual({ action: action1 });
+      expect(action).toEqual({ action: actionJSON1 });
     });
 
     test('throws an error if the body is not a record', async () => {
@@ -303,7 +303,7 @@ describe('ActionController', () => {
       } as unknown as Request;
 
       const result = await controller.updateAction(req);
-      expect(result).toStrictEqual({ action: action1 });
+      expect(result).toEqual({ action: actionJSON1 });
       expect(service.actionsList[0]?.toJSON()).toEqual(actionUpdate);
     });
 
@@ -385,7 +385,7 @@ describe('ActionController', () => {
       } as unknown as Request;
 
       const result = await controller.deleteAction(req);
-      expect(result).toStrictEqual({ action: action1 });
+      expect(result).toEqual({ action: actionJSON1 });
       expect(service.actionsList.length).toBe(0);
     });
 
@@ -464,7 +464,7 @@ describe('ActionController', () => {
 
       const deposits = await controller.getDeposits(req);
 
-      expect(deposits).toEqual({ deposits: [deposit1, deposit2] });
+      expect(deposits).toEqual({ deposits: [deposit1JSON, deposit2JSON] });
 
       expect(getSpy).toHaveBeenCalledTimes(1);
       expect(getSpy).toHaveBeenCalledWith({
@@ -497,7 +497,7 @@ describe('ActionController', () => {
 
       const deposits = await controller.getDeposits(req);
 
-      expect(deposits).toEqual({ deposits: [deposit1] });
+      expect(deposits).toEqual({ deposits: [deposit1.toJSON()] });
 
       expect(getSpy).toHaveBeenCalledTimes(1);
       expect(getSpy).toHaveBeenCalledWith({
@@ -587,7 +587,7 @@ describe('ActionController', () => {
 
       const deposit = await controller.addDeposit(req);
 
-      expect(deposit).toEqual({ deposit: deposit1, currentTokens: 2 });
+      expect(deposit).toEqual({ deposit: deposit1.toJSON(), currentTokens: 2 });
     });
 
     test('throws an error if the body is invalid', async () => {
@@ -676,8 +676,8 @@ describe('ActionController', () => {
 
       const result = await controller.updateDeposit(req);
 
-      expect(result.oldDeposit).toBe(deposit1);
-      expect(result.deposit.toJSON()).toEqual(updatedDeposit);
+      expect(result.oldDeposit).toEqual(deposit1.toJSON());
+      expect(result.deposit).toEqual(updatedDeposit);
 
       const tokenDiff =
         (updatedDeposit.depositQuantity - deposit1.depositQuantity) *
@@ -775,7 +775,7 @@ describe('ActionController', () => {
 
       const result = await controller.deleteDeposit(req);
 
-      expect(result.deposit).toBe(deposit1);
+      expect(result.deposit).toEqual(deposit1.toJSON());
 
       const currentTokens = user1.currentTokens + deposit1.tokensEarned * -1;
       expect(result.currentTokens).toBe(currentTokens);
