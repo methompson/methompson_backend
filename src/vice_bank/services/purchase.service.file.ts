@@ -140,7 +140,8 @@ export class FilePurchaseService extends InMemoryPurchaseService {
       try {
         if (rawData.length > 0) {
           console.error('Invalid or no data when reading file data file', e);
-          await fileServiceWriter.writeBackup(viceBankPath, rawData);
+          const backupPath = join(viceBankPath, 'backup');
+          await fileServiceWriter.writeBackup(backupPath, rawData);
         } else {
           console.error('Init: No file data found. Creating new file.');
         }
