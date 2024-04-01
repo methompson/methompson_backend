@@ -24,6 +24,13 @@ describe('Category', () => {
       expect(category.toJSON()).toEqual(validInput);
     });
 
+    test('toJSON can be piped into fromJSON', () => {
+      const category1 = Category.fromJSON(validInput);
+      const category2 = Category.fromJSON(category1.toJSON());
+
+      expect(category1.toJSON()).toEqual(category2.toJSON());
+    });
+
     test('throws an error if values are missing from the input', () => {
       let invalidInput: Record<string, unknown> = { ...validInput };
 
