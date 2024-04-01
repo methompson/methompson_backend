@@ -48,7 +48,6 @@
     "@nestjs/websockets": "^9.0.0",
     "@swc/core": "^1.2.162",
     "@types/cookie-parser": "^1.4.3",
-    "@types/cron": "^2.0.0",
     "@types/express": "^4.17.13",
     "@types/formidable": "^2.0.0",
     "@types/jest": "27.4.1",

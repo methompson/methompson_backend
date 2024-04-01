@@ -536,8 +536,10 @@ describe('FileActionService', () => {
 
       expect(svc.actionsList.length).toBe(0);
 
+      const backupPath = join(conversionsPath, 'backup');
+
       expect(wbSpy).toHaveBeenCalledTimes(1);
-      expect(wbSpy).toHaveBeenCalledWith(conversionsPath, invalidData);
+      expect(wbSpy).toHaveBeenCalledWith(backupPath, invalidData);
       expect(cfSpy).toHaveBeenCalledTimes(1);
     });
   });

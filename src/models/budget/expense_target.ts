@@ -40,7 +40,9 @@ export interface ExpenseTargetJSON {
 // An expense target indicates WHEN you want to spend the money. Different
 // targets can be used to indicate different dates or time periods for
 // expenses.
-export class ExpenseTarget {
+export abstract class ExpenseTarget {
+  abstract toJSON(): ExpenseTargetJSON;
+
   static fromJSON(json: unknown): ExpenseTarget {
     if (!ExpenseTarget.isExpenseTargetJSON(json)) {
       const errors = ExpenseTarget.expenseTargetJSONTest(json);
@@ -111,7 +113,7 @@ export class WeeklyExpenseTarget extends ExpenseTarget {
 
     const data = JSON.parse(input.data);
 
-    if (!WeeklyExpenseTarget.isWeeklyWeeklyExpenseTargetJSON(data)) {
+    if (!WeeklyExpenseTarget.isWeeklyExpenseTargetJSON(data)) {
       const errors = WeeklyExpenseTarget.weeklyExpenseTargetJSONTest(data);
       throw new Error(`Invalid JSON ${errors.join(', ')}`);
     }
@@ -135,7 +137,7 @@ export class WeeklyExpenseTarget extends ExpenseTarget {
     return output;
   }
 
-  static isWeeklyWeeklyExpenseTargetJSON(
+  static isWeeklyExpenseTargetJSON(
     input: unknown,
   ): input is WeeklyExpenseTargetJSON {
     return WeeklyExpenseTarget.weeklyExpenseTargetJSONTest(input).length === 0;

@@ -5,6 +5,7 @@ import {
 } from '@/src/models/vice_bank/task_deposit';
 import { FileServiceWriter } from '@/src/utils/file_service_writer';
 import { FileTaskService } from './task_service.file';
+import { join } from 'path';
 
 const task1Id = 'taskId1';
 const task2Id = 'taskId2';
@@ -82,11 +83,13 @@ logSpy.mockImplementation(() => {});
 const errorSpy = jest.spyOn(console, 'error');
 errorSpy.mockImplementation(() => {});
 
+const filePath = 'path/to/file';
+
 describe('FileTaskService', () => {
   describe('taskString', () => {
     test('returns a stringified version of the tasks and taskDeposits', () => {
       const fsw = new FileServiceWriter('baseName', 'json');
-      const service = new FileTaskService(fsw, 'path', {
+      const service = new FileTaskService(fsw, filePath, {
         tasks: [task1, task2, task3],
         taskDeposits: [td1, td2, td3],
       });
@@ -102,7 +105,7 @@ describe('FileTaskService', () => {
 
     test('returns empty data if there are no tasks or taskDeposits', () => {
       const fsw = new FileServiceWriter('baseName', 'json');
-      const service = new FileTaskService(fsw, 'path');
+      const service = new FileTaskService(fsw, filePath);
 
       const data = service.taskString;
 
@@ -115,7 +118,7 @@ describe('FileTaskService', () => {
     test('adds a task and calls writeToFile', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileTaskService(fsw, 'path');
+      const service = new FileTaskService(fsw, filePath);
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
       writeToFileSpy.mockImplementationOnce(async () => {});
 
@@ -130,7 +133,7 @@ describe('FileTaskService', () => {
     test('throws an error if writeToFile throws an error', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileTaskService(fsw, 'path');
+      const service = new FileTaskService(fsw, filePath);
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
       writeToFileSpy.mockImplementationOnce(async () => {
         throw new Error(testError);
@@ -146,7 +149,7 @@ describe('FileTaskService', () => {
     test('updates a task and calls writeToFile', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileTaskService(fsw, 'path', {
+      const service = new FileTaskService(fsw, filePath, {
         tasks: [task1, task2, task3],
         taskDeposits: [td1, td2, td3],
       });
@@ -169,7 +172,7 @@ describe('FileTaskService', () => {
     test('throws an error if writeToFile throws an error', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileTaskService(fsw, 'path', {
+      const service = new FileTaskService(fsw, filePath, {
         tasks: [task1, task2, task3],
         taskDeposits: [td1, td2, td3],
       });
@@ -189,7 +192,7 @@ describe('FileTaskService', () => {
     test('deletes a task and calls writeToFile', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileTaskService(fsw, 'path', {
+      const service = new FileTaskService(fsw, filePath, {
         tasks: [task1, task2, task3],
         taskDeposits: [td1, td2, td3],
       });
@@ -208,7 +211,7 @@ describe('FileTaskService', () => {
     test('throws an error if writeToFile throws an error', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileTaskService(fsw, 'path', {
+      const service = new FileTaskService(fsw, filePath, {
         tasks: [task1, task2, task3],
         taskDeposits: [td1, td2, td3],
       });
@@ -228,7 +231,7 @@ describe('FileTaskService', () => {
     test('adds a taskDeposit and calls writeToFile', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileTaskService(fsw, 'path', {
+      const service = new FileTaskService(fsw, filePath, {
         tasks: [task1, task2, task3],
       });
 
@@ -246,7 +249,7 @@ describe('FileTaskService', () => {
     test('throws an error if writeToFile throws an error', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileTaskService(fsw, 'path', {
+      const service = new FileTaskService(fsw, filePath, {
         tasks: [task1, task2, task3],
         taskDeposits: [td1, td2, td3],
       });
@@ -265,7 +268,7 @@ describe('FileTaskService', () => {
     test('updates a taskDeposit and calls writeToFile', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileTaskService(fsw, 'path', {
+      const service = new FileTaskService(fsw, filePath, {
         tasks: [task1, task2, task3],
         taskDeposits: [td1],
       });
@@ -291,7 +294,7 @@ describe('FileTaskService', () => {
     test('throws an error if writeToFile throws an error', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileTaskService(fsw, 'path', {
+      const service = new FileTaskService(fsw, filePath, {
         tasks: [task1, task2, task3],
         taskDeposits: [td1, td2, td3],
       });
@@ -310,7 +313,7 @@ describe('FileTaskService', () => {
     test('deletes a task and calls writeToFile', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileTaskService(fsw, 'path', {
+      const service = new FileTaskService(fsw, filePath, {
         tasks: [task1, task2, task3],
         taskDeposits: [td1, td2, td3],
       });
@@ -329,7 +332,7 @@ describe('FileTaskService', () => {
     test('throws an error if writeToFile throws an error', async () => {
       const fsw = new FileServiceWriter('baseName', 'json');
 
-      const service = new FileTaskService(fsw, 'path', {
+      const service = new FileTaskService(fsw, filePath, {
         tasks: [task1, task2, task3],
         taskDeposits: [td1, td2, td3],
       });
@@ -352,7 +355,7 @@ describe('FileTaskService', () => {
       const wtfSpy = jest.spyOn(fsw, 'writeToFile');
       wtfSpy.mockImplementationOnce(async () => {});
 
-      const svc = new FileTaskService(fsw, 'path', {
+      const svc = new FileTaskService(fsw, filePath, {
         tasks: [task1, task2, task3],
         taskDeposits: [td1, td2, td3],
       });
@@ -362,7 +365,7 @@ describe('FileTaskService', () => {
       await svc.writeToFile();
 
       expect(wtfSpy).toHaveBeenCalledTimes(1);
-      expect(wtfSpy).toHaveBeenCalledWith('path', str);
+      expect(wtfSpy).toHaveBeenCalledWith(filePath, str);
     });
 
     test('Throws an error if FileServiceWriter.writeToFile throws an error', async () => {
@@ -372,12 +375,55 @@ describe('FileTaskService', () => {
         throw new Error(testError);
       });
 
-      const svc = new FileTaskService(fsw, 'path', {
+      const svc = new FileTaskService(fsw, filePath, {
         tasks: [task1, task2, task3],
         taskDeposits: [td1, td2, td3],
       });
 
       await expect(() => svc.writeToFile()).rejects.toThrow(testError);
+    });
+  });
+
+  describe('backup', () => {
+    test('runs writeBackup with expected values', async () => {
+      const fsw = new FileServiceWriter('baseName', 'json');
+
+      const wbSpy = jest.spyOn(fsw, 'writeBackup');
+      wbSpy.mockImplementationOnce(async () => {});
+
+      const svc = new FileTaskService(fsw, filePath, {
+        tasks: [task1, task2, task3],
+        taskDeposits: [td1, td2, td3],
+      });
+      await svc.backup();
+
+      expect(wbSpy).toHaveBeenCalledTimes(1);
+      expect(wbSpy).toHaveBeenCalledWith(
+        join(filePath, 'backup'),
+        svc.taskString,
+      );
+    });
+
+    test('throws an error if writeBackup throws an error', async () => {
+      const fsw = new FileServiceWriter('baseName', 'json');
+
+      const svc = new FileTaskService(fsw, filePath, {
+        tasks: [task1, task2, task3],
+        taskDeposits: [td1, td2, td3],
+      });
+
+      const wbSpy = jest.spyOn(fsw, 'writeBackup');
+      wbSpy.mockImplementationOnce(async () => {
+        throw new Error(testError);
+      });
+
+      await expect(() => svc.backup()).rejects.toThrow(testError);
+
+      expect(wbSpy).toHaveBeenCalledTimes(1);
+      expect(wbSpy).toHaveBeenCalledWith(
+        join(filePath, 'backup'),
+        svc.taskString,
+      );
     });
   });
 
@@ -489,8 +535,10 @@ describe('FileTaskService', () => {
       expect(svc.tasksList.length).toBe(0);
       expect(svc.taskDepositsList.length).toBe(0);
 
+      const backupPath = join(taskPath, 'backup');
+
       expect(wbSpy).toHaveBeenCalledTimes(1);
-      expect(wbSpy).toHaveBeenCalledWith(taskPath, invalidData);
+      expect(wbSpy).toHaveBeenCalledWith(backupPath, invalidData);
       expect(cfSpy).toHaveBeenCalledTimes(1);
     });
   });

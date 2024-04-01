@@ -1,4 +1,8 @@
-import { ExpenseTarget } from '@/src/models/budget/expense_target';
+import {
+  ExpenseTarget,
+  ExpenseTargetJSON,
+} from '@/src/models/budget/expense_target';
+import { isNumber, isRecord, isString } from '@/src/utils/type_guards';
 
 export interface ExpenseJSON {
   id: string;
@@ -6,7 +10,7 @@ export interface ExpenseJSON {
   categoryId: string;
   description: string;
   amount: number;
-  target: Record<string, unknown>;
+  expenseTarget: ExpenseTargetJSON;
 }
 
 // An Expense is money that is owed during a time period
@@ -17,7 +21,7 @@ export class Expense {
     protected _categoryId: string,
     protected _description: string,
     protected _amount: number,
-    protected _target: ExpenseTarget,
+    protected _expenseTarget: ExpenseTarget,
   ) {}
 
   get id(): string {
@@ -35,7 +39,54 @@ export class Expense {
   get amount(): number {
     return this._amount;
   }
-  get target(): ExpenseTarget {
-    return this._target;
+  get expenseTarget(): ExpenseTarget {
+    return this._expenseTarget;
+  }
+
+  toJSON(): ExpenseJSON {
+    return {
+      id: this.id,
+      budgetId: this.budgetId,
+      categoryId: this.categoryId,
+      description: this.description,
+      amount: this.amount,
+      expenseTarget: this.expenseTarget.toJSON(),
+    };
+  }
+
+  static fromJSON(json: unknown): Expense {
+    if (!Expense.isExpenseJSON(json)) {
+      const errors = Expense.expenseJSONTest(json);
+      throw new Error(`Invalid JSON ${errors.join(', ')}`);
+    }
+
+    const { id, budgetId, categoryId, description, amount, expenseTarget } =
+      json;
+
+    const target = ExpenseTarget.fromJSON(expenseTarget);
+
+    return new Expense(id, budgetId, categoryId, description, amount, target);
+  }
+
+  static isExpenseJSON(input: unknown): input is ExpenseJSON {
+    return Expense.expenseJSONTest(input).length === 0;
+  }
+
+  static expenseJSONTest(input: unknown): string[] {
+    if (!isRecord(input)) {
+      return ['root'];
+    }
+
+    const output: string[] = [];
+
+    if (!isString(input.id)) output.push('id');
+    if (!isString(input.budgetId)) output.push('budgetId');
+    if (!isString(input.categoryId)) output.push('categoryId');
+    if (!isString(input.description)) output.push('description');
+    if (!isNumber(input.amount)) output.push('amount');
+    if (!ExpenseTarget.isExpenseTargetJSON(input.expenseTarget))
+      output.push('expenseTarget');
+
+    return output;
   }
 }
