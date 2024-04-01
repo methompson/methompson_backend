@@ -1,3 +1,4 @@
+import { join } from 'path';
 import { Injectable } from '@nestjs/common';
 
 import { InMemoryTaskService } from './task_service.memory';
@@ -84,6 +85,11 @@ export class FileTaskService extends InMemoryTaskService {
     await this.fileServiceWriter.writeToFile(this.viceBankPath, json);
   }
 
+  async backup() {
+    const backupPath = join(this.viceBankPath, 'backup');
+    await this.fileServiceWriter.writeBackup(backupPath, this.taskString);
+  }
+
   static async init(
     viceBankPath: string,
     options?: { fileServiceWriter?: FileServiceWriter },
@@ -129,7 +135,8 @@ export class FileTaskService extends InMemoryTaskService {
       try {
         if (rawData.length > 0) {
           console.error('Invalid or no data when reading file data file', e);
-          await fileServiceWriter.writeBackup(viceBankPath, rawData);
+          const backupPath = join(viceBankPath, 'backup');
+          await fileServiceWriter.writeBackup(backupPath, rawData);
         } else {
           console.error('Init: No file data found. Creating new file.');
         }

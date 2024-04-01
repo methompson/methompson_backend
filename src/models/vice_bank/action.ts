@@ -61,6 +61,10 @@ export class Action {
     return this._minDeposit;
   }
 
+  get conversionRate(): number {
+    return this.tokensPer / this.depositsPer;
+  }
+
   toJSON(): ActionJSON {
     return {
       id: this.id,

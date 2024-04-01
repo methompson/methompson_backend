@@ -15,6 +15,7 @@ export interface DepositJSON {
   depositQuantity: number;
   conversionRate: number;
   actionName: string;
+  actionId: string;
   conversionUnit: string;
 }
 
@@ -25,6 +26,7 @@ export class Deposit {
     protected _date: DateTime<true>,
     protected _depositQuantity: number,
     protected _conversionRate: number,
+    protected _actionId: string,
     protected _actionName: string,
     protected _conversionUnit: string,
   ) {}
@@ -49,6 +51,10 @@ export class Deposit {
     return this._conversionRate;
   }
 
+  get actionId(): string {
+    return this._actionId;
+  }
+
   get actionName(): string {
     return this._actionName;
   }
@@ -68,9 +74,17 @@ export class Deposit {
       date: this.date.toISO(),
       depositQuantity: this.depositQuantity,
       conversionRate: this.conversionRate,
+      actionId: this.actionId,
       actionName: this.actionName,
       conversionUnit: this.conversionUnit,
     };
+  }
+
+  copyWith(input: Record<string, unknown>): Deposit {
+    return Deposit.fromJSON({
+      ...this.toJSON(),
+      ...input,
+    });
   }
 
   static fromJSON(input: unknown): Deposit {
@@ -90,6 +104,7 @@ export class Deposit {
       dateTime,
       input.depositQuantity,
       input.conversionRate,
+      input.actionId,
       input.actionName,
       input.conversionUnit,
     );
@@ -113,6 +128,7 @@ export class Deposit {
     if (!isValidDateTimeString(input.date)) output.push('date');
     if (!isNumber(input.depositQuantity)) output.push('depositQuantity');
     if (!isNumber(input.conversionRate)) output.push('conversionRate');
+    if (!isString(input.actionId)) output.push('actionId');
     if (!isString(input.actionName)) output.push('actionName');
     if (!isString(input.conversionUnit)) output.push('conversionUnit');
 

@@ -885,6 +885,143 @@ describe('InMemoryTaskService', () => {
       expect(updatedDeposit.tokensEarned).not.toBe(0);
     });
 
+    test('if the updated deposit earns zero on one date and earns zero on another date, the earned tokens will be the same', async () => {
+      const d1 = TaskDeposit.fromJSON({
+        ...td1.toJSON(),
+        id: '1',
+        tokensEarned: 1,
+      });
+      const d2 = TaskDeposit.fromJSON({
+        ...td1.toJSON(),
+        date: d1.date.plus({ minutes: 1 }).toISO(),
+        id: '2',
+        tokensEarned: 0,
+      });
+      const d3 = TaskDeposit.fromJSON({
+        ...td1.toJSON(),
+        date: d1.date.plus({ days: 1 }).toISO(),
+        id: '3',
+        tokensEarned: 1,
+      });
+
+      const d2Update = TaskDeposit.fromJSON({
+        ...d2.toJSON(),
+        date: d3.date.plus({ minutes: 1 }).toISO(),
+      });
+
+      const svc = new InMemoryTaskService({
+        tasks: [task1],
+        taskDeposits: [d1, d2, d3],
+      });
+
+      const result = await svc.updateTaskDeposit(d2Update);
+
+      const deposit = svc.taskDeposits[d2Update.id];
+
+      if (!deposit) {
+        throw new Error('not found');
+      }
+
+      expect(result.tokensAdded).toBe(0);
+    });
+
+    test('if the updated deposit earns zero on one date and earns tokens on another date, the earned tokens will go up', async () => {
+      const d1 = TaskDeposit.fromJSON({
+        ...td1.toJSON(),
+        id: '1',
+        tokensEarned: 1,
+      });
+      const d2 = TaskDeposit.fromJSON({
+        ...td1.toJSON(),
+        date: d1.date.plus({ minutes: 1 }).toISO(),
+        id: '2',
+        tokensEarned: 0,
+      });
+
+      const d2Update = TaskDeposit.fromJSON({
+        ...d2.toJSON(),
+        date: d1.date.plus({ days: 1 }).toISO(),
+      });
+
+      const svc = new InMemoryTaskService({
+        tasks: [task1],
+        taskDeposits: [d1, d2],
+      });
+
+      const result = await svc.updateTaskDeposit(d2Update);
+
+      const deposit = svc.taskDeposits[d2Update.id];
+
+      if (!deposit) {
+        throw new Error('not found');
+      }
+
+      expect(result.tokensAdded).toBe(1);
+    });
+
+    test('If the updated deposit earns tokens on one date and earns zero on another date, the earned tokens will go down', async () => {
+      const d1 = TaskDeposit.fromJSON({
+        ...td1.toJSON(),
+        id: '1',
+        tokensEarned: 1,
+      });
+
+      const d3 = TaskDeposit.fromJSON({
+        ...td1.toJSON(),
+        date: d1.date.plus({ days: 1 }).toISO(),
+        id: '3',
+        tokensEarned: 1,
+      });
+
+      const d1Update = TaskDeposit.fromJSON({
+        ...d1.toJSON(),
+        date: d3.date.plus({ minutes: 1 }).toISO(),
+      });
+
+      const svc = new InMemoryTaskService({
+        tasks: [task1],
+        taskDeposits: [d1, d3],
+      });
+
+      const result = await svc.updateTaskDeposit(d1Update);
+
+      const deposit = svc.taskDeposits[d1Update.id];
+
+      if (!deposit) {
+        throw new Error('not found');
+      }
+
+      expect(result.tokensAdded).toBe(-1);
+    });
+
+    test('If the updated deposit earns tokens on one date and earns tokens on another date, the earned tokens will be the same', async () => {
+      const d1 = TaskDeposit.fromJSON({
+        ...td1.toJSON(),
+        id: '1',
+        tokensEarned: 1,
+      });
+
+      const d1Update = TaskDeposit.fromJSON({
+        ...d1.toJSON(),
+        date: d1.date.plus({ minutes: 1 }).toISO(),
+      });
+
+      const svc = new InMemoryTaskService({
+        tasks: [task1],
+        taskDeposits: [d1],
+      });
+
+      const result = await svc.updateTaskDeposit(d1Update);
+
+      const deposit = svc.taskDeposits[d1Update.id];
+
+      if (!deposit) {
+        throw new Error('not found');
+      }
+
+      expect(result.tokensAdded).toBe(0);
+    });
+
     test('if the updated deposit is on a different date and is the only deposit during that frequency, tokens earned is set to the conversion rate', async () => {
       const td4 = TaskDeposit.fromJSON({
         ...td1.toJSON(),

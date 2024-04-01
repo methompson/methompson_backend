@@ -154,7 +154,7 @@ describe('FileViceBankUserService', () => {
       const writeToFileSpy = jest.spyOn(service, 'writeToFile');
       writeToFileSpy.mockImplementationOnce(async () => {});
 
-      await service.deleteViceBankUser(userId, user1.id);
+      await service.deleteViceBankUser(user1.id);
 
       expect(service.viceBankUsersList.length).toBe(0);
       expect(writeToFileSpy).toHaveBeenCalledTimes(1);
@@ -172,7 +172,7 @@ describe('FileViceBankUserService', () => {
       });
 
       await expect(() =>
-        service.deleteViceBankUser(userId, user1.id),
+        service.deleteViceBankUser(user1.id),
       ).rejects.toThrow();
 
       expect(writeToFileSpy).toHaveBeenCalledTimes(1);

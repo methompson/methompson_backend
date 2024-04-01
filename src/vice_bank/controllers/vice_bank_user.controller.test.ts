@@ -153,28 +153,8 @@ describe('ViceBankUserController', () => {
       } as unknown as METIncomingMessage;
 
       jest
-        .spyOn(service, 'getViceBankUsers')
+        .spyOn(service, 'getViceBankUser')
         .mockRejectedValue(new Error('testError'));
-
-      await expect(() => controller.getUser(req)).rejects.toThrow(
-        new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
-      );
-    });
-
-    test('throws an error if more than one user is found', async () => {
-      const service = new InMemoryViceBankUserService([user1, user2, user3]);
-      const loggerService = new LoggerService();
-
-      const controller = new ViceBankUserController(service, loggerService);
-
-      const req = {
-        authModel,
-        params: {
-          userId: user1.id,
-        },
-      } as unknown as METIncomingMessage;
-
-      jest.spyOn(service, 'getViceBankUsers').mockResolvedValue([user1, user2]);
 
       await expect(() => controller.getUser(req)).rejects.toThrow(
         new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),

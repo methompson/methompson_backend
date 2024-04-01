@@ -40,11 +40,8 @@ export class FileViceBankUserService extends InMemoryViceBankUserService {
     return result;
   }
 
-  async deleteViceBankUser(
-    userId: string,
-    viceBankUserId: string,
-  ): Promise<ViceBankUser> {
-    const result = await super.deleteViceBankUser(userId, viceBankUserId);
+  async deleteViceBankUser(viceBankUserId: string): Promise<ViceBankUser> {
+    const result = await super.deleteViceBankUser(viceBankUserId);
 
     await this.writeToFile();
 

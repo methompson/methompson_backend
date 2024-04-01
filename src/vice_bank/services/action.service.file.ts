@@ -4,6 +4,9 @@ import { Injectable } from '@nestjs/common';
 import { InMemoryActionService } from '@/src/vice_bank/services/action.service.memory';
 import { Action } from '@/src/models/vice_bank/action';
 import { FileServiceWriter } from '@/src/utils/file_service_writer';
+import { Deposit } from '@/src/models/vice_bank/deposit';
+import { isRecord } from '@/src/utils/type_guards';
+import { DepositResponse } from '@/src/vice_bank/types';
 
 const BASE_NAME = 'action_data';
 const FILE_EXTENSION = 'json';
@@ -14,13 +17,16 @@ export class FileActionService extends InMemoryActionService {
   constructor(
     protected readonly fileServiceWriter: FileServiceWriter,
     protected readonly viceBankPath: string,
-    actions?: Action[],
+    options?: { actions?: Action[]; deposits?: Deposit[] },
   ) {
-    super(actions);
+    super(options);
   }
 
   get actionsString(): string {
-    return JSON.stringify(Object.values(this.actions));
+    return JSON.stringify({
+      actions: Object.values(this.actions),
+      deposits: Object.values(this.deposits),
+    });
   }
 
   async addAction(action: Action): Promise<Action> {
@@ -41,6 +47,30 @@ export class FileActionService extends InMemoryActionService {
 
   async deleteAction(actionId: string): Promise<Action> {
     const result = await super.deleteAction(actionId);
+
+    await this.writeToFile();
+
+    return result;
+  }
+
+  async addDeposit(deposit: Deposit): Promise<DepositResponse> {
+    const result = await super.addDeposit(deposit);
+
+    await this.writeToFile();
+
+    return result;
+  }
+
+  async updateDeposit(deposit: Deposit): Promise<DepositResponse> {
+    const result = await super.updateDeposit(deposit);
+
+    await this.writeToFile();
+
+    return result;
+  }
+
+  async deleteDeposit(depositId: string): Promise<DepositResponse> {
+    const result = await super.deleteDeposit(depositId);
 
     await this.writeToFile();
 
@@ -68,16 +98,34 @@ export class FileActionService extends InMemoryActionService {
 
     let rawData = '';
 
-    const actions: Action[] = [];
+    const actionsList: Action[] = [];
+    const depositsList: Deposit[] = [];
+
     try {
       rawData = await fileServiceWriter.readFile(viceBankPath);
 
       const json = JSON.parse(rawData);
 
-      if (Array.isArray(json)) {
-        for (const val of json) {
+      if (!isRecord(json)) {
+        throw new Error('Invalid JSON data');
+      }
+
+      const { actions, deposits } = json;
+
+      if (Array.isArray(actions)) {
+        for (const val of actions) {
           try {
-            actions.push(Action.fromJSON(val));
+            actionsList.push(Action.fromJSON(val));
+          } catch (e) {
+            console.error('Invalid BlogPost: ', val, e);
+          }
+        }
+      }
+
+      if (Array.isArray(deposits)) {
+        for (const val of deposits) {
+          try {
+            depositsList.push(Deposit.fromJSON(val));
           } catch (e) {
             console.error('Invalid BlogPost: ', val, e);
           }
@@ -87,7 +135,8 @@ export class FileActionService extends InMemoryActionService {
       try {
         if (rawData.length > 0) {
           console.error('Invalid or no data when reading file data file', e);
-          await fileServiceWriter.writeBackup(viceBankPath, rawData);
+          const backupPath = join(viceBankPath, 'backup');
+          await fileServiceWriter.writeBackup(backupPath, rawData);
         } else {
           console.error('Init: No file data found. Creating new file.');
         }
@@ -98,6 +147,9 @@ export class FileActionService extends InMemoryActionService {
       }
     }
 
-    return new FileActionService(fileServiceWriter, viceBankPath, actions);
+    return new FileActionService(fileServiceWriter, viceBankPath, {
+      actions: actionsList,
+      deposits: depositsList,
+    });
   }
 }
