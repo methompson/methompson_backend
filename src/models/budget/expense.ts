@@ -54,14 +54,14 @@ export class Expense {
     };
   }
 
-  static fromJSON(json: unknown): Expense {
-    if (!Expense.isExpenseJSON(json)) {
-      const errors = Expense.expenseJSONTest(json);
+  static fromJSON(input: unknown): Expense {
+    if (!Expense.isExpenseJSON(input)) {
+      const errors = Expense.expenseJSONTest(input);
       throw new Error(`Invalid JSON ${errors.join(', ')}`);
     }
 
     const { id, budgetId, categoryId, description, amount, expenseTarget } =
-      json;
+      input;
 
     const target = ExpenseTarget.fromJSON(expenseTarget);
 

@@ -251,7 +251,7 @@ export class DatedExpenseTarget extends ExpenseTarget {
       throw new Error(`Invalid JSON ${errors.join(', ')}`);
     }
 
-    const date = DateTime.fromISO(data.date);
+    const date = DateTime.fromISO(data.date, { zone: 'America/Chicago' });
 
     if (!date.isValid) {
       throw new Error('Invalid date');
