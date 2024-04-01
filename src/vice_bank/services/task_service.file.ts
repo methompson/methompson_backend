@@ -80,8 +80,14 @@ export class FileTaskService extends InMemoryTaskService {
   }
 
   async writeToFile(): Promise<void> {
+    const json = this.taskString;
+
+    await this.fileServiceWriter.writeToFile(this.viceBankPath, json);
+  }
+
+  async backup() {
     const backupPath = join(this.viceBankPath, 'backup');
-    await this.fileServiceWriter.writeToFile(backupPath, this.taskString);
+    await this.fileServiceWriter.writeBackup(backupPath, this.taskString);
   }
 
   static async init(
