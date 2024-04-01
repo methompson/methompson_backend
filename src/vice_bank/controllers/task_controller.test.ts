@@ -130,7 +130,7 @@ describe('TaskController', () => {
 
       const result = await controller.getTasks(request);
 
-      expect(result.tasks).toEqual([task1, task2]);
+      expect(result.tasks).toEqual([task1JSON, task2JSON]);
 
       expect(getSpy).toHaveBeenCalledTimes(1);
       expect(getSpy).toHaveBeenCalledWith({
@@ -238,7 +238,7 @@ describe('TaskController', () => {
 
       const result = await controller.addTask(request);
 
-      expect(result.task).toEqual(task1);
+      expect(result.task).toEqual(task1.toJSON());
 
       expect(addSpy).toHaveBeenCalledTimes(1);
     });
@@ -336,7 +336,7 @@ describe('TaskController', () => {
 
       const result = await controller.updateTask(request);
 
-      expect(result.task).toEqual(task1);
+      expect(result.task).toEqual(task1.toJSON());
 
       expect(upSpy).toHaveBeenCalledTimes(1);
     });
@@ -434,7 +434,7 @@ describe('TaskController', () => {
 
       const result = await controller.deleteTask(request);
 
-      expect(result.task).toEqual(task1);
+      expect(result.task).toEqual(task1.toJSON());
 
       expect(delSpy).toHaveBeenCalledTimes(1);
       expect(delSpy).toHaveBeenCalledWith(task1.id);
@@ -542,11 +542,79 @@ describe('TaskController', () => {
       });
     });
 
-    test.skip('throws an error if the body is invalid', async () => {});
+    test('throws an error if the query is invalid', async () => {
+      const logger = new LoggerService();
 
-    test.skip('throws an error if the body cannot be parsed', async () => {});
+      const tsvc = new InMemoryTaskService({
+        tasks: [task1, task2, task3],
+        taskDeposits: [td1, td2, td3],
+      });
+      const controller = new TaskController(tsvc, vbService, logger);
 
-    test.skip('throws an error if getTaskDeposits throws an error', async () => {});
+      const request = {} as unknown as METIncomingMessage;
+
+      const getSpy = jest.spyOn(tsvc, 'getTaskDeposits');
+
+      await expect(() => controller.getTaskDeposits(request)).rejects.toThrow(
+        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+      );
+
+      expect(getSpy).not.toHaveBeenCalled();
+    });
+
+    test('throws an error if the query cannot be parsed', async () => {
+      const logger = new LoggerService();
+
+      const tsvc = new InMemoryTaskService({
+        tasks: [task1, task2, task3],
+        taskDeposits: [td1, td2, td3],
+      });
+      const controller = new TaskController(tsvc, vbService, logger);
+
+      const request = {
+        query: {
+          userId: 1,
+        },
+      } as unknown as METIncomingMessage;
+
+      const getSpy = jest.spyOn(tsvc, 'getTaskDeposits');
+
+      await expect(() => controller.getTaskDeposits(request)).rejects.toThrow(
+        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+      );
+
+      expect(getSpy).not.toHaveBeenCalled();
+    });
+
+    test('throws an error if getTaskDeposits throws an error', async () => {
+      const logger = new LoggerService();
+
+      const tsvc = new InMemoryTaskService({
+        tasks: [task1, task2, task3],
+        taskDeposits: [td1, td2, td3],
+      });
+      const controller = new TaskController(tsvc, vbService, logger);
+
+      const request = {
+        query: {
+          userId: vbUserId1,
+        },
+      } as unknown as METIncomingMessage;
+
+      const getSpy = jest.spyOn(tsvc, 'getTaskDeposits');
+      getSpy.mockRejectedValue(new Error('Test Error'));
+
+      await expect(() => controller.getTaskDeposits(request)).rejects.toThrow(
+        new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+      );
+
+      expect(getSpy).toHaveBeenCalledTimes(1);
+      expect(getSpy).toHaveBeenCalledWith({
+        userId: vbUserId1,
+        page: 1,
+        pagination: 10,
+      });
+    });
   });
 
   describe('addTaskDeposit', () => {
@@ -575,28 +643,121 @@ describe('TaskController', () => {
         tokensAdded: td1.tokensEarned,
       });
 
-      const getvbSpy = jest.spyOn(vbService, 'getViceBankUsers');
+      const getvbSpy = jest.spyOn(vbService, 'getViceBankUser');
       const upvbSpy = jest.spyOn(vbService, 'updateViceBankUser');
 
       const result = await controller.addTaskDeposit(request);
 
       expect(result).toEqual({
-        taskDeposit: td1,
+        taskDeposit: td1.toJSON(),
         currentTokens,
       });
 
       expect(addSpy).toHaveBeenCalledTimes(1);
 
       expect(getvbSpy).toHaveBeenCalledTimes(1);
-      expect(getvbSpy).toHaveBeenCalledWith('userId', { userId: vbUserId1 });
+      expect(getvbSpy).toHaveBeenCalledWith(vbUserId1);
 
       expect(upvbSpy).toHaveBeenCalledTimes(1);
       expect(upvbSpy).toHaveBeenCalledWith(user1.copyWith({ currentTokens }));
     });
 
-    test.skip('throws an error if the body is invalid', async () => {});
+    test('throws an error if the body is invalid', async () => {
+      const logger = new LoggerService();
 
-    test.skip('throws an error if the body cannot be parsed', async () => {});
+      const tsvc = new InMemoryTaskService({
+        tasks: [task1, task2, task3],
+      });
+      const controller = new TaskController(tsvc, vbService, logger);
+      const authModel = new NoAuthModel();
+      jest.spyOn(authModel, 'userId', 'get').mockReturnValue('userId');
+
+      const request = {
+        authModel,
+      } as unknown as METIncomingMessage;
+
+      const addSpy = jest.spyOn(tsvc, 'addTaskDeposit');
+
+      const getvbSpy = jest.spyOn(vbService, 'getViceBankUser');
+      const upvbSpy = jest.spyOn(vbService, 'updateViceBankUser');
+
+      await expect(() => controller.addTaskDeposit(request)).rejects.toThrow(
+        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+      );
+
+      expect(addSpy).toHaveBeenCalledTimes(0);
+      expect(getvbSpy).toHaveBeenCalledTimes(0);
+      expect(upvbSpy).toHaveBeenCalledTimes(0);
+    });
+
+    test('throws an error if the body cannot be parsed', async () => {
+      const logger = new LoggerService();
+
+      const tsvc = new InMemoryTaskService({
+        tasks: [task1, task2, task3],
+      });
+      const controller = new TaskController(tsvc, vbService, logger);
+      const authModel = new NoAuthModel();
+      jest.spyOn(authModel, 'userId', 'get').mockReturnValue('userId');
+
+      const request = {
+        authModel,
+        body: {
+          taskDeposit: {},
+        },
+      } as unknown as METIncomingMessage;
+
+      const addSpy = jest.spyOn(tsvc, 'addTaskDeposit');
+
+      const getvbSpy = jest.spyOn(vbService, 'getViceBankUser');
+      const upvbSpy = jest.spyOn(vbService, 'updateViceBankUser');
+
+      await expect(() => controller.addTaskDeposit(request)).rejects.toThrow();
+
+      expect(addSpy).toHaveBeenCalledTimes(0);
+      expect(getvbSpy).toHaveBeenCalledTimes(0);
+      expect(upvbSpy).toHaveBeenCalledTimes(0);
+    });
+
+    test('throws an error if getViceBankUser throws an error', async () => {
+      const logger = new LoggerService();
+
+      const tsvc = new InMemoryTaskService({
+        tasks: [task1, task2, task3],
+      });
+      const controller = new TaskController(tsvc, vbService, logger);
+      const authModel = new NoAuthModel();
+      jest.spyOn(authModel, 'userId', 'get').mockReturnValue('userId');
+
+      const request = {
+        authModel,
+        body: {
+          taskDeposit: td1JSON,
+        },
+      } as unknown as METIncomingMessage;
+
+      const addSpy = jest.spyOn(tsvc, 'addTaskDeposit');
+      addSpy.mockResolvedValue({
+        taskDeposit: td1,
+        tokensAdded: td1.tokensEarned,
+      });
+
+      const getvbSpy = jest.spyOn(vbService, 'getViceBankUser');
+      getvbSpy.mockRejectedValue(new Error('Test Error'));
+
+      const upvbSpy = jest.spyOn(vbService, 'updateViceBankUser');
+
+      await expect(controller.addTaskDeposit(request)).rejects.toThrow(
+        new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+      );
+
+      expect(addSpy).toHaveBeenCalledTimes(0);
+
+      expect(getvbSpy).toHaveBeenCalledTimes(1);
+      expect(getvbSpy).toHaveBeenCalledWith(vbUserId1);
+
+      expect(upvbSpy).toHaveBeenCalledTimes(0);
+    });
 
     test('throws an error if addTaskDeposit throws an error', async () => {
       const logger = new LoggerService();
@@ -622,10 +783,170 @@ describe('TaskController', () => {
 
       expect(addSpy).toHaveBeenCalledTimes(1);
     });
+
+    test('throws an error if updateViceBankuser throws an error', async () => {
+      const logger = new LoggerService();
+
+      const tsvc = new InMemoryTaskService({
+        tasks: [task1, task2, task3],
+      });
+      const controller = new TaskController(tsvc, vbService, logger);
+      const authModel = new NoAuthModel();
+      jest.spyOn(authModel, 'userId', 'get').mockReturnValue('userId');
+
+      const request = {
+        authModel,
+        body: {
+          taskDeposit: td1JSON,
+        },
+      } as unknown as METIncomingMessage;
+
+      const currentTokens = td1.tokensEarned + user1.currentTokens;
+
+      const addSpy = jest.spyOn(tsvc, 'addTaskDeposit');
+      addSpy.mockResolvedValue({
+        taskDeposit: td1,
+        tokensAdded: td1.tokensEarned,
+      });
+
+      const getvbSpy = jest.spyOn(vbService, 'getViceBankUser');
+      const upvbSpy = jest.spyOn(vbService, 'updateViceBankUser');
+      upvbSpy.mockRejectedValue(new Error('Test Error'));
+
+      await expect(controller.addTaskDeposit(request)).rejects.toThrow(
+        new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+      );
+
+      expect(addSpy).toHaveBeenCalledTimes(1);
+
+      expect(getvbSpy).toHaveBeenCalledTimes(1);
+      expect(getvbSpy).toHaveBeenCalledWith(vbUserId1);
+
+      expect(upvbSpy).toHaveBeenCalledTimes(1);
+      expect(upvbSpy).toHaveBeenCalledWith(user1.copyWith({ currentTokens }));
+    });
   });
 
   describe('updateTaskDeposit', () => {
     test('updates a taskDeposit with the TaskService', async () => {
+      const logger = new LoggerService();
+
+      const tsvc = new InMemoryTaskService({
+        tasks: [task1, task2, task3],
+        taskDeposits: [td1],
+      });
+      const controller = new TaskController(tsvc, vbService, logger);
+      const authModel = new NoAuthModel();
+      jest.spyOn(authModel, 'userId', 'get').mockReturnValue('userId');
+
+      const updatedTaskDeposit = {
+        ...td1JSON,
+        date: td1.date.plus({ days: 1 }).toISO(),
+      };
+
+      const request = {
+        authModel,
+        body: {
+          taskDeposit: updatedTaskDeposit,
+        },
+      } as unknown as METIncomingMessage;
+
+      const upSpy = jest.spyOn(tsvc, 'updateTaskDeposit');
+      upSpy.mockResolvedValue({
+        taskDeposit: td1,
+        tokensAdded: 0,
+      });
+
+      const getvbSpy = jest.spyOn(vbService, 'getViceBankUser');
+      const upvbSpy = jest.spyOn(vbService, 'updateViceBankUser');
+
+      const result = await controller.updateTaskDeposit(request);
+
+      expect(result).toEqual({
+        oldTaskDeposit: td1.toJSON(),
+        taskDeposit: updatedTaskDeposit,
+        currentTokens: user1.currentTokens,
+      });
+
+      expect(upSpy).toHaveBeenCalledTimes(1);
+
+      expect(getvbSpy).toHaveBeenCalledTimes(1);
+      expect(getvbSpy).toHaveBeenCalledWith(vbUserId1);
+
+      expect(upvbSpy).toHaveBeenCalledTimes(1);
+      expect(upvbSpy).toHaveBeenCalledWith(user1);
+    });
+
+    test('throws an error if the body is invalid', async () => {
+      const logger = new LoggerService();
+
+      const tsvc = new InMemoryTaskService({
+        tasks: [task1, task2, task3],
+        taskDeposits: [td1],
+      });
+      const controller = new TaskController(tsvc, vbService, logger);
+      const authModel = new NoAuthModel();
+      jest.spyOn(authModel, 'userId', 'get').mockReturnValue('userId');
+
+      const request = {
+        authModel,
+      } as unknown as METIncomingMessage;
+
+      const upSpy = jest.spyOn(tsvc, 'updateTaskDeposit');
+      upSpy.mockResolvedValue({
+        taskDeposit: td1,
+        tokensAdded: 0,
+      });
+
+      const getvbSpy = jest.spyOn(vbService, 'getViceBankUser');
+      const upvbSpy = jest.spyOn(vbService, 'updateViceBankUser');
+
+      await expect(() => controller.updateTaskDeposit(request)).rejects.toThrow(
+        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+      );
+
+      expect(upSpy).toHaveBeenCalledTimes(0);
+      expect(getvbSpy).toHaveBeenCalledTimes(0);
+      expect(upvbSpy).toHaveBeenCalledTimes(0);
+    });
+
+    test('throws an error if the body cannot be parsed', async () => {
+      const logger = new LoggerService();
+
+      const tsvc = new InMemoryTaskService({
+        tasks: [task1, task2, task3],
+        taskDeposits: [td1],
+      });
+      const controller = new TaskController(tsvc, vbService, logger);
+      const authModel = new NoAuthModel();
+      jest.spyOn(authModel, 'userId', 'get').mockReturnValue('userId');
+
+      const request = {
+        authModel,
+        body: {
+          taskDeposit: {},
+        },
+      } as unknown as METIncomingMessage;
+
+      const upSpy = jest.spyOn(tsvc, 'updateTaskDeposit');
+      upSpy.mockResolvedValue({
+        taskDeposit: td1,
+        tokensAdded: 0,
+      });
+
+      const getvbSpy = jest.spyOn(vbService, 'getViceBankUser');
+      const upvbSpy = jest.spyOn(vbService, 'updateViceBankUser');
+
+      await expect(() => controller.updateTaskDeposit(request)).rejects.toThrow(
+        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+      );
+
+      expect(upSpy).toHaveBeenCalledTimes(0);
+      expect(getvbSpy).toHaveBeenCalledTimes(0);
+      expect(upvbSpy).toHaveBeenCalledTimes(0);
+    });
+
+    test('throws an error if getViceBankUser throws an error', async () => {
       const logger = new LoggerService();
 
       const tsvc = new InMemoryTaskService({
@@ -649,28 +970,18 @@ describe('TaskController', () => {
         tokensAdded: 0,
       });
 
-      const getvbSpy = jest.spyOn(vbService, 'getViceBankUsers');
+      const getvbSpy = jest.spyOn(vbService, 'getViceBankUser');
+      getvbSpy.mockRejectedValue(new Error('Test Error'));
       const upvbSpy = jest.spyOn(vbService, 'updateViceBankUser');
 
-      const result = await controller.updateTaskDeposit(request);
-
-      expect(result).toEqual({
-        taskDeposit: td1,
-        currentTokens: user1.currentTokens,
-      });
-
-      expect(upSpy).toHaveBeenCalledTimes(1);
-
+      await expect(() => controller.updateTaskDeposit(request)).rejects.toThrow(
+        new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+      );
       expect(getvbSpy).toHaveBeenCalledTimes(1);
-      expect(getvbSpy).toHaveBeenCalledWith('userId', { userId: vbUserId1 });
-
-      expect(upvbSpy).toHaveBeenCalledTimes(1);
-      expect(upvbSpy).toHaveBeenCalledWith(user1);
+      expect(getvbSpy).toHaveBeenCalledWith(vbUserId1);
+      expect(upSpy).toHaveBeenCalledTimes(0);
+      expect(upvbSpy).toHaveBeenCalledTimes(0);
     });
-
-    test.skip('throws an error if the body is invalid', async () => {});
-
-    test.skip('throws an error if the body cannot be parsed', async () => {});
 
     test('throws an error if updateTaskDeposit throws an error', async () => {
       const logger = new LoggerService();
@@ -695,6 +1006,47 @@ describe('TaskController', () => {
       );
 
       expect(updateSpy).toHaveBeenCalledTimes(1);
+    });
+
+    test('throws an error if updateViceBankUser throws an error', async () => {
+      const logger = new LoggerService();
+
+      const tsvc = new InMemoryTaskService({
+        tasks: [task1, task2, task3],
+        taskDeposits: [td1],
+      });
+      const controller = new TaskController(tsvc, vbService, logger);
+      const authModel = new NoAuthModel();
+      jest.spyOn(authModel, 'userId', 'get').mockReturnValue('userId');
+
+      const request = {
+        authModel,
+        body: {
+          taskDeposit: td1JSON,
+        },
+      } as unknown as METIncomingMessage;
+
+      const upSpy = jest.spyOn(tsvc, 'updateTaskDeposit');
+      upSpy.mockResolvedValue({
+        taskDeposit: td1,
+        tokensAdded: 0,
+      });
+
+      const getvbSpy = jest.spyOn(vbService, 'getViceBankUser');
+      const upvbSpy = jest.spyOn(vbService, 'updateViceBankUser');
+      upvbSpy.mockRejectedValue(new Error('Test Error'));
+
+      await expect(() => controller.updateTaskDeposit(request)).rejects.toThrow(
+        new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+      );
+
+      expect(upSpy).toHaveBeenCalledTimes(1);
+
+      expect(getvbSpy).toHaveBeenCalledTimes(1);
+      expect(getvbSpy).toHaveBeenCalledWith(vbUserId1);
+
+      expect(upvbSpy).toHaveBeenCalledTimes(1);
+      expect(upvbSpy).toHaveBeenCalledWith(user1);
     });
   });
 
@@ -723,20 +1075,21 @@ describe('TaskController', () => {
         tokensAdded: -1,
       });
 
-      const getvbSpy = jest.spyOn(vbService, 'getViceBankUsers');
+      const getvbSpy = jest.spyOn(vbService, 'getViceBankUser');
       const upvbSpy = jest.spyOn(vbService, 'updateViceBankUser');
 
       const result = await controller.deleteTaskDeposit(request);
 
       expect(result).toEqual({
-        taskDeposit: td1,
+        taskDeposit: td1.toJSON(),
         currentTokens: 0,
       });
 
       expect(delSpy).toHaveBeenCalledTimes(1);
+      expect(delSpy).toHaveBeenCalledWith(td1.id);
 
       expect(getvbSpy).toHaveBeenCalledTimes(1);
-      expect(getvbSpy).toHaveBeenCalledWith('userId', { userId: vbUserId1 });
+      expect(getvbSpy).toHaveBeenCalledWith(vbUserId1);
 
       expect(upvbSpy).toHaveBeenCalledTimes(1);
       expect(upvbSpy).toHaveBeenCalledWith(
@@ -744,9 +1097,74 @@ describe('TaskController', () => {
       );
     });
 
-    test.skip('throws an error if the body is invalid', async () => {});
+    test('throws an error if the body is invalid', async () => {
+      const logger = new LoggerService();
 
-    test.skip('throws an error if the body cannot be parsed', async () => {});
+      const tsvc = new InMemoryTaskService({
+        tasks: [task1, task2, task3],
+        taskDeposits: [td1],
+      });
+      const controller = new TaskController(tsvc, vbService, logger);
+      const authModel = new NoAuthModel();
+      jest.spyOn(authModel, 'userId', 'get').mockReturnValue('userId');
+
+      const request = {
+        authModel,
+      } as unknown as METIncomingMessage;
+
+      const delSpy = jest.spyOn(tsvc, 'deleteTaskDeposit');
+      delSpy.mockResolvedValue({
+        taskDeposit: td1,
+        tokensAdded: -1,
+      });
+
+      const getvbSpy = jest.spyOn(vbService, 'getViceBankUser');
+      const upvbSpy = jest.spyOn(vbService, 'updateViceBankUser');
+
+      await expect(() => controller.deleteTaskDeposit(request)).rejects.toThrow(
+        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+      );
+
+      expect(delSpy).toHaveBeenCalledTimes(0);
+      expect(getvbSpy).toHaveBeenCalledTimes(0);
+      expect(upvbSpy).toHaveBeenCalledTimes(0);
+    });
+
+    test('throws an error if the body cannot be parsed', async () => {
+      const logger = new LoggerService();
+
+      const tsvc = new InMemoryTaskService({
+        tasks: [task1, task2, task3],
+        taskDeposits: [td1],
+      });
+      const controller = new TaskController(tsvc, vbService, logger);
+      const authModel = new NoAuthModel();
+      jest.spyOn(authModel, 'userId', 'get').mockReturnValue('userId');
+
+      const request = {
+        authModel,
+        body: {
+          taskDepositId: 1,
+        },
+      } as unknown as METIncomingMessage;
+
+      const delSpy = jest.spyOn(tsvc, 'deleteTaskDeposit');
+      delSpy.mockResolvedValue({
+        taskDeposit: td1,
+        tokensAdded: -1,
+      });
+
+      const getvbSpy = jest.spyOn(vbService, 'getViceBankUser');
+      const upvbSpy = jest.spyOn(vbService, 'updateViceBankUser');
+
+      await expect(() => controller.deleteTaskDeposit(request)).rejects.toThrow(
+        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+      );
+
+      expect(delSpy).toHaveBeenCalledTimes(0);
+      expect(getvbSpy).toHaveBeenCalledTimes(0);
+      expect(upvbSpy).toHaveBeenCalledTimes(0);
+    });
 
     test('throws an error if deleteTaskDeposit throws an error', async () => {
       const logger = new LoggerService();
@@ -766,11 +1184,100 @@ describe('TaskController', () => {
       const delSpy = jest.spyOn(tsvc, 'deleteTaskDeposit');
       delSpy.mockRejectedValue(new Error('Test Error'));
 
+      const getvbSpy = jest.spyOn(vbService, 'getViceBankUser');
+      const upvbSpy = jest.spyOn(vbService, 'updateViceBankUser');
+
       await expect(() => controller.deleteTaskDeposit(request)).rejects.toThrow(
         new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
       );
 
       expect(delSpy).toHaveBeenCalledTimes(1);
+      expect(delSpy).toHaveBeenCalledWith(td1.id);
+
+      expect(getvbSpy).toHaveBeenCalledTimes(0);
+      expect(upvbSpy).toHaveBeenCalledTimes(0);
+    });
+
+    test('throws an error if getViceBankUser throws an error', async () => {
+      const logger = new LoggerService();
+
+      const tsvc = new InMemoryTaskService({
+        tasks: [task1, task2, task3],
+        taskDeposits: [td1],
+      });
+      const controller = new TaskController(tsvc, vbService, logger);
+      const authModel = new NoAuthModel();
+      jest.spyOn(authModel, 'userId', 'get').mockReturnValue('userId');
+
+      const request = {
+        authModel,
+        body: {
+          taskDepositId: td1.id,
+        },
+      } as unknown as METIncomingMessage;
+
+      const delSpy = jest.spyOn(tsvc, 'deleteTaskDeposit');
+      delSpy.mockResolvedValue({
+        taskDeposit: td1,
+        tokensAdded: -1,
+      });
+
+      const getvbSpy = jest.spyOn(vbService, 'getViceBankUser');
+      getvbSpy.mockRejectedValue(new Error('Test Error'));
+      const upvbSpy = jest.spyOn(vbService, 'updateViceBankUser');
+
+      await expect(() => controller.deleteTaskDeposit(request)).rejects.toThrow(
+        new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+      );
+
+      expect(delSpy).toHaveBeenCalledTimes(1);
+
+      expect(getvbSpy).toHaveBeenCalledTimes(1);
+      expect(getvbSpy).toHaveBeenCalledWith(vbUserId1);
+      expect(upvbSpy).toHaveBeenCalledTimes(0);
+    });
+
+    test('throws an error if updateViceBankUser throws an error', async () => {
+      const logger = new LoggerService();
+
+      const tsvc = new InMemoryTaskService({
+        tasks: [task1, task2, task3],
+        taskDeposits: [td1],
+      });
+      const controller = new TaskController(tsvc, vbService, logger);
+      const authModel = new NoAuthModel();
+      jest.spyOn(authModel, 'userId', 'get').mockReturnValue('userId');
+
+      const request = {
+        authModel,
+        body: {
+          taskDepositId: td1.id,
+        },
+      } as unknown as METIncomingMessage;
+
+      const delSpy = jest.spyOn(tsvc, 'deleteTaskDeposit');
+      delSpy.mockResolvedValue({
+        taskDeposit: td1,
+        tokensAdded: -1,
+      });
+
+      const getvbSpy = jest.spyOn(vbService, 'getViceBankUser');
+      const upvbSpy = jest.spyOn(vbService, 'updateViceBankUser');
+      upvbSpy.mockRejectedValue(new Error('Test Error'));
+
+      await expect(() => controller.deleteTaskDeposit(request)).rejects.toThrow(
+        new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+      );
+
+      expect(delSpy).toHaveBeenCalledTimes(1);
+
+      expect(getvbSpy).toHaveBeenCalledTimes(1);
+      expect(getvbSpy).toHaveBeenCalledWith(vbUserId1);
+
+      expect(upvbSpy).toHaveBeenCalledTimes(1);
+      expect(upvbSpy).toHaveBeenCalledWith(
+        user1.copyWith({ currentTokens: 0 }),
+      );
     });
   });
 });

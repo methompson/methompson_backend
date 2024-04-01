@@ -15,7 +15,7 @@ import { LoggerService } from '@/src/logger/logger.service';
 import { pageAndPagination } from '@/src/utils/page_and_pagination';
 import { ViceBankUser } from '@/src/models/vice_bank/vice_bank_user';
 import { isNullOrUndefined, isRecord, isString } from '@/src/utils/type_guards';
-import { InvalidInputError, NotFoundError } from '@/src/errors';
+import { InvalidInputError } from '@/src/errors';
 import { AuthRequiredIncerceptor } from '@/src/middleware/auth_interceptor';
 import { commonErrorHandler } from '@/src/utils/common_error_handler';
 import type { METIncomingMessage } from '@/src/utils/met_incoming_message';
@@ -64,13 +64,11 @@ export class ViceBankUserController {
         throw new UnauthorizedException('Auth Model Not Found in Request');
       }
 
-      const users = await this.viceBankUserService.getViceBankUsers(
-        auth.userId,
-        {
-          page,
-          pagination,
-        },
-      );
+      const users = await this.viceBankUserService.getViceBankUsers({
+        userId: auth.userId,
+        page,
+        pagination,
+      });
 
       return { users };
     } catch (e) {
@@ -90,22 +88,11 @@ export class ViceBankUserController {
         throw new UnauthorizedException('Auth Model Not Found in Request');
       }
 
-      const users = await this.viceBankUserService.getViceBankUsers(
-        auth.userId,
-        {
-          userId,
-        },
-      );
-
-      if (users.length > 1) {
-        throw new Error('More than one user found');
+      if (isNullOrUndefined(userId)) {
+        throw new InvalidInputError('User ID Not Found');
       }
 
-      const user = users[0];
-
-      if (isNullOrUndefined(user)) {
-        throw new NotFoundError(`User with ID ${userId} not found`);
-      }
+      const user = await this.viceBankUserService.getViceBankUser(userId);
 
       return { user };
     } catch (e) {
@@ -177,7 +164,6 @@ export class ViceBankUserController {
       }
 
       const user = await this.viceBankUserService.deleteViceBankUser(
-        auth.userId,
         body.viceBankUserId,
       );
 

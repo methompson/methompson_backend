@@ -1,18 +1,17 @@
 import { isString } from '@/src/utils/type_guards';
 import { TaskDeposit } from '@/src/models/vice_bank/task_deposit';
+import { Deposit } from '@/src/models/vice_bank/deposit';
 
 export interface GetPageOptions {
   page?: number;
   pagination?: number;
 }
 
-export interface GetViceBankUsersOptions extends GetPageOptions {
-  userId?: string;
-}
-
 export interface GetPageAndUserOptions extends GetPageOptions {
   userId: string;
 }
+
+export type GetViceBankUsersOptions = GetPageAndUserOptions;
 
 export interface PurchaseInputOptions extends GetPageOptions {
   userId: string;
@@ -65,5 +64,10 @@ export function frequencyFromString(input: string) {
 
 export interface TaskDepositResponse {
   taskDeposit: TaskDeposit;
+  tokensAdded: number;
+}
+
+export interface DepositResponse {
+  deposit: Deposit;
   tokensAdded: number;
 }
