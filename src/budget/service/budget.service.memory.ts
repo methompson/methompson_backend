@@ -3,8 +3,18 @@ import { v4 as uuidv4 } from 'uuid';
 import { Budget } from '@/src/budget/models/budget';
 import { BudgetService } from './budget.service';
 import { listToObject } from '@/src/utils/array_to_obj';
-import { GetBudgetOptions } from '@/src/budget/types';
+import {
+  GetBudgetOptions,
+  ExpenseResponse,
+  GetExpenseOptions,
+  TransactionOptions,
+} from '@/src/budget/types';
 import { isNullOrUndefined } from '@/src/utils/type_guards';
+import { UnimplementedError } from '@/src/errors';
+import { Expense } from '@/src/budget/models/expense';
+import { Category } from '@/src/budget/models/category';
+import { DepositTransaction } from '@/src/budget/models/deposit_transaction';
+import { WithdrawalTransaction } from '@/src/budget/models/withdrawal_transaction';
 
 export interface BudgetInputOptions {
   budgets?: Budget[];
@@ -87,5 +97,77 @@ export class InMemoryBudgetService implements BudgetService {
     delete this._budgets[budgetId];
 
     return existingBudget;
+  }
+
+  async getCategories(budgetId: string): Promise<Category[]> {
+    throw new UnimplementedError();
+  }
+  async getCategory(categoryId: string): Promise<Category> {
+    throw new UnimplementedError();
+  }
+  async addCategory(category: Category): Promise<Category> {
+    throw new UnimplementedError();
+  }
+  async updateCategory(category: Category): Promise<Category> {
+    throw new UnimplementedError();
+  }
+  async deleteCategory(categoryId: string): Promise<Category> {
+    throw new UnimplementedError();
+  }
+
+  async getExpenses(input: GetExpenseOptions): Promise<Expense[]> {
+    throw new UnimplementedError();
+  }
+  async getExpense(expenseId: string): Promise<Expense> {
+    throw new UnimplementedError();
+  }
+  async addExpense(expense: Expense): Promise<ExpenseResponse> {
+    throw new UnimplementedError();
+  }
+  async updateExpense(expense: Expense): Promise<ExpenseResponse> {
+    throw new UnimplementedError();
+  }
+  async deleteExpense(expenseId: string): Promise<ExpenseResponse> {
+    throw new UnimplementedError();
+  }
+
+  async getDeposits(input: TransactionOptions): Promise<DepositTransaction[]> {
+    throw new UnimplementedError();
+  }
+  async getDeposit(depositId: string): Promise<DepositTransaction> {
+    throw new UnimplementedError();
+  }
+  async addDeposit(deposit: DepositTransaction): Promise<DepositTransaction> {
+    throw new UnimplementedError();
+  }
+  async updateDeposit(
+    deposit: DepositTransaction,
+  ): Promise<DepositTransaction> {
+    throw new UnimplementedError();
+  }
+  async deleteDeposit(depositId: string): Promise<DepositTransaction> {
+    throw new UnimplementedError();
+  }
+
+  async getWithdrawals(
+    input: TransactionOptions,
+  ): Promise<WithdrawalTransaction[]> {
+    throw new UnimplementedError();
+  }
+  async getWithdrawal(withdrawalId: string): Promise<WithdrawalTransaction> {
+    throw new UnimplementedError();
+  }
+  async addWithdrawal(
+    withdrawal: WithdrawalTransaction,
+  ): Promise<WithdrawalTransaction> {
+    throw new UnimplementedError();
+  }
+  async updateWithdrawal(
+    withdrawal: WithdrawalTransaction,
+  ): Promise<WithdrawalTransaction> {
+    throw new UnimplementedError();
+  }
+  async deleteWithdrawal(withdrawalId: string): Promise<WithdrawalTransaction> {
+    throw new UnimplementedError();
   }
 }
