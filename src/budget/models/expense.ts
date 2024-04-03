@@ -1,7 +1,7 @@
 import {
   ExpenseTarget,
   ExpenseTargetJSON,
-} from '@/src/models/budget/expense_target';
+} from '@/src/budget/models/expense_target';
 import { isNumber, isRecord, isString } from '@/src/utils/type_guards';
 
 export interface ExpenseJSON {

@@ -1,4 +1,4 @@
-import { Expense } from '@/src/models/budget/expense';
+import { Expense } from '@/src/budget/models/expense';
 
 export interface GetPageOptions {
   page?: number;
@@ -15,4 +15,10 @@ export interface GetExpenseOptions extends GetPageOptions {
 
 export interface ExpenseResponse {
   expense: Expense;
+}
+
+export interface TransactionOptions extends GetPageOptions {
+  budgetId: string;
+  startDate: string;
+  endDate: string;
 }

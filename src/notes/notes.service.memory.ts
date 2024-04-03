@@ -9,7 +9,7 @@ import {
 import { NewNote, Note } from '@/src/models/notes_model';
 import { isUndefined } from '@/src/utils/type_guards';
 import { NotFoundError, MutateDataException } from '@/src/errors';
-import { arrayToObject } from '@/src/utils/array_to_obj';
+import { listToObject } from '@/src/utils/array_to_obj';
 
 @Injectable()
 export class InMemoryNotesService implements NotesService {
@@ -19,7 +19,7 @@ export class InMemoryNotesService implements NotesService {
   protected _notes: Record<string, Note> = {};
 
   constructor(inputNotes: Note[] = []) {
-    this._notes = arrayToObject(inputNotes, (n) => n.id);
+    this._notes = listToObject(inputNotes, (n) => n.id);
   }
 
   get notes(): Record<string, Note> {

@@ -11,7 +11,7 @@ import {
 import { MutateDataException, NotFoundError } from '@/src/errors';
 import { BlogService, BlogPostRequestOutput } from '@/src/blog/blog.service';
 import { isNullOrUndefined, isUndefined } from '@/src/utils/type_guards';
-import { arrayToObject } from '@/src/utils/array_to_obj';
+import { listToObject } from '@/src/utils/array_to_obj';
 
 @Injectable()
 export class InMemoryBlogService implements BlogService {
@@ -21,7 +21,7 @@ export class InMemoryBlogService implements BlogService {
   protected _blogPosts: Record<string, BlogPost> = {};
 
   constructor(inputPosts: BlogPost[] = []) {
-    this._blogPosts = arrayToObject(inputPosts, (p) => p.slug);
+    this._blogPosts = listToObject(inputPosts, (p) => p.slug);
   }
 
   get blogPosts() {
