@@ -52,7 +52,17 @@ export class WithdrawalTransaction {
     };
   }
 
-  static fromJSON(input: WithdrawalTransactionJSON): WithdrawalTransaction {
+  static fromNewWithdrawalTransaction(
+    id: string,
+    input: WithdrawalTransaction,
+  ): WithdrawalTransaction {
+    return WithdrawalTransaction.fromJSON({
+      ...input.toJSON(),
+      id,
+    });
+  }
+
+  static fromJSON(input: unknown): WithdrawalTransaction {
     if (!WithdrawalTransaction.isWithdrawalTransactionJSON(input)) {
       const errors = WithdrawalTransaction.withdrawalTransactionTest(input);
       throw new Error(`Invalid JSON ${errors.join(', ')}`);

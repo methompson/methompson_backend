@@ -54,6 +54,13 @@ export class Expense {
     };
   }
 
+  static fromNewExpense(id: string, input: Expense): Expense {
+    return Expense.fromJSON({
+      ...input.toJSON(),
+      id,
+    });
+  }
+
   static fromJSON(input: unknown): Expense {
     if (!Expense.isExpenseJSON(input)) {
       const errors = Expense.expenseJSONTest(input);

@@ -46,7 +46,17 @@ export class DepositTransaction {
     };
   }
 
-  static fromJSON(input: DepositTransactionJSON): DepositTransaction {
+  static fromNewDepositTransaction(
+    id: string,
+    input: DepositTransaction,
+  ): DepositTransaction {
+    return DepositTransaction.fromJSON({
+      ...input.toJSON(),
+      id,
+    });
+  }
+
+  static fromJSON(input: unknown): DepositTransaction {
     if (!DepositTransaction.isDepositTransactionJSON(input)) {
       const errors = DepositTransaction.depositTransactionTest(input);
       throw new Error(`Invalid JSON ${errors.join(', ')}`);

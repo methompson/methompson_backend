@@ -22,3 +22,7 @@ export interface TransactionOptions extends GetPageOptions {
   startDate: string;
   endDate: string;
 }
+
+export interface GetCategoryOptions extends GetPageOptions {
+  budgetId: string;
+}

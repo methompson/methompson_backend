@@ -24,7 +24,7 @@ export interface DepositInputOptions extends GetPageOptions {
   userId: string;
   startDate?: string;
   endDate?: string;
-  depositConversionId?: string;
+  actionId?: string;
 }
 
 export interface GetTaskOptions extends GetPageOptions {

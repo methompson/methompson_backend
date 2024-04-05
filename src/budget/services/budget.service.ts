@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 
 import { Budget } from '@/src/budget/models/budget';
 import {
-  ExpenseResponse,
   GetBudgetOptions,
+  GetCategoryOptions,
   GetExpenseOptions,
   TransactionOptions,
 } from '@/src/budget/types';
@@ -20,7 +20,7 @@ export abstract class BudgetService {
   abstract updateBudget(budget: Budget): Promise<Budget>;
   abstract deleteBudget(budgetId: string): Promise<Budget>;
 
-  abstract getCategories(budgetId: string): Promise<Category[]>;
+  abstract getCategories(input: GetCategoryOptions): Promise<Category[]>;
   abstract getCategory(categoryId: string): Promise<Category>;
   abstract addCategory(category: Category): Promise<Category>;
   abstract updateCategory(category: Category): Promise<Category>;
@@ -28,9 +28,9 @@ export abstract class BudgetService {
 
   abstract getExpenses(input: GetExpenseOptions): Promise<Expense[]>;
   abstract getExpense(expenseId: string): Promise<Expense>;
-  abstract addExpense(expense: Expense): Promise<ExpenseResponse>;
-  abstract updateExpense(expense: Expense): Promise<ExpenseResponse>;
-  abstract deleteExpense(expenseId: string): Promise<ExpenseResponse>;
+  abstract addExpense(expense: Expense): Promise<Expense>;
+  abstract updateExpense(expense: Expense): Promise<Expense>;
+  abstract deleteExpense(expenseId: string): Promise<Expense>;
 
   abstract getDeposits(
     input: TransactionOptions,

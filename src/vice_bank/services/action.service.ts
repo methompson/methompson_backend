@@ -12,9 +12,9 @@ import { Deposit } from '@/src/models/vice_bank/deposit';
 export abstract class ActionService {
   abstract getActions(input: GetPageAndUserOptions): Promise<Action[]>;
   abstract getAction(actionId: string): Promise<Action>;
-  abstract addAction(depositConversion: Action): Promise<Action>;
-  abstract updateAction(depositConversion: Action): Promise<Action>;
-  abstract deleteAction(depositConversionId: string): Promise<Action>;
+  abstract addAction(action: Action): Promise<Action>;
+  abstract updateAction(action: Action): Promise<Action>;
+  abstract deleteAction(actionId: string): Promise<Action>;
 
   abstract getDeposits(input: DepositInputOptions): Promise<Deposit[]>;
   abstract addDeposit(deposit: Deposit): Promise<DepositResponse>;

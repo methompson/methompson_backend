@@ -473,7 +473,7 @@ describe('ActionController', () => {
         userId: vbUserId1,
         startDate: undefined,
         endDate: undefined,
-        depositConversionId: undefined,
+        acitonId: undefined,
       });
     });
 
@@ -506,7 +506,7 @@ describe('ActionController', () => {
         userId: vbUserId1,
         startDate: '2021-01-01',
         endDate: '2021-01-10',
-        depositConversionId: undefined,
+        actionId: undefined,
       });
     });
 
