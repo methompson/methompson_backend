@@ -93,9 +93,9 @@ describe('InMemoryActionsService', () => {
         actions: [action1, action2, action3],
       });
 
-      const conversions = service.actions;
+      const actions = service.actions;
 
-      expect(conversions).toEqual({
+      expect(actions).toEqual({
         id1: action1,
         id2: action2,
         id3: action3,
@@ -105,10 +105,10 @@ describe('InMemoryActionsService', () => {
     test('if there are no actions, it returns an empty object', () => {
       const service = new InMemoryActionService();
 
-      const conversions = service.actions;
+      const actions = service.actions;
 
-      expect(conversions).toEqual({});
-      expect(Object.values(conversions).length).toBe(0);
+      expect(actions).toEqual({});
+      expect(Object.values(actions).length).toBe(0);
     });
 
     test('revising the actions object does not revise the stored version', () => {
@@ -116,11 +116,11 @@ describe('InMemoryActionsService', () => {
         actions: [action1, action2, action3],
       });
 
-      const conversions = service.actions;
+      const actions = service.actions;
 
-      delete conversions.id1;
+      delete actions.id1;
 
-      expect(Object.values(conversions).length).toBe(2);
+      expect(Object.values(actions).length).toBe(2);
 
       expect(service.actions).toEqual({
         id1: action1,
@@ -193,10 +193,10 @@ describe('InMemoryActionsService', () => {
       expect(result2).toEqual([action3]);
     });
 
-    test('returns paginated actions if there are more conversions than the pagination', async () => {
-      const conversions: Action[] = [];
+    test('returns paginated actions if there are more actions than the pagination', async () => {
+      const actions: Action[] = [];
       for (let i = 4; i < 10; i++) {
-        conversions.push(
+        actions.push(
           Action.fromJSON({
             id: `id${i}`,
             vbUserId: vbUserId1,
@@ -211,16 +211,16 @@ describe('InMemoryActionsService', () => {
       }
 
       const service = new InMemoryActionService({
-        actions: [action1, action2, action3, ...conversions],
+        actions: [action1, action2, action3, ...actions],
       });
 
-      const conversion4 = conversions[0];
-      const conversion5 = conversions[1];
-      const conversion6 = conversions[2];
+      const action4 = actions[0];
+      const action5 = actions[1];
+      const action6 = actions[2];
 
-      expect(isNullOrUndefined(conversion4)).toBeFalsy();
-      expect(isNullOrUndefined(conversion5)).toBeFalsy();
-      expect(isNullOrUndefined(conversion6)).toBeFalsy();
+      expect(isNullOrUndefined(action4)).toBeFalsy();
+      expect(isNullOrUndefined(action5)).toBeFalsy();
+      expect(isNullOrUndefined(action6)).toBeFalsy();
 
       const result = await service.getActions({
         userId: vbUserId1,
@@ -228,19 +228,13 @@ describe('InMemoryActionsService', () => {
       });
 
       expect(result.length).toBe(5);
-      expect(result).toEqual([
-        action1,
-        action2,
-        conversion4,
-        conversion5,
-        conversion6,
-      ]);
+      expect(result).toEqual([action1, action2, action4, action5, action6]);
     });
 
     test('goes to the proper page if a page and pagination are provided', async () => {
-      const conversions: Action[] = [];
+      const actions: Action[] = [];
       for (let i = 4; i < 10; i++) {
-        conversions.push(
+        actions.push(
           Action.fromJSON({
             id: `id${i}`,
             vbUserId: vbUserId1,
@@ -255,16 +249,16 @@ describe('InMemoryActionsService', () => {
       }
 
       const service = new InMemoryActionService({
-        actions: [action1, action2, action3, ...conversions],
+        actions: [action1, action2, action3, ...actions],
       });
 
-      const conversion7 = conversions[3];
-      const conversion8 = conversions[4];
-      const conversion9 = conversions[5];
+      const action7 = actions[3];
+      const action8 = actions[4];
+      const action9 = actions[5];
 
-      expect(isNullOrUndefined(conversion7)).toBeFalsy();
-      expect(isNullOrUndefined(conversion8)).toBeFalsy();
-      expect(isNullOrUndefined(conversion9)).toBeFalsy();
+      expect(isNullOrUndefined(action7)).toBeFalsy();
+      expect(isNullOrUndefined(action8)).toBeFalsy();
+      expect(isNullOrUndefined(action9)).toBeFalsy();
 
       const result = await service.getActions({
         userId: vbUserId1,
@@ -273,10 +267,10 @@ describe('InMemoryActionsService', () => {
       });
 
       expect(result.length).toBe(3);
-      expect(result).toEqual([conversion7, conversion8, conversion9]);
+      expect(result).toEqual([action7, action8, action9]);
     });
 
-    test('returns an empty array if the page is beyond the range of conversions', async () => {
+    test('returns an empty array if the page is beyond the range of actions', async () => {
       const service = new InMemoryActionService({
         actions: [action1, action2, action3],
       });
@@ -294,7 +288,7 @@ describe('InMemoryActionsService', () => {
       expect(resultB.length).toBe(0);
     });
 
-    test('returns an empty array if there are no conversions', async () => {
+    test('returns an empty array if there are no actions', async () => {
       const service = new InMemoryActionService();
 
       const result = await service.getActions({
@@ -304,7 +298,7 @@ describe('InMemoryActionsService', () => {
       expect(result.length).toBe(0);
     });
 
-    test('returns an empty array if the user has no conversions', async () => {
+    test('returns an empty array if the user has no actions', async () => {
       const service = new InMemoryActionService({
         actions: [action1, action2, action3],
       });
@@ -371,37 +365,37 @@ describe('InMemoryActionsService', () => {
   });
 
   describe('updateAction', () => {
-    test('replaces the action with a new action and returns the old conversion', async () => {
+    test('replaces the action with a new action and returns the old action', async () => {
       const service = new InMemoryActionService({ actions: [action1] });
 
-      const newConversion = Action.fromJSON({
+      const newAction = Action.fromJSON({
         ...action1.toJSON(),
         maxDeposit: 100,
       });
 
-      const result = await service.updateAction(newConversion);
+      const result = await service.updateAction(newAction);
 
       expect(result).toBe(action1);
-      expect(service.actionsList[0]).toBe(newConversion);
+      expect(service.actionsList[0]).toBe(newAction);
       expect(service.actionsList.length).toBe(1);
     });
 
     test('throws an error if the action does not exist', async () => {
       const service = new InMemoryActionService();
 
-      const newConversion = Action.fromJSON({
+      const newAction = Action.fromJSON({
         ...action1.toJSON(),
         id: 'invalid id',
       });
 
-      await expect(() => service.updateAction(newConversion)).rejects.toThrow(
-        `Action with ID ${newConversion.id} not found`,
+      await expect(() => service.updateAction(newAction)).rejects.toThrow(
+        `Action with ID ${newAction.id} not found`,
       );
     });
   });
 
   describe('deleteAction', () => {
-    test('deletes the action and returns the deleted conversion', async () => {
+    test('deletes the action and returns the deleted action', async () => {
       const service = new InMemoryActionService({
         actions: [action1, action2, action3],
       });

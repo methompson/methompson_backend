@@ -34,7 +34,7 @@ export function isExpenseTargetType(
 
 export interface ExpenseTargetJSON {
   type: string;
-  data: string;
+  data: Record<string, unknown>;
 }
 
 // An expense target indicates WHEN you want to spend the money. Different
@@ -73,7 +73,7 @@ export abstract class ExpenseTarget {
     const output: string[] = [];
 
     if (!isExpenseTargetType(input.type)) output.push('type');
-    if (!isString(input.data)) output.push('data');
+    if (!isRecord(input.data)) output.push('data');
 
     return output;
   }
@@ -101,7 +101,7 @@ export class WeeklyExpenseTarget extends ExpenseTarget {
   toJSON(): ExpenseTargetJSON {
     return {
       type: ExpenseTargetType.Weekly,
-      data: JSON.stringify(this.dataJSON()),
+      data: { ...this.dataJSON() },
     };
   }
 
@@ -111,7 +111,7 @@ export class WeeklyExpenseTarget extends ExpenseTarget {
       throw new Error(`Invalid JSON ${errors.join(', ')}`);
     }
 
-    const data = JSON.parse(input.data);
+    const data = input.data;
 
     if (!WeeklyExpenseTarget.isWeeklyExpenseTargetJSON(data)) {
       const errors = WeeklyExpenseTarget.weeklyExpenseTargetJSONTest(data);
@@ -166,7 +166,7 @@ export class MonthlyExpenseTarget extends ExpenseTarget {
   toJSON(): ExpenseTargetJSON {
     return {
       type: ExpenseTargetType.Monthly,
-      data: JSON.stringify(this.dataJSON()),
+      data: { ...this.dataJSON() },
     };
   }
 
@@ -176,7 +176,7 @@ export class MonthlyExpenseTarget extends ExpenseTarget {
       throw new Error(`Invalid JSON ${errors.join(', ')}`);
     }
 
-    const data = JSON.parse(input.data);
+    const data = input.data;
 
     if (!MonthlyExpenseTarget.isMonthlyExpenseTargetJSON(data)) {
       const errors = MonthlyExpenseTarget.monthlyExpenseTargetJSONTest(data);
@@ -234,7 +234,7 @@ export class DatedExpenseTarget extends ExpenseTarget {
   toJSON(): ExpenseTargetJSON {
     return {
       type: ExpenseTargetType.Dated,
-      data: JSON.stringify(this.dataJSON()),
+      data: { ...this.dataJSON() },
     };
   }
 
@@ -244,7 +244,7 @@ export class DatedExpenseTarget extends ExpenseTarget {
       throw new Error(`Invalid JSON ${errors.join(', ')}`);
     }
 
-    const data = JSON.parse(input.data);
+    const data = input.data;
 
     if (!DatedExpenseTarget.isDatedExpenseTargetJSON(data)) {
       const errors = DatedExpenseTarget.datedExpenseTargetJSONTest(data);

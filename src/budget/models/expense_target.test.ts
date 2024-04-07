@@ -58,9 +58,9 @@ describe('ExpenseTarget functions', () => {
     const met = new MonthlyExpenseTarget(1);
     const det = DatedExpenseTarget.fromJSON({
       type: ExpenseTargetType.Dated,
-      data: JSON.stringify({
+      data: {
         date: '2024-05-01',
-      }),
+      },
     });
 
     describe('fromJSON', () => {
@@ -180,7 +180,7 @@ describe('ExpenseTarget functions', () => {
 
     const expenseTargetInput: ExpenseTargetJSON = {
       type: ExpenseTargetType.Weekly,
-      data: JSON.stringify(validInput),
+      data: { ...validInput },
     };
 
     describe('toJSON', () => {
@@ -189,7 +189,7 @@ describe('ExpenseTarget functions', () => {
 
         expect(vi.toJSON()).toEqual({
           type: ExpenseTargetType.Weekly,
-          data: JSON.stringify(vi.dataJSON()),
+          data: vi.dataJSON(),
         });
       });
     });
@@ -215,7 +215,7 @@ describe('ExpenseTarget functions', () => {
 
         json = {
           type: ExpenseTargetType.Weekly,
-          data: JSON.stringify(validInput),
+          data: validInput,
         };
         expect(() => WeeklyExpenseTarget.fromJSON(json)).not.toThrow();
 
@@ -223,7 +223,7 @@ describe('ExpenseTarget functions', () => {
         delete invalidInput.dayOfWeek;
         json = {
           type: ExpenseTargetType.Weekly,
-          data: JSON.stringify(invalidInput),
+          data: invalidInput,
         };
         expect(() => WeeklyExpenseTarget.fromJSON(json)).toThrow();
 
@@ -233,7 +233,7 @@ describe('ExpenseTarget functions', () => {
         expect(() => WeeklyExpenseTarget.fromJSON(json)).toThrow();
 
         json = {
-          data: JSON.stringify(validInput),
+          data: validInput,
         };
         expect(() => WeeklyExpenseTarget.fromJSON(json)).toThrow();
       });
@@ -317,7 +317,7 @@ describe('ExpenseTarget functions', () => {
 
     const expenseTargetInput: ExpenseTargetJSON = {
       type: ExpenseTargetType.Monthly,
-      data: JSON.stringify(validInput),
+      data: { ...validInput },
     };
 
     describe('toJSON', () => {
@@ -326,7 +326,7 @@ describe('ExpenseTarget functions', () => {
 
         expect(vi.toJSON()).toEqual({
           type: 'monthly',
-          data: JSON.stringify(vi.dataJSON()),
+          data: vi.dataJSON(),
         });
       });
     });
@@ -352,7 +352,7 @@ describe('ExpenseTarget functions', () => {
 
         json = {
           type: ExpenseTargetType.Monthly,
-          data: JSON.stringify(validInput),
+          data: validInput,
         };
         expect(() => MonthlyExpenseTarget.fromJSON(json)).not.toThrow();
 
@@ -360,12 +360,12 @@ describe('ExpenseTarget functions', () => {
         delete invalidInput.dayOfMonth;
         json = {
           type: ExpenseTargetType.Monthly,
-          data: JSON.stringify(invalidInput),
+          data: invalidInput,
         };
         expect(() => MonthlyExpenseTarget.fromJSON(json)).toThrow();
 
         json = {
-          data: JSON.stringify(validInput),
+          data: validInput,
         };
         expect(() => MonthlyExpenseTarget.fromJSON(json)).toThrow();
 
@@ -458,7 +458,7 @@ describe('ExpenseTarget functions', () => {
 
     const expenseTargetInput: ExpenseTargetJSON = {
       type: ExpenseTargetType.Dated,
-      data: JSON.stringify(validInput),
+      data: { ...validInput },
     };
 
     describe('toJSON', () => {
@@ -467,7 +467,7 @@ describe('ExpenseTarget functions', () => {
 
         expect(vi.toJSON()).toEqual({
           type: ExpenseTargetType.Dated,
-          data: JSON.stringify(vi.dataJSON()),
+          data: vi.dataJSON(),
         });
       });
     });
@@ -493,7 +493,7 @@ describe('ExpenseTarget functions', () => {
 
         json = {
           type: ExpenseTargetType.Dated,
-          data: JSON.stringify(validInput),
+          data: validInput,
         };
         expect(() => DatedExpenseTarget.fromJSON(json)).not.toThrow();
 
@@ -501,12 +501,12 @@ describe('ExpenseTarget functions', () => {
         delete invalidInput.date;
         json = {
           type: ExpenseTargetType.Dated,
-          data: JSON.stringify(invalidInput),
+          data: invalidInput,
         };
         expect(() => DatedExpenseTarget.fromJSON(json)).toThrow();
 
         json = {
-          data: JSON.stringify(validInput),
+          data: validInput,
         };
         expect(() => DatedExpenseTarget.fromJSON(json)).toThrow();
 

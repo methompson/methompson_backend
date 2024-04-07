@@ -3,12 +3,14 @@ import { DateTime } from 'luxon';
 import { isNumber, isRecord, isString } from '@/src/utils/type_guards';
 import { isValidDateString } from '@/src/utils/valid_date';
 
+// All numeric values should be in CENTS, not dollars
+
 export interface WithdrawalTransactionJSON {
   id: string;
   budgetId: string;
   expenseId: string;
   description: string;
-  date: string;
+  dateTime: string;
   amount: number;
 }
 
@@ -18,7 +20,7 @@ export class WithdrawalTransaction {
     protected _budgetId: string,
     protected _expenseId: string,
     protected _description: string,
-    protected _date: DateTime<true>,
+    protected _dateTime: DateTime<true>,
     protected _amount: number,
   ) {}
 
@@ -34,8 +36,8 @@ export class WithdrawalTransaction {
   get description(): string {
     return this._description;
   }
-  get date(): DateTime<true> {
-    return this._date;
+  get dateTime(): DateTime<true> {
+    return this._dateTime;
   }
   get amount(): number {
     return this._amount;
@@ -47,7 +49,7 @@ export class WithdrawalTransaction {
       budgetId: this._budgetId,
       expenseId: this._expenseId,
       description: this._description,
-      date: this._date.toISO(),
+      dateTime: this._dateTime.toISO(),
       amount: this._amount,
     };
   }
@@ -68,7 +70,14 @@ export class WithdrawalTransaction {
       throw new Error(`Invalid JSON ${errors.join(', ')}`);
     }
 
-    const { id, budgetId, expenseId, description, date, amount } = input;
+    const {
+      id,
+      budgetId,
+      expenseId,
+      description,
+      dateTime: date,
+      amount,
+    } = input;
 
     const dt = DateTime.fromISO(date, { zone: 'America/Chicago' });
     if (!dt.isValid) {
@@ -102,7 +111,7 @@ export class WithdrawalTransaction {
     if (!isString(input.budgetId)) output.push('budgetId');
     if (!isString(input.expenseId)) output.push('expenseId');
     if (!isString(input.description)) output.push('description');
-    if (!isValidDateString(input.date)) output.push('date');
+    if (!isValidDateString(input.dateTime)) output.push('date');
     if (!isNumber(input.amount)) output.push('amount');
 
     return output;

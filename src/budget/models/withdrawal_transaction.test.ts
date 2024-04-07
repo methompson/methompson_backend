@@ -9,7 +9,7 @@ describe('WithdrawalTransaction', () => {
     budgetId: 'budgetId',
     expenseId: 'expenseId',
     description: 'description',
-    date: '2021-02-01T12:30:00.000-06:00',
+    dateTime: '2021-02-01T12:30:00.000-06:00',
     amount: 1,
   };
 
@@ -62,7 +62,7 @@ describe('WithdrawalTransaction', () => {
       expect(() => WithdrawalTransaction.fromJSON(invalidInput)).toThrow();
 
       invalidInput = { ...validInput };
-      delete invalidInput.date;
+      delete invalidInput.dateTime;
       expect(() => WithdrawalTransaction.fromJSON(invalidInput)).toThrow();
 
       invalidInput = { ...validInput };
@@ -92,7 +92,7 @@ describe('WithdrawalTransaction', () => {
       expect(() => WithdrawalTransaction.fromJSON(invalidInput)).toThrow();
 
       invalidInput = { ...validInput };
-      invalidInput.date = 1;
+      invalidInput.dateTime = 1;
       expect(() => WithdrawalTransaction.fromJSON(invalidInput)).toThrow();
 
       invalidInput = { ...validInput };
@@ -147,7 +147,7 @@ describe('WithdrawalTransaction', () => {
       ).toBe(false);
 
       invalidInput = { ...validInput };
-      delete invalidInput.date;
+      delete invalidInput.dateTime;
       expect(
         WithdrawalTransaction.isWithdrawalTransactionJSON(invalidInput),
       ).toBe(false);
@@ -190,7 +190,7 @@ describe('WithdrawalTransaction', () => {
       ).toBe(false);
 
       invalidInput = { ...validInput };
-      invalidInput.date = 1;
+      invalidInput.dateTime = 1;
       expect(
         WithdrawalTransaction.isWithdrawalTransactionJSON(invalidInput),
       ).toBe(false);
@@ -256,7 +256,7 @@ describe('WithdrawalTransaction', () => {
       ).toEqual(['description']);
 
       invalidInput = { ...validInput };
-      delete invalidInput.date;
+      delete invalidInput.dateTime;
       expect(
         WithdrawalTransaction.withdrawalTransactionTest(invalidInput),
       ).toEqual(['date']);
@@ -300,7 +300,7 @@ describe('WithdrawalTransaction', () => {
       ).toEqual(['description']);
 
       invalidInput = { ...validInput };
-      invalidInput.date = 1;
+      invalidInput.dateTime = 1;
       expect(
         WithdrawalTransaction.withdrawalTransactionTest(invalidInput),
       ).toEqual(['date']);

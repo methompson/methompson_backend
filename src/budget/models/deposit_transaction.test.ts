@@ -8,7 +8,7 @@ describe('DepositTransaction', () => {
     id: 'id',
     budgetId: 'budgetId',
     description: 'description',
-    date: '2021-02-01T12:30:00.000-06:00',
+    dateTime: '2021-02-01T12:30:00.000-06:00',
     amount: 1,
   };
 
@@ -57,7 +57,7 @@ describe('DepositTransaction', () => {
       expect(() => DepositTransaction.fromJSON(invalidInput)).toThrow();
 
       invalidInput = { ...validInput };
-      delete invalidInput.date;
+      delete invalidInput.dateTime;
       expect(() => DepositTransaction.fromJSON(invalidInput)).toThrow();
 
       invalidInput = { ...validInput };
@@ -79,7 +79,7 @@ describe('DepositTransaction', () => {
       expect(() => DepositTransaction.fromJSON(invalidInput)).toThrow();
 
       invalidInput = { ...validInput };
-      invalidInput.date = 1;
+      invalidInput.dateTime = 1;
       expect(() => DepositTransaction.fromJSON(invalidInput)).toThrow();
 
       invalidInput = { ...validInput };
@@ -128,7 +128,7 @@ describe('DepositTransaction', () => {
       );
 
       invalidInput = { ...validInput };
-      delete invalidInput.date;
+      delete invalidInput.dateTime;
       expect(DepositTransaction.isDepositTransactionJSON(invalidInput)).toBe(
         false,
       );
@@ -159,7 +159,7 @@ describe('DepositTransaction', () => {
       );
 
       invalidInput = { ...validInput };
-      invalidInput.date = 1;
+      invalidInput.dateTime = 1;
       expect(DepositTransaction.isDepositTransactionJSON(invalidInput)).toBe(
         false,
       );
@@ -211,7 +211,7 @@ describe('DepositTransaction', () => {
       ]);
 
       invalidInput = { ...validInput };
-      delete invalidInput.date;
+      delete invalidInput.dateTime;
       expect(DepositTransaction.depositTransactionTest(invalidInput)).toEqual([
         'date',
       ]);
@@ -243,7 +243,7 @@ describe('DepositTransaction', () => {
       ]);
 
       invalidInput = { ...validInput };
-      invalidInput.date = 1;
+      invalidInput.dateTime = 1;
       expect(DepositTransaction.depositTransactionTest(invalidInput)).toEqual([
         'date',
       ]);

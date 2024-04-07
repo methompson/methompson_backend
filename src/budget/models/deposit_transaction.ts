@@ -7,16 +7,18 @@ export interface DepositTransactionJSON {
   id: string;
   budgetId: string;
   description: string;
-  date: string;
+  dateTime: string;
   amount: number;
 }
+
+// All numeric values should be in CENTS, not dollars
 
 export class DepositTransaction {
   constructor(
     protected _id: string,
     protected _budgetId: string,
     protected _description: string,
-    protected _date: DateTime<true>,
+    protected _dateTime: DateTime<true>,
     protected _amount: number,
   ) {}
 
@@ -29,8 +31,8 @@ export class DepositTransaction {
   get description(): string {
     return this._description;
   }
-  get date(): DateTime<true> {
-    return this._date;
+  get dateTime(): DateTime<true> {
+    return this._dateTime;
   }
   get amount(): number {
     return this._amount;
@@ -41,7 +43,7 @@ export class DepositTransaction {
       id: this._id,
       budgetId: this._budgetId,
       description: this._description,
-      date: this._date.toISO(),
+      dateTime: this._dateTime.toISO(),
       amount: this._amount,
     };
   }
@@ -62,7 +64,7 @@ export class DepositTransaction {
       throw new Error(`Invalid JSON ${errors.join(', ')}`);
     }
 
-    const { id, budgetId, description, date, amount } = input;
+    const { id, budgetId, description, dateTime: date, amount } = input;
 
     const dt = DateTime.fromISO(date, { zone: 'America/Chicago' });
     if (!dt.isValid) {
@@ -88,7 +90,7 @@ export class DepositTransaction {
     if (!isString(input.id)) output.push('id');
     if (!isString(input.budgetId)) output.push('budgetId');
     if (!isString(input.description)) output.push('description');
-    if (!isValidDateString(input.date)) output.push('date');
+    if (!isValidDateString(input.dateTime)) output.push('date');
     if (!isNumber(input.amount)) output.push('amount');
 
     return output;

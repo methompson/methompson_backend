@@ -1,9 +1,10 @@
-import { isRecord, isString } from '@/src/utils/type_guards';
+import { isNumber, isRecord, isString } from '@/src/utils/type_guards';
 
 export interface BudgetJSON {
   id: string;
   userId: string;
   name: string;
+  currentFunds: number;
 }
 
 // A budget is a grouping of costs meant to further a goal. The budget
@@ -13,6 +14,7 @@ export class Budget {
     protected _id: string,
     protected _userId: string,
     protected _name: string,
+    protected _currentFunds: number,
   ) {}
 
   get id(): string {
@@ -25,12 +27,24 @@ export class Budget {
     return this._name;
   }
 
+  get currentFunds(): number {
+    return this._currentFunds;
+  }
+
   toJSON(): BudgetJSON {
     return {
       id: this.id,
       userId: this.userId,
       name: this.name,
+      currentFunds: this.currentFunds,
     };
+  }
+
+  static fromNewBudget(id: string, input: Budget): Budget {
+    return Budget.fromJSON({
+      ...input.toJSON(),
+      id,
+    });
   }
 
   static fromJSON(input: unknown): Budget {
@@ -39,7 +53,7 @@ export class Budget {
       throw new Error(`Invalid JSON ${errors.join(', ')}`);
     }
 
-    return new Budget(input.id, input.userId, input.name);
+    return new Budget(input.id, input.userId, input.name, input.currentFunds);
   }
 
   static isBudgetJSON(input: unknown): input is BudgetJSON {
@@ -56,6 +70,7 @@ export class Budget {
     if (!isString(input.id)) output.push('id');
     if (!isString(input.userId)) output.push('userId');
     if (!isString(input.name)) output.push('name');
+    if (!isNumber(input.currentFunds)) output.push('currentFunds');
 
     return output;
   }

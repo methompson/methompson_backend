@@ -26,3 +26,11 @@ export interface TransactionOptions extends GetPageOptions {
 export interface GetCategoryOptions extends GetPageOptions {
   budgetId: string;
 }
+
+export interface ReconciliationOptions extends GetPageOptions {
+  budgetId: string;
+}
+
+export interface RecalcFundsOptions {
+  budgetId: string;
+}

@@ -5,12 +5,21 @@ import {
   GetBudgetOptions,
   GetCategoryOptions,
   GetExpenseOptions,
+  RecalcFundsOptions,
+  ReconciliationOptions,
   TransactionOptions,
 } from '@/src/budget/types';
 import { Expense } from '@/src/budget/models/expense';
 import { Category } from '@/src/budget/models/category';
 import { DepositTransaction } from '@/src/budget/models/deposit_transaction';
 import { WithdrawalTransaction } from '@/src/budget/models/withdrawal_transaction';
+import { Reconciliation } from '@/src/budget/models/reconciliation';
+
+export interface RecalcFundsResponse {
+  funds: number;
+}
+
+// All numeric values should be in CENTS, not dollars
 
 @Injectable()
 export abstract class BudgetService {
@@ -55,4 +64,16 @@ export abstract class BudgetService {
   abstract deleteWithdrawal(
     withdrawalId: string,
   ): Promise<WithdrawalTransaction>;
+
+  abstract getReconciliations(
+    input: ReconciliationOptions,
+  ): Promise<Reconciliation[]>;
+  abstract addRecociliation(
+    reconciliation: Reconciliation,
+  ): Promise<Reconciliation>;
+  abstract deleteReconciliation(
+    reconciliationId: string,
+  ): Promise<Reconciliation>;
+
+  abstract recalcFunds(input: RecalcFundsOptions): Promise<number>;
 }

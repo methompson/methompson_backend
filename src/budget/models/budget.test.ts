@@ -4,18 +4,33 @@ describe('Budget', () => {
   const id = 'id';
   const userId = 'userId';
   const name = 'name';
+  const currentFunds = 100;
 
   const validInput: BudgetJSON = {
     id,
     userId,
     name,
+    currentFunds,
   };
 
   describe('toJSON', () => {
     test('returns a BudgetJSON object', () => {
-      const budget = new Budget(id, userId, name);
+      const budget = new Budget(id, userId, name, currentFunds);
 
       expect(budget.toJSON()).toEqual(validInput);
+    });
+  });
+
+  describe('fromNewBudget', () => {
+    test('returns a Budget object', () => {
+      const budget = Budget.fromJSON(validInput);
+
+      const newId = 'abc123';
+      const newBudget = Budget.fromNewBudget(newId, budget);
+
+      expect(newBudget).toBeInstanceOf(Budget);
+      expect(newBudget.toJSON()).not.toEqual(validInput);
+      expect(newBudget.toJSON()).toEqual({ ...validInput, id: newId });
     });
   });
 
