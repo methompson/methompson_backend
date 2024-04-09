@@ -9,7 +9,7 @@ describe('Expense', () => {
   const amount = 1;
   const expenseTarget: ExpenseTargetJSON = {
     type: 'monthly',
-    data: JSON.stringify({ dayOfMonth: 1 }),
+    data: { dayOfMonth: 1 },
   };
 
   const validInput: ExpenseJSON = {
@@ -33,7 +33,7 @@ describe('Expense', () => {
       expect(json.description).toBe(description);
       expect(json.amount).toBe(amount);
       expect(json.expenseTarget.type).toBe(validInput.expenseTarget.type);
-      expect(json.expenseTarget.data).toBe(validInput.expenseTarget.data);
+      expect(json.expenseTarget.data).toEqual(validInput.expenseTarget.data);
     });
   });
 

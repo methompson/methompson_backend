@@ -5,6 +5,7 @@ import { isValidDateString } from '@/src/utils/valid_date';
 
 export enum ExpenseTargetType {
   Weekly = 'weekly',
+  // Biweekly = 'biweekly',
   Monthly = 'monthly',
   Dated = 'dated',
 }

@@ -109,7 +109,7 @@ export class BudgetController {
   ) {}
 
   @Get('budgets')
-  async getActions(@Req() request: Request): Promise<GetBudgetsResponse> {
+  async getBudgets(@Req() request: Request): Promise<GetBudgetsResponse> {
     const { page, pagination } = pageAndPagination(request);
 
     const userId = request.query?.userId;
