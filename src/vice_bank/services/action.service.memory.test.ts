@@ -1,8 +1,8 @@
 import * as uuid from 'uuid';
 import { DateTime } from 'luxon';
 
-import { Action, ActionJSON } from '@/src/models/vice_bank/action';
-import { Deposit, DepositJSON } from '@/src/models/vice_bank/deposit';
+import { Action, ActionJSON } from '@/src/vice_bank/models/action';
+import { Deposit, DepositJSON } from '@/src/vice_bank/models/deposit';
 import { InMemoryActionService } from './action.service.memory';
 import { isNullOrUndefined } from '@/src/utils/type_guards';
 

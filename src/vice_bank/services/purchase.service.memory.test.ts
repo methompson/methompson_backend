@@ -1,13 +1,13 @@
 import { DateTime } from 'luxon';
 import * as uuid from 'uuid';
 
-import { Purchase, PurchaseJSON } from '@/src/models/vice_bank/purchase';
+import { Purchase, PurchaseJSON } from '@/src/vice_bank/models/purchase';
 import { InMemoryPurchaseService } from './purchase.service.memory';
 
 import {
   PurchasePrice,
   PurchasePriceJSON,
-} from '@/src/models/vice_bank/purchase_price';
+} from '@/src/vice_bank/models/purchase_price';
 import { isNullOrUndefined } from '@/src/utils/type_guards';
 
 jest.mock('uuid', () => {

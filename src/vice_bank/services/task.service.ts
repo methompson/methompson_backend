@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 
-import { Task } from '@/src/models/vice_bank/task';
+import { Task } from '@/src/vice_bank/models/task';
 import {
   TaskDepositResponse,
   Frequency,
   GetTaskDepositOptions,
   GetTaskOptions,
 } from '@/src/vice_bank/types';
-import { TaskDeposit } from '@/src/models/vice_bank/task_deposit';
+import { TaskDeposit } from '@/src/vice_bank/models/task_deposit';
 
 @Injectable()
 export abstract class TaskService {

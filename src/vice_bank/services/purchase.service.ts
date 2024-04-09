@@ -4,8 +4,8 @@ import {
   PurchaseInputOptions,
   GetPageAndUserOptions,
 } from '@/src/vice_bank/types';
-import { Purchase } from '@/src/models/vice_bank/purchase';
-import { PurchasePrice } from '@/src/models/vice_bank/purchase_price';
+import { Purchase } from '@/src/vice_bank/models/purchase';
+import { PurchasePrice } from '@/src/vice_bank/models/purchase_price';
 
 @Injectable()
 export abstract class PurchaseService {

@@ -1,8 +1,8 @@
-import { Task, TaskJSON } from '@/src/models/vice_bank/task';
+import { Task, TaskJSON } from '@/src/vice_bank/models/task';
 import {
   TaskDeposit,
   TaskDepositJSON,
-} from '@/src/models/vice_bank/task_deposit';
+} from '@/src/vice_bank/models/task_deposit';
 import { FileServiceWriter } from '@/src/utils/file_service_writer';
 import { FileTaskService } from './task_service.file';
 import { join } from 'path';

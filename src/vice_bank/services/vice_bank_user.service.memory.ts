@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 
-import { ViceBankUser } from '@/src/models/vice_bank/vice_bank_user';
+import { ViceBankUser } from '@/src/vice_bank/models/vice_bank_user';
 import { isNullOrUndefined } from '@/src/utils/type_guards';
 import { ViceBankUserService } from './vice_bank_user.service';
 import { GetViceBankUsersOptions } from '@/src/vice_bank/types';

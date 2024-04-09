@@ -1,7 +1,7 @@
 import {
   ViceBankUser,
   ViceBankUserJSON,
-} from '@/src/models/vice_bank/vice_bank_user';
+} from '@/src/vice_bank/models/vice_bank_user';
 import { InMemoryViceBankUserService } from '@/src/vice_bank/services/vice_bank_user.service.memory';
 import { ViceBankUserController } from './vice_bank_user.controller';
 import { LoggerService } from '@/src/logger/logger.service';

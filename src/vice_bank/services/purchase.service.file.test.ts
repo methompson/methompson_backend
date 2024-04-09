@@ -1,11 +1,11 @@
 import { join } from 'path';
 
 import { FilePurchaseService } from './purchase.service.file';
-import { Purchase, PurchaseJSON } from '@/src/models/vice_bank/purchase';
+import { Purchase, PurchaseJSON } from '@/src/vice_bank/models/purchase';
 import {
   PurchasePrice,
   PurchasePriceJSON,
-} from '@/src/models/vice_bank/purchase_price';
+} from '@/src/vice_bank/models/purchase_price';
 import { FileServiceWriter } from '@/src/utils/file_service_writer';
 
 const purchasedName = 'purchasedName';

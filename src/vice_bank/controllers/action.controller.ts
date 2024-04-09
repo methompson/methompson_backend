@@ -18,8 +18,8 @@ import { type METIncomingMessage } from '@/src/utils/met_incoming_message';
 import { pageAndPagination } from '@/src/utils/page_and_pagination';
 import { isNullOrUndefined, isRecord, isString } from '@/src/utils/type_guards';
 
-import { Action, ActionJSON } from '@/src/models/vice_bank/action';
-import { Deposit, DepositJSON } from '@/src/models/vice_bank/deposit';
+import { Action, ActionJSON } from '@/src/vice_bank/models/action';
+import { Deposit, DepositJSON } from '@/src/vice_bank/models/deposit';
 import { ActionService } from '@/src/vice_bank/services/action.service';
 import { ViceBankUserService } from '@/src/vice_bank/services/vice_bank_user.service';
 

@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 
-import { Action } from '@/src/models/vice_bank/action';
+import { Action } from '@/src/vice_bank/models/action';
 import {
   GetPageAndUserOptions,
   DepositInputOptions,
   DepositResponse,
 } from '@/src/vice_bank/types';
-import { Deposit } from '@/src/models/vice_bank/deposit';
+import { Deposit } from '@/src/vice_bank/models/deposit';
 
 @Injectable()
 export abstract class ActionService {
