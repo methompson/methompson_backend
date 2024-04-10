@@ -27,9 +27,18 @@ export class Budget {
   get name(): string {
     return this._name;
   }
-
   get currentFunds(): number {
     return this._currentFunds;
+  }
+
+  // Does not mutate the Budget object. Returns a new Budget object.
+  updateFunds(addedFunds: number): Budget {
+    return new Budget(
+      this._id,
+      this._userId,
+      this._name,
+      this._currentFunds + addedFunds,
+    );
   }
 
   toJSON(): BudgetJSON {

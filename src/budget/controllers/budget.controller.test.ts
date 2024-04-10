@@ -1,3 +1,5 @@
+import * as uuid from 'uuid';
+
 import { Budget, BudgetJSON } from '@/src/budget/models/budget';
 import { Category, CategoryJSON } from '@/src/budget/models/category';
 import { Expense, ExpenseJSON } from '@/src/budget/models/expense';
@@ -22,6 +24,17 @@ import { LoggerService } from '@/src/logger/logger.service';
 import { BudgetController } from './budget.controller';
 import { Request } from 'express';
 import { HttpException, HttpStatus } from '@nestjs/common';
+import { get } from 'http';
+
+jest.mock('uuid', () => {
+  const v4 = jest.fn(() => 'uuidv4');
+
+  return {
+    v4,
+  };
+});
+
+const uuidv4 = uuid.v4 as jest.Mock<unknown, unknown[]>;
 
 const userId = 'userId';
 const budgetId = 'budgetId';
@@ -108,7 +121,7 @@ const validWithdrawal2: WithdrawalTransactionJSON = {
   expenseId,
   description: 'Withdrawal 2',
   dateTime: '2024-01-25T12:01:00.000-06:00',
-  amount: 25,
+  amount: 32,
 };
 
 const withdrawal1 = WithdrawalTransaction.fromJSON(validWithdrawal1);
@@ -152,1327 +165,2128 @@ const reconciliation1 = Reconciliation.fromJSON(validReconciliation1);
 const reconciliation2 = Reconciliation.fromJSON(validReconciliation2);
 
 describe('Budget Controller', () => {
-  describe('getBudgets', () => {
-    test('gets budgets from the BudgetService', async () => {
-      const service = new InMemoryBudgetService({
-        budgets: [budget1, budget2],
-        categories: [category1, category2],
-        expenses: [expense1, expense2],
-        deposits: [deposit1, deposit2],
-        withdrawals: [withdrawal1, withdrawal2],
-        reconciliations: [reconciliation1, reconciliation2],
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('budgets', () => {
+    describe('getBudgets', () => {
+      test('gets budgets from the BudgetService', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1, budget2],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+          deposits: [deposit1, deposit2],
+          withdrawals: [withdrawal1, withdrawal2],
+          reconciliations: [reconciliation1, reconciliation2],
+        });
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          query: {
+            userId,
+          },
+        } as unknown as Request;
+
+        const response = await controller.getBudgets(req);
+
+        expect(response.budgets).toHaveLength(2);
+        expect(response.budgets).toContainEqual(validBudget1);
+        expect(response.budgets).toContainEqual(validBudget2);
       });
-      const loggerService = new LoggerService();
 
-      const controller = new BudgetController(service, loggerService);
+      test('throws an error if the userId is not a string', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1, budget2],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+          deposits: [deposit1, deposit2],
+          withdrawals: [withdrawal1, withdrawal2],
+          reconciliations: [reconciliation1, reconciliation2],
+        });
+        const loggerService = new LoggerService();
 
-      const req = {
-        query: {
-          userId,
-        },
-      } as unknown as Request;
+        const controller = new BudgetController(service, loggerService);
 
-      const response = await controller.getBudgets(req);
+        const req = {
+          query: {
+            userId: 1,
+          },
+        } as unknown as Request;
 
-      expect(response.budgets).toHaveLength(2);
-      expect(response.budgets).toContainEqual(validBudget1);
-      expect(response.budgets).toContainEqual(validBudget2);
+        await expect(() => controller.getBudgets(req)).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+      });
+
+      test('throws an error if getBudgets throws an error', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1, budget2],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+          deposits: [deposit1, deposit2],
+          withdrawals: [withdrawal1, withdrawal2],
+          reconciliations: [reconciliation1, reconciliation2],
+        });
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          query: {
+            userId,
+          },
+        } as unknown as Request;
+
+        jest
+          .spyOn(service, 'getBudgets')
+          .mockRejectedValue(new Error('Test Error'));
+
+        await expect(() => controller.getBudgets(req)).rejects.toThrow(
+          new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+        );
+      });
     });
 
-    test('throws an error if the userId is not a string', async () => {
-      const service = new InMemoryBudgetService({
-        budgets: [budget1, budget2],
-        categories: [category1, category2],
-        expenses: [expense1, expense2],
-        deposits: [deposit1, deposit2],
-        withdrawals: [withdrawal1, withdrawal2],
-        reconciliations: [reconciliation1, reconciliation2],
+    describe('addBudget', () => {
+      test('adds a budget using the BudgetService', async () => {
+        const service = new InMemoryBudgetService();
+
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          body: {
+            budget: validBudget1,
+          },
+        } as unknown as Request;
+
+        const addSpy = jest.spyOn(service, 'addBudget');
+        addSpy.mockResolvedValue(budget1);
+
+        const response = await controller.addBudget(req);
+
+        expect(response.budget).toEqual(validBudget1);
+        expect(addSpy).toHaveBeenCalledTimes(1);
+        expect(addSpy).toHaveBeenCalledWith(budget1);
       });
-      const loggerService = new LoggerService();
 
-      const controller = new BudgetController(service, loggerService);
+      test('throws an error if the body is not a record', async () => {
+        const service = new InMemoryBudgetService();
 
-      const req = {
-        query: {
-          userId: 1,
-        },
-      } as unknown as Request;
+        const loggerService = new LoggerService();
 
-      await expect(() => controller.getBudgets(req)).rejects.toThrow(
-        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
-      );
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          body: undefined,
+        } as unknown as Request;
+
+        const addSpy = jest.spyOn(service, 'addBudget');
+
+        await expect(() => controller.addBudget(req)).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+        expect(addSpy).not.toHaveBeenCalled();
+      });
+
+      test('throws an error if the body cannot be parsed into a budget', async () => {
+        const service = new InMemoryBudgetService();
+
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          body: {},
+        } as unknown as Request;
+
+        const addSpy = jest.spyOn(service, 'addBudget');
+
+        await expect(() => controller.addBudget(req)).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+        expect(addSpy).not.toHaveBeenCalled();
+      });
+
+      test('throws an error if addAction throws an error', async () => {
+        const service = new InMemoryBudgetService();
+
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          body: {
+            budget: validBudget1,
+          },
+        } as unknown as Request;
+
+        const addSpy = jest.spyOn(service, 'addBudget');
+        addSpy.mockRejectedValue(new Error('Test Error'));
+
+        await expect(() => controller.addBudget(req)).rejects.toThrow(
+          new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+        );
+
+        expect(addSpy).toHaveBeenCalledTimes(1);
+        expect(addSpy).toHaveBeenCalledWith(budget1);
+      });
     });
 
-    test('throws an error if getBudgets throws an error', async () => {
-      const service = new InMemoryBudgetService({
-        budgets: [budget1, budget2],
-        categories: [category1, category2],
-        expenses: [expense1, expense2],
-        deposits: [deposit1, deposit2],
-        withdrawals: [withdrawal1, withdrawal2],
-        reconciliations: [reconciliation1, reconciliation2],
+    describe('updateBudget', () => {
+      test('updates a budget using the BudgetService', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1, budget2],
+        });
+
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const updatedBudgetJSON = {
+          ...validBudget1,
+          name: 'Updated Budget',
+        };
+        const updatedBudget = Budget.fromJSON(updatedBudgetJSON);
+
+        const req = {
+          body: {
+            budget: updatedBudgetJSON,
+          },
+        } as unknown as Request;
+
+        const updateSpy = jest.spyOn(service, 'updateBudget');
+        updateSpy.mockResolvedValue(updatedBudget);
+
+        const response = await controller.updateBudget(req);
+
+        expect(response.budget).toEqual(updatedBudgetJSON);
+        expect(updateSpy).toHaveBeenCalledTimes(1);
+        expect(updateSpy).toHaveBeenCalledWith(updatedBudget);
       });
-      const loggerService = new LoggerService();
 
-      const controller = new BudgetController(service, loggerService);
+      test('throws an error if the body is not a record', async () => {
+        const service = new InMemoryBudgetService();
 
-      const req = {
-        query: {
-          userId,
-        },
-      } as unknown as Request;
+        const loggerService = new LoggerService();
 
-      jest
-        .spyOn(service, 'getBudgets')
-        .mockRejectedValue(new Error('Test Error'));
+        const controller = new BudgetController(service, loggerService);
 
-      await expect(() => controller.getBudgets(req)).rejects.toThrow(
-        new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
-      );
+        const req = {
+          body: undefined,
+        } as unknown as Request;
+
+        const updateSpy = jest.spyOn(service, 'updateBudget');
+
+        await expect(() => controller.updateBudget(req)).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+        expect(updateSpy).not.toHaveBeenCalled();
+      });
+
+      test('throws an error if the body cannot be parsed into a budget', async () => {
+        const service = new InMemoryBudgetService();
+
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          body: {},
+        } as unknown as Request;
+
+        const updateSpy = jest.spyOn(service, 'updateBudget');
+
+        await expect(() => controller.updateBudget(req)).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+        expect(updateSpy).not.toHaveBeenCalled();
+      });
+
+      test('throws an error if updateBudget throws an error', async () => {
+        const service = new InMemoryBudgetService();
+
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const updatedBudgetJSON = {
+          ...validBudget1,
+          name: 'Updated Budget',
+        };
+        const updatedBudget = Budget.fromJSON(updatedBudgetJSON);
+
+        const req = {
+          body: {
+            budget: updatedBudgetJSON,
+          },
+        } as unknown as Request;
+
+        const updateSpy = jest.spyOn(service, 'updateBudget');
+        updateSpy.mockRejectedValue(new Error('Test Error'));
+
+        await expect(() => controller.updateBudget(req)).rejects.toThrow(
+          new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+        );
+        expect(updateSpy).toHaveBeenCalledTimes(1);
+        expect(updateSpy).toHaveBeenCalledWith(updatedBudget);
+      });
+    });
+
+    describe('deleteBudget', () => {
+      test('deletes a budget using the BudgetService', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1, budget2],
+        });
+
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          body: {
+            budgetId,
+          },
+        } as unknown as Request;
+
+        const delSpy = jest.spyOn(service, 'deleteBudget');
+        delSpy.mockResolvedValue(budget1);
+
+        const response = await controller.deleteBudget(req);
+
+        expect(response.budget).toEqual(budget1.toJSON());
+        expect(delSpy).toHaveBeenCalledTimes(1);
+        expect(delSpy).toHaveBeenCalledWith(budgetId);
+      });
+
+      test('throws an error if the budgetId is not a string', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1, budget2],
+        });
+
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          body: {
+            budgetId: 1,
+          },
+        } as unknown as Request;
+
+        const delSpy = jest.spyOn(service, 'deleteBudget');
+
+        await expect(() => controller.deleteBudget(req)).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+        expect(delSpy).not.toHaveBeenCalled();
+      });
+
+      test('throws an error if deleteBudget throws an error', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1, budget2],
+        });
+
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          body: {
+            budgetId,
+          },
+        } as unknown as Request;
+
+        const delSpy = jest.spyOn(service, 'deleteBudget');
+        delSpy.mockRejectedValue(new Error('Test Error'));
+
+        await expect(() => controller.deleteBudget(req)).rejects.toThrow(
+          new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+        );
+        expect(delSpy).toHaveBeenCalledTimes(1);
+        expect(delSpy).toHaveBeenCalledWith(budgetId);
+      });
     });
   });
 
-  describe('addBudget', () => {
-    test('adds a budget using the BudgetService', async () => {
-      const service = new InMemoryBudgetService();
+  describe('categories', () => {
+    describe('getCategories', () => {
+      test('gets categories from the BudgetService', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1, budget2],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+          deposits: [deposit1, deposit2],
+          withdrawals: [withdrawal1, withdrawal2],
+          reconciliations: [reconciliation1, reconciliation2],
+        });
+        const loggerService = new LoggerService();
 
-      const loggerService = new LoggerService();
+        const controller = new BudgetController(service, loggerService);
 
-      const controller = new BudgetController(service, loggerService);
+        const req = {
+          query: {
+            budgetId,
+          },
+        } as unknown as Request;
 
-      const req = {
-        body: {
-          budget: validBudget1,
-        },
-      } as unknown as Request;
+        const response = await controller.getCategories(req);
 
-      const addSpy = jest.spyOn(service, 'addBudget');
-      addSpy.mockResolvedValue(budget1);
+        expect(response.categories).toHaveLength(2);
+        expect(response.categories).toContainEqual(validCategory1);
+        expect(response.categories).toContainEqual(validCategory2);
+      });
 
-      const response = await controller.addBudget(req);
+      test('throws an error if the userId is not a string', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1, budget2],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+          deposits: [deposit1, deposit2],
+          withdrawals: [withdrawal1, withdrawal2],
+          reconciliations: [reconciliation1, reconciliation2],
+        });
+        const loggerService = new LoggerService();
 
-      expect(response.budget).toEqual(validBudget1);
-      expect(addSpy).toHaveBeenCalledTimes(1);
-      expect(addSpy).toHaveBeenCalledWith(budget1);
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          query: {
+            userId: 1,
+          },
+        } as unknown as Request;
+
+        await expect(() => controller.getCategories(req)).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+      });
+
+      test('throws an error if getCategories throws an error', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1, budget2],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+          deposits: [deposit1, deposit2],
+          withdrawals: [withdrawal1, withdrawal2],
+          reconciliations: [reconciliation1, reconciliation2],
+        });
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          query: {
+            budgetId,
+          },
+        } as unknown as Request;
+
+        jest
+          .spyOn(service, 'getCategories')
+          .mockRejectedValue(new Error('Test Error'));
+
+        await expect(() => controller.getCategories(req)).rejects.toThrow(
+          new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+        );
+      });
     });
 
-    test('throws an error if the body is not a record', async () => {
-      const service = new InMemoryBudgetService();
+    describe('addCategory', () => {
+      test('adds a category using the BudgetService', async () => {
+        const service = new InMemoryBudgetService();
 
-      const loggerService = new LoggerService();
+        const loggerService = new LoggerService();
 
-      const controller = new BudgetController(service, loggerService);
+        const controller = new BudgetController(service, loggerService);
 
-      const req = {
-        body: undefined,
-      } as unknown as Request;
+        const req = {
+          body: {
+            category: validCategory1,
+          },
+        } as unknown as Request;
 
-      const addSpy = jest.spyOn(service, 'addBudget');
+        const addSpy = jest.spyOn(service, 'addCategory');
+        addSpy.mockResolvedValue(category1);
 
-      await expect(() => controller.addBudget(req)).rejects.toThrow(
-        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
-      );
-      expect(addSpy).not.toHaveBeenCalled();
+        const response = await controller.addCategory(req);
+
+        expect(response.category).toEqual(validCategory1);
+        expect(addSpy).toHaveBeenCalledTimes(1);
+        expect(addSpy).toHaveBeenCalledWith(category1);
+      });
+
+      test('throws an error if the body is not a record', async () => {
+        const service = new InMemoryBudgetService();
+
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          body: undefined,
+        } as unknown as Request;
+
+        const addSpy = jest.spyOn(service, 'addCategory');
+
+        await expect(() => controller.addCategory(req)).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+        expect(addSpy).not.toHaveBeenCalled();
+      });
+
+      test('throws an error if the body cannot be parsed into a budget', async () => {
+        const service = new InMemoryBudgetService();
+
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          body: {},
+        } as unknown as Request;
+
+        const addSpy = jest.spyOn(service, 'addCategory');
+
+        await expect(() => controller.addCategory(req)).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+        expect(addSpy).not.toHaveBeenCalled();
+      });
+
+      test('throws an error if addAction throws an error', async () => {
+        const service = new InMemoryBudgetService();
+
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          body: {
+            category: validCategory1,
+          },
+        } as unknown as Request;
+
+        const addSpy = jest.spyOn(service, 'addCategory');
+        addSpy.mockRejectedValue(new Error('Test Error'));
+
+        await expect(() => controller.addCategory(req)).rejects.toThrow(
+          new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+        );
+
+        expect(addSpy).toHaveBeenCalledTimes(1);
+        expect(addSpy).toHaveBeenCalledWith(category1);
+      });
     });
 
-    test('throws an error if the body cannot be parsed into a budget', async () => {
-      const service = new InMemoryBudgetService();
+    describe('updateCategory', () => {
+      test('updates a budget using the BudgetService', async () => {
+        const service = new InMemoryBudgetService({
+          categories: [category1, category2],
+        });
 
-      const loggerService = new LoggerService();
+        const loggerService = new LoggerService();
 
-      const controller = new BudgetController(service, loggerService);
+        const controller = new BudgetController(service, loggerService);
 
-      const req = {
-        body: {},
-      } as unknown as Request;
+        const updatedCategoryJSON = {
+          ...validCategory1,
+          name: 'Updated Category',
+        };
+        const updatedCategory = Category.fromJSON(updatedCategoryJSON);
 
-      const addSpy = jest.spyOn(service, 'addBudget');
+        const req = {
+          body: {
+            category: updatedCategoryJSON,
+          },
+        } as unknown as Request;
 
-      await expect(() => controller.addBudget(req)).rejects.toThrow(
-        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
-      );
-      expect(addSpy).not.toHaveBeenCalled();
+        const updateSpy = jest.spyOn(service, 'updateCategory');
+        updateSpy.mockResolvedValue(updatedCategory);
+
+        const response = await controller.updateCategory(req);
+
+        expect(response.category).toEqual(updatedCategoryJSON);
+        expect(updateSpy).toHaveBeenCalledTimes(1);
+        expect(updateSpy).toHaveBeenCalledWith(updatedCategory);
+      });
+
+      test('throws an error if the body is not a record', async () => {
+        const service = new InMemoryBudgetService();
+
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          body: undefined,
+        } as unknown as Request;
+
+        const updateSpy = jest.spyOn(service, 'updateCategory');
+
+        await expect(() => controller.updateCategory(req)).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+        expect(updateSpy).not.toHaveBeenCalled();
+      });
+
+      test('throws an error if the body cannot be parsed into a category', async () => {
+        const service = new InMemoryBudgetService();
+
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          body: {},
+        } as unknown as Request;
+
+        const updateSpy = jest.spyOn(service, 'updateCategory');
+
+        await expect(() => controller.updateCategory(req)).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+        expect(updateSpy).not.toHaveBeenCalled();
+      });
+
+      test('throws an error if updateCategory throws an error', async () => {
+        const service = new InMemoryBudgetService();
+
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const updatedCategoryJSON = {
+          ...validCategory1,
+          name: 'Updated Category',
+        };
+        const updatedCategory = Category.fromJSON(updatedCategoryJSON);
+
+        const req = {
+          body: {
+            category: updatedCategoryJSON,
+          },
+        } as unknown as Request;
+
+        const updateSpy = jest.spyOn(service, 'updateCategory');
+        updateSpy.mockRejectedValue(new Error('Test Error'));
+
+        await expect(() => controller.updateCategory(req)).rejects.toThrow(
+          new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+        );
+        expect(updateSpy).toHaveBeenCalledTimes(1);
+        expect(updateSpy).toHaveBeenCalledWith(updatedCategory);
+      });
     });
 
-    test('throws an error if addAction throws an error', async () => {
-      const service = new InMemoryBudgetService();
+    describe('deleteCategory', () => {
+      test('deletes a budget using the BudgetService', async () => {
+        const service = new InMemoryBudgetService({
+          categories: [category1, category2],
+        });
 
-      const loggerService = new LoggerService();
+        const loggerService = new LoggerService();
 
-      const controller = new BudgetController(service, loggerService);
+        const controller = new BudgetController(service, loggerService);
 
-      const req = {
-        body: {
-          budget: validBudget1,
-        },
-      } as unknown as Request;
+        const req = {
+          body: {
+            categoryId,
+          },
+        } as unknown as Request;
 
-      const addSpy = jest.spyOn(service, 'addBudget');
-      addSpy.mockRejectedValue(new Error('Test Error'));
+        const delSpy = jest.spyOn(service, 'deleteCategory');
+        delSpy.mockResolvedValue(category1);
 
-      await expect(() => controller.addBudget(req)).rejects.toThrow(
-        new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
-      );
+        const response = await controller.deleteCategory(req);
 
-      expect(addSpy).toHaveBeenCalledTimes(1);
-      expect(addSpy).toHaveBeenCalledWith(budget1);
+        expect(response.category).toEqual(category1.toJSON());
+        expect(delSpy).toHaveBeenCalledTimes(1);
+        expect(delSpy).toHaveBeenCalledWith(categoryId);
+      });
+
+      test('throws an error if the budgetId is not a string', async () => {
+        const service = new InMemoryBudgetService({
+          categories: [category1, category2],
+        });
+
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          body: {
+            categoryId: 1,
+          },
+        } as unknown as Request;
+
+        const delSpy = jest.spyOn(service, 'deleteCategory');
+
+        await expect(() => controller.deleteCategory(req)).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+        expect(delSpy).not.toHaveBeenCalled();
+      });
+
+      test('throws an error if deleteCategory throws an error', async () => {
+        const service = new InMemoryBudgetService({
+          categories: [category1, category2],
+        });
+
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          body: {
+            categoryId,
+          },
+        } as unknown as Request;
+
+        const delSpy = jest.spyOn(service, 'deleteCategory');
+        delSpy.mockRejectedValue(new Error('Test Error'));
+
+        await expect(() => controller.deleteCategory(req)).rejects.toThrow(
+          new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+        );
+        expect(delSpy).toHaveBeenCalledTimes(1);
+        expect(delSpy).toHaveBeenCalledWith(categoryId);
+      });
     });
   });
 
-  describe('updateBudget', () => {
-    test('updates a budget using the BudgetService', async () => {
-      const service = new InMemoryBudgetService({
-        budgets: [budget1, budget2],
+  describe('expenses', () => {
+    describe('getExpenses', () => {
+      test('gets budgets from the BudgetService', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1, budget2],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+          deposits: [deposit1, deposit2],
+          withdrawals: [withdrawal1, withdrawal2],
+          reconciliations: [reconciliation1, reconciliation2],
+        });
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          query: {
+            budgetId,
+          },
+        } as unknown as Request;
+
+        const response = await controller.getExpenses(req);
+
+        expect(response.expenses).toHaveLength(2);
+        expect(response.expenses).toContainEqual(validExpense1);
+        expect(response.expenses).toContainEqual(validExpense2);
       });
 
-      const loggerService = new LoggerService();
+      test('throws an error if the userId is not a string', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1, budget2],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+          deposits: [deposit1, deposit2],
+          withdrawals: [withdrawal1, withdrawal2],
+          reconciliations: [reconciliation1, reconciliation2],
+        });
+        const loggerService = new LoggerService();
 
-      const controller = new BudgetController(service, loggerService);
+        const controller = new BudgetController(service, loggerService);
 
-      const updatedBudgetJSON = {
-        ...validBudget1,
-        name: 'Updated Budget',
-      };
-      const updatedBudget = Budget.fromJSON(updatedBudgetJSON);
+        const req = {
+          query: {
+            userId: 1,
+          },
+        } as unknown as Request;
 
-      const req = {
-        body: {
-          budget: updatedBudgetJSON,
-        },
-      } as unknown as Request;
+        await expect(() => controller.getExpenses(req)).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+      });
 
-      const updateSpy = jest.spyOn(service, 'updateBudget');
-      updateSpy.mockResolvedValue(updatedBudget);
+      test('throws an error if getExpenses throws an error', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1, budget2],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+          deposits: [deposit1, deposit2],
+          withdrawals: [withdrawal1, withdrawal2],
+          reconciliations: [reconciliation1, reconciliation2],
+        });
+        const loggerService = new LoggerService();
 
-      const response = await controller.updateBudget(req);
+        const controller = new BudgetController(service, loggerService);
 
-      expect(response.budget).toEqual(updatedBudgetJSON);
-      expect(updateSpy).toHaveBeenCalledTimes(1);
-      expect(updateSpy).toHaveBeenCalledWith(updatedBudget);
+        const req = {
+          query: {
+            budgetId,
+          },
+        } as unknown as Request;
+
+        jest
+          .spyOn(service, 'getExpenses')
+          .mockRejectedValue(new Error('Test Error'));
+
+        await expect(() => controller.getExpenses(req)).rejects.toThrow(
+          new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+        );
+      });
     });
 
-    test('throws an error if the body is not a record', async () => {
-      const service = new InMemoryBudgetService();
+    describe('addExpense', () => {
+      test('adds an Expense using the BudgetService', async () => {
+        const service = new InMemoryBudgetService();
 
-      const loggerService = new LoggerService();
+        const loggerService = new LoggerService();
 
-      const controller = new BudgetController(service, loggerService);
+        const controller = new BudgetController(service, loggerService);
 
-      const req = {
-        body: undefined,
-      } as unknown as Request;
+        const req = {
+          body: {
+            expense: validExpense1,
+          },
+        } as unknown as Request;
 
-      const updateSpy = jest.spyOn(service, 'updateBudget');
+        const addSpy = jest.spyOn(service, 'addExpense');
+        addSpy.mockResolvedValue(expense1);
 
-      await expect(() => controller.updateBudget(req)).rejects.toThrow(
-        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
-      );
-      expect(updateSpy).not.toHaveBeenCalled();
+        const response = await controller.addExpense(req);
+
+        expect(response.expense).toEqual(validExpense1);
+        expect(addSpy).toHaveBeenCalledTimes(1);
+        expect(addSpy).toHaveBeenCalledWith(expense1);
+      });
+
+      test('throws an error if the body is not a record', async () => {
+        const service = new InMemoryBudgetService();
+
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          body: undefined,
+        } as unknown as Request;
+
+        const addSpy = jest.spyOn(service, 'addExpense');
+
+        await expect(() => controller.addExpense(req)).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+        expect(addSpy).not.toHaveBeenCalled();
+      });
+
+      test('throws an error if the body cannot be parsed into a budget', async () => {
+        const service = new InMemoryBudgetService();
+
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          body: {},
+        } as unknown as Request;
+
+        const addSpy = jest.spyOn(service, 'addExpense');
+
+        await expect(() => controller.addExpense(req)).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+        expect(addSpy).not.toHaveBeenCalled();
+      });
+
+      test('throws an error if addAction throws an error', async () => {
+        const service = new InMemoryBudgetService();
+
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          body: {
+            expense: validExpense1,
+          },
+        } as unknown as Request;
+
+        const addSpy = jest.spyOn(service, 'addExpense');
+        addSpy.mockRejectedValue(new Error('Test Error'));
+
+        await expect(() => controller.addExpense(req)).rejects.toThrow(
+          new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+        );
+
+        expect(addSpy).toHaveBeenCalledTimes(1);
+        expect(addSpy).toHaveBeenCalledWith(expense1);
+      });
     });
 
-    test('throws an error if the body cannot be parsed into a budget', async () => {
-      const service = new InMemoryBudgetService();
+    describe('updateExpense', () => {
+      test('updates an expense using the BudgetService', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1, budget2],
+        });
 
-      const loggerService = new LoggerService();
+        const loggerService = new LoggerService();
 
-      const controller = new BudgetController(service, loggerService);
+        const controller = new BudgetController(service, loggerService);
 
-      const req = {
-        body: {},
-      } as unknown as Request;
+        const updatedExpenseJSON = {
+          ...validExpense1,
+          description: 'Updated Expense',
+        };
+        const updatedExpense = Expense.fromJSON(updatedExpenseJSON);
 
-      const updateSpy = jest.spyOn(service, 'updateBudget');
+        const req = {
+          body: {
+            expense: updatedExpenseJSON,
+          },
+        } as unknown as Request;
 
-      await expect(() => controller.updateBudget(req)).rejects.toThrow(
-        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
-      );
-      expect(updateSpy).not.toHaveBeenCalled();
+        const updateSpy = jest.spyOn(service, 'updateExpense');
+        updateSpy.mockResolvedValue(updatedExpense);
+
+        const response = await controller.updateExpense(req);
+
+        expect(response.expense).toEqual(updatedExpenseJSON);
+        expect(updateSpy).toHaveBeenCalledTimes(1);
+        expect(updateSpy).toHaveBeenCalledWith(updatedExpense);
+      });
+
+      test('throws an error if the body is not a record', async () => {
+        const service = new InMemoryBudgetService();
+
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          body: undefined,
+        } as unknown as Request;
+
+        const updateSpy = jest.spyOn(service, 'updateExpense');
+
+        await expect(() => controller.updateExpense(req)).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+        expect(updateSpy).not.toHaveBeenCalled();
+      });
+
+      test('throws an error if the body cannot be parsed into an expense', async () => {
+        const service = new InMemoryBudgetService();
+
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          body: {},
+        } as unknown as Request;
+
+        const updateSpy = jest.spyOn(service, 'updateExpense');
+
+        await expect(() => controller.updateExpense(req)).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+        expect(updateSpy).not.toHaveBeenCalled();
+      });
+
+      test('throws an error if updateExpense throws an error', async () => {
+        const service = new InMemoryBudgetService();
+
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const updatedExpenseJSON = {
+          ...validExpense1,
+          description: 'Updated Expense',
+        };
+        const updatedExpense = Expense.fromJSON(updatedExpenseJSON);
+
+        const req = {
+          body: {
+            expense: updatedExpenseJSON,
+          },
+        } as unknown as Request;
+
+        const updateSpy = jest.spyOn(service, 'updateExpense');
+        updateSpy.mockRejectedValue(new Error('Test Error'));
+
+        await expect(() => controller.updateExpense(req)).rejects.toThrow(
+          new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+        );
+        expect(updateSpy).toHaveBeenCalledTimes(1);
+        expect(updateSpy).toHaveBeenCalledWith(updatedExpense);
+      });
     });
 
-    test('throws an error if updateBudget throws an error', async () => {
-      const service = new InMemoryBudgetService();
+    describe('deleteExpense', () => {
+      test('deletes a budget using the BudgetService', async () => {
+        const service = new InMemoryBudgetService({
+          expenses: [expense1, expense2],
+        });
 
-      const loggerService = new LoggerService();
+        const loggerService = new LoggerService();
 
-      const controller = new BudgetController(service, loggerService);
+        const controller = new BudgetController(service, loggerService);
 
-      const updatedBudgetJSON = {
-        ...validBudget1,
-        name: 'Updated Budget',
-      };
-      const updatedBudget = Budget.fromJSON(updatedBudgetJSON);
+        const req = {
+          body: {
+            expenseId,
+          },
+        } as unknown as Request;
 
-      const req = {
-        body: {
-          budget: updatedBudgetJSON,
-        },
-      } as unknown as Request;
+        const delSpy = jest.spyOn(service, 'deleteExpense');
+        delSpy.mockResolvedValue(expense1);
 
-      const updateSpy = jest.spyOn(service, 'updateBudget');
-      updateSpy.mockRejectedValue(new Error('Test Error'));
+        const response = await controller.deleteExpense(req);
 
-      await expect(() => controller.updateBudget(req)).rejects.toThrow(
-        new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
-      );
-      expect(updateSpy).toHaveBeenCalledTimes(1);
-      expect(updateSpy).toHaveBeenCalledWith(updatedBudget);
+        expect(response.expense).toEqual(expense1.toJSON());
+        expect(delSpy).toHaveBeenCalledTimes(1);
+        expect(delSpy).toHaveBeenCalledWith(expenseId);
+      });
+
+      test('throws an error if the budgetId is not a string', async () => {
+        const service = new InMemoryBudgetService({
+          expenses: [expense1, expense2],
+        });
+
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          body: {
+            expenseId: 1,
+          },
+        } as unknown as Request;
+
+        const delSpy = jest.spyOn(service, 'deleteExpense');
+
+        await expect(() => controller.deleteExpense(req)).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+        expect(delSpy).not.toHaveBeenCalled();
+      });
+
+      test('throws an error if deleteExpense throws an error', async () => {
+        const service = new InMemoryBudgetService({
+          expenses: [expense1, expense2],
+        });
+
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          body: {
+            expenseId,
+          },
+        } as unknown as Request;
+
+        const delSpy = jest.spyOn(service, 'deleteExpense');
+        delSpy.mockRejectedValue(new Error('Test Error'));
+
+        await expect(() => controller.deleteExpense(req)).rejects.toThrow(
+          new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+        );
+        expect(delSpy).toHaveBeenCalledTimes(1);
+        expect(delSpy).toHaveBeenCalledWith(expenseId);
+      });
     });
   });
 
-  describe('deleteBudget', () => {
-    test('deletes a budget using the BudgetService', async () => {
-      const service = new InMemoryBudgetService({
-        budgets: [budget1, budget2],
+  describe('deposits', () => {
+    describe('getDeposits', () => {
+      test('gets budgets from the BudgetService', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1, budget2],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+          deposits: [deposit1, deposit2],
+          withdrawals: [withdrawal1, withdrawal2],
+          reconciliations: [reconciliation1, reconciliation2],
+        });
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          query: {
+            budgetId,
+            startDate: '2024-01-01',
+            endDate: '2024-01-31',
+          },
+        } as unknown as Request;
+
+        const response = await controller.getDeposits(req);
+
+        expect(response.deposits).toHaveLength(2);
+        expect(response.deposits).toContainEqual(validDeposit1);
+        expect(response.deposits).toContainEqual(validDeposit2);
       });
 
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const req = {
-        body: {
-          budgetId,
-        },
-      } as unknown as Request;
-
-      const delSpy = jest.spyOn(service, 'deleteBudget');
-      delSpy.mockResolvedValue(budget1);
-
-      const response = await controller.deleteBudget(req);
-
-      expect(response.budget).toEqual(budget1.toJSON());
-      expect(delSpy).toHaveBeenCalledTimes(1);
-      expect(delSpy).toHaveBeenCalledWith(budgetId);
-    });
-
-    test('throws an error if the budgetId is not a string', async () => {
-      const service = new InMemoryBudgetService({
-        budgets: [budget1, budget2],
-      });
-
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const req = {
-        body: {
-          budgetId: 1,
-        },
-      } as unknown as Request;
-
-      const delSpy = jest.spyOn(service, 'deleteBudget');
-
-      await expect(() => controller.deleteBudget(req)).rejects.toThrow(
-        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
-      );
-      expect(delSpy).not.toHaveBeenCalled();
-    });
-
-    test('throws an error if deleteBudget throws an error', async () => {
-      const service = new InMemoryBudgetService({
-        budgets: [budget1, budget2],
-      });
-
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const req = {
-        body: {
-          budgetId,
-        },
-      } as unknown as Request;
-
-      const delSpy = jest.spyOn(service, 'deleteBudget');
-      delSpy.mockRejectedValue(new Error('Test Error'));
-
-      await expect(() => controller.deleteBudget(req)).rejects.toThrow(
-        new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
-      );
-      expect(delSpy).toHaveBeenCalledTimes(1);
-      expect(delSpy).toHaveBeenCalledWith(budgetId);
-    });
-  });
-
-  describe('getCategories', () => {
-    test('gets categories from the BudgetService', async () => {
-      const service = new InMemoryBudgetService({
-        budgets: [budget1, budget2],
-        categories: [category1, category2],
-        expenses: [expense1, expense2],
-        deposits: [deposit1, deposit2],
-        withdrawals: [withdrawal1, withdrawal2],
-        reconciliations: [reconciliation1, reconciliation2],
-      });
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const req = {
-        query: {
-          budgetId,
-        },
-      } as unknown as Request;
-
-      const response = await controller.getCategories(req);
-
-      expect(response.categories).toHaveLength(2);
-      expect(response.categories).toContainEqual(validCategory1);
-      expect(response.categories).toContainEqual(validCategory2);
-    });
-
-    test('throws an error if the userId is not a string', async () => {
-      const service = new InMemoryBudgetService({
-        budgets: [budget1, budget2],
-        categories: [category1, category2],
-        expenses: [expense1, expense2],
-        deposits: [deposit1, deposit2],
-        withdrawals: [withdrawal1, withdrawal2],
-        reconciliations: [reconciliation1, reconciliation2],
-      });
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const req = {
-        query: {
-          userId: 1,
-        },
-      } as unknown as Request;
-
-      await expect(() => controller.getCategories(req)).rejects.toThrow(
-        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
-      );
-    });
-
-    test('throws an error if getCategories throws an error', async () => {
-      const service = new InMemoryBudgetService({
-        budgets: [budget1, budget2],
-        categories: [category1, category2],
-        expenses: [expense1, expense2],
-        deposits: [deposit1, deposit2],
-        withdrawals: [withdrawal1, withdrawal2],
-        reconciliations: [reconciliation1, reconciliation2],
-      });
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const req = {
-        query: {
-          budgetId,
-        },
-      } as unknown as Request;
-
-      jest
-        .spyOn(service, 'getCategories')
-        .mockRejectedValue(new Error('Test Error'));
-
-      await expect(() => controller.getCategories(req)).rejects.toThrow(
-        new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
-      );
-    });
-  });
-
-  describe('addCategory', () => {
-    test('adds a category using the BudgetService', async () => {
-      const service = new InMemoryBudgetService();
-
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const req = {
-        body: {
-          category: validCategory1,
-        },
-      } as unknown as Request;
-
-      const addSpy = jest.spyOn(service, 'addCategory');
-      addSpy.mockResolvedValue(category1);
-
-      const response = await controller.addCategory(req);
-
-      expect(response.category).toEqual(validCategory1);
-      expect(addSpy).toHaveBeenCalledTimes(1);
-      expect(addSpy).toHaveBeenCalledWith(category1);
-    });
-
-    test('throws an error if the body is not a record', async () => {
-      const service = new InMemoryBudgetService();
-
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const req = {
-        body: undefined,
-      } as unknown as Request;
-
-      const addSpy = jest.spyOn(service, 'addCategory');
-
-      await expect(() => controller.addCategory(req)).rejects.toThrow(
-        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
-      );
-      expect(addSpy).not.toHaveBeenCalled();
-    });
-
-    test('throws an error if the body cannot be parsed into a budget', async () => {
-      const service = new InMemoryBudgetService();
-
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const req = {
-        body: {},
-      } as unknown as Request;
-
-      const addSpy = jest.spyOn(service, 'addCategory');
-
-      await expect(() => controller.addCategory(req)).rejects.toThrow(
-        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
-      );
-      expect(addSpy).not.toHaveBeenCalled();
-    });
-
-    test('throws an error if addAction throws an error', async () => {
-      const service = new InMemoryBudgetService();
-
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const req = {
-        body: {
-          category: validCategory1,
-        },
-      } as unknown as Request;
-
-      const addSpy = jest.spyOn(service, 'addCategory');
-      addSpy.mockRejectedValue(new Error('Test Error'));
-
-      await expect(() => controller.addCategory(req)).rejects.toThrow(
-        new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
-      );
-
-      expect(addSpy).toHaveBeenCalledTimes(1);
-      expect(addSpy).toHaveBeenCalledWith(category1);
-    });
-  });
-
-  describe('updateCategory', () => {
-    test('updates a budget using the BudgetService', async () => {
-      const service = new InMemoryBudgetService({
-        categories: [category1, category2],
-      });
-
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const updatedCategoryJSON = {
-        ...validCategory1,
-        name: 'Updated Category',
-      };
-      const updatedCategory = Category.fromJSON(updatedCategoryJSON);
-
-      const req = {
-        body: {
-          category: updatedCategoryJSON,
-        },
-      } as unknown as Request;
-
-      const updateSpy = jest.spyOn(service, 'updateCategory');
-      updateSpy.mockResolvedValue(updatedCategory);
-
-      const response = await controller.updateCategory(req);
-
-      expect(response.category).toEqual(updatedCategoryJSON);
-      expect(updateSpy).toHaveBeenCalledTimes(1);
-      expect(updateSpy).toHaveBeenCalledWith(updatedCategory);
-    });
-
-    test('throws an error if the body is not a record', async () => {
-      const service = new InMemoryBudgetService();
-
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const req = {
-        body: undefined,
-      } as unknown as Request;
-
-      const updateSpy = jest.spyOn(service, 'updateCategory');
-
-      await expect(() => controller.updateCategory(req)).rejects.toThrow(
-        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
-      );
-      expect(updateSpy).not.toHaveBeenCalled();
-    });
-
-    test('throws an error if the body cannot be parsed into a category', async () => {
-      const service = new InMemoryBudgetService();
-
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const req = {
-        body: {},
-      } as unknown as Request;
-
-      const updateSpy = jest.spyOn(service, 'updateCategory');
-
-      await expect(() => controller.updateCategory(req)).rejects.toThrow(
-        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
-      );
-      expect(updateSpy).not.toHaveBeenCalled();
-    });
-
-    test('throws an error if updateCategory throws an error', async () => {
-      const service = new InMemoryBudgetService();
-
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const updatedCategoryJSON = {
-        ...validCategory1,
-        name: 'Updated Category',
-      };
-      const updatedCategory = Category.fromJSON(updatedCategoryJSON);
-
-      const req = {
-        body: {
-          category: updatedCategoryJSON,
-        },
-      } as unknown as Request;
-
-      const updateSpy = jest.spyOn(service, 'updateCategory');
-      updateSpy.mockRejectedValue(new Error('Test Error'));
-
-      await expect(() => controller.updateCategory(req)).rejects.toThrow(
-        new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
-      );
-      expect(updateSpy).toHaveBeenCalledTimes(1);
-      expect(updateSpy).toHaveBeenCalledWith(updatedCategory);
-    });
-  });
-
-  describe('deleteCategory', () => {
-    test('deletes a budget using the BudgetService', async () => {
-      const service = new InMemoryBudgetService({
-        categories: [category1, category2],
-      });
-
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const req = {
-        body: {
-          categoryId,
-        },
-      } as unknown as Request;
-
-      const delSpy = jest.spyOn(service, 'deleteCategory');
-      delSpy.mockResolvedValue(category1);
-
-      const response = await controller.deleteCategory(req);
-
-      expect(response.category).toEqual(category1.toJSON());
-      expect(delSpy).toHaveBeenCalledTimes(1);
-      expect(delSpy).toHaveBeenCalledWith(categoryId);
-    });
-
-    test('throws an error if the budgetId is not a string', async () => {
-      const service = new InMemoryBudgetService({
-        categories: [category1, category2],
-      });
-
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const req = {
-        body: {
-          categoryId: 1,
-        },
-      } as unknown as Request;
-
-      const delSpy = jest.spyOn(service, 'deleteCategory');
-
-      await expect(() => controller.deleteCategory(req)).rejects.toThrow(
-        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
-      );
-      expect(delSpy).not.toHaveBeenCalled();
-    });
-
-    test('throws an error if deleteCategory throws an error', async () => {
-      const service = new InMemoryBudgetService({
-        categories: [category1, category2],
-      });
-
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const req = {
-        body: {
-          categoryId,
-        },
-      } as unknown as Request;
-
-      const delSpy = jest.spyOn(service, 'deleteCategory');
-      delSpy.mockRejectedValue(new Error('Test Error'));
-
-      await expect(() => controller.deleteCategory(req)).rejects.toThrow(
-        new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
-      );
-      expect(delSpy).toHaveBeenCalledTimes(1);
-      expect(delSpy).toHaveBeenCalledWith(categoryId);
-    });
-  });
-
-  describe('getExpenses', () => {
-    test('gets budgets from the BudgetService', async () => {
-      const service = new InMemoryBudgetService({
-        budgets: [budget1, budget2],
-        categories: [category1, category2],
-        expenses: [expense1, expense2],
-        deposits: [deposit1, deposit2],
-        withdrawals: [withdrawal1, withdrawal2],
-        reconciliations: [reconciliation1, reconciliation2],
-      });
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const req = {
-        query: {
-          budgetId,
-        },
-      } as unknown as Request;
-
-      const response = await controller.getExpenses(req);
-
-      expect(response.expenses).toHaveLength(2);
-      expect(response.expenses).toContainEqual(validExpense1);
-      expect(response.expenses).toContainEqual(validExpense2);
-    });
-
-    test('throws an error if the userId is not a string', async () => {
-      const service = new InMemoryBudgetService({
-        budgets: [budget1, budget2],
-        categories: [category1, category2],
-        expenses: [expense1, expense2],
-        deposits: [deposit1, deposit2],
-        withdrawals: [withdrawal1, withdrawal2],
-        reconciliations: [reconciliation1, reconciliation2],
-      });
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const req = {
-        query: {
-          userId: 1,
-        },
-      } as unknown as Request;
-
-      await expect(() => controller.getExpenses(req)).rejects.toThrow(
-        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
-      );
-    });
-
-    test('throws an error if getExpenses throws an error', async () => {
-      const service = new InMemoryBudgetService({
-        budgets: [budget1, budget2],
-        categories: [category1, category2],
-        expenses: [expense1, expense2],
-        deposits: [deposit1, deposit2],
-        withdrawals: [withdrawal1, withdrawal2],
-        reconciliations: [reconciliation1, reconciliation2],
-      });
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const req = {
-        query: {
-          budgetId,
-        },
-      } as unknown as Request;
-
-      jest
-        .spyOn(service, 'getExpenses')
-        .mockRejectedValue(new Error('Test Error'));
-
-      await expect(() => controller.getExpenses(req)).rejects.toThrow(
-        new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
-      );
-    });
-  });
-
-  describe('addExpense', () => {
-    test('adds an Expense using the BudgetService', async () => {
-      const service = new InMemoryBudgetService();
-
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const req = {
-        body: {
-          expense: validExpense1,
-        },
-      } as unknown as Request;
-
-      const addSpy = jest.spyOn(service, 'addExpense');
-      addSpy.mockResolvedValue(expense1);
-
-      const response = await controller.addExpense(req);
-
-      expect(response.expense).toEqual(validExpense1);
-      expect(addSpy).toHaveBeenCalledTimes(1);
-      expect(addSpy).toHaveBeenCalledWith(expense1);
-    });
-
-    test('throws an error if the body is not a record', async () => {
-      const service = new InMemoryBudgetService();
-
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const req = {
-        body: undefined,
-      } as unknown as Request;
-
-      const addSpy = jest.spyOn(service, 'addExpense');
-
-      await expect(() => controller.addExpense(req)).rejects.toThrow(
-        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
-      );
-      expect(addSpy).not.toHaveBeenCalled();
-    });
-
-    test('throws an error if the body cannot be parsed into a budget', async () => {
-      const service = new InMemoryBudgetService();
-
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const req = {
-        body: {},
-      } as unknown as Request;
-
-      const addSpy = jest.spyOn(service, 'addExpense');
-
-      await expect(() => controller.addExpense(req)).rejects.toThrow(
-        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
-      );
-      expect(addSpy).not.toHaveBeenCalled();
-    });
-
-    test('throws an error if addAction throws an error', async () => {
-      const service = new InMemoryBudgetService();
-
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const req = {
-        body: {
-          expense: validExpense1,
-        },
-      } as unknown as Request;
-
-      const addSpy = jest.spyOn(service, 'addExpense');
-      addSpy.mockRejectedValue(new Error('Test Error'));
-
-      await expect(() => controller.addExpense(req)).rejects.toThrow(
-        new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
-      );
-
-      expect(addSpy).toHaveBeenCalledTimes(1);
-      expect(addSpy).toHaveBeenCalledWith(expense1);
-    });
-  });
-
-  describe('updateExpense', () => {
-    test('updates an expense using the BudgetService', async () => {
-      const service = new InMemoryBudgetService({
-        budgets: [budget1, budget2],
-      });
-
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const updatedExpenseJSON = {
-        ...validExpense1,
-        description: 'Updated Expense',
-      };
-      const updatedExpense = Expense.fromJSON(updatedExpenseJSON);
-
-      const req = {
-        body: {
-          expense: updatedExpenseJSON,
-        },
-      } as unknown as Request;
-
-      const updateSpy = jest.spyOn(service, 'updateExpense');
-      updateSpy.mockResolvedValue(updatedExpense);
-
-      const response = await controller.updateExpense(req);
-
-      expect(response.expense).toEqual(updatedExpenseJSON);
-      expect(updateSpy).toHaveBeenCalledTimes(1);
-      expect(updateSpy).toHaveBeenCalledWith(updatedExpense);
-    });
-
-    test('throws an error if the body is not a record', async () => {
-      const service = new InMemoryBudgetService();
-
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const req = {
-        body: undefined,
-      } as unknown as Request;
-
-      const updateSpy = jest.spyOn(service, 'updateExpense');
-
-      await expect(() => controller.updateExpense(req)).rejects.toThrow(
-        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
-      );
-      expect(updateSpy).not.toHaveBeenCalled();
-    });
-
-    test('throws an error if the body cannot be parsed into an expense', async () => {
-      const service = new InMemoryBudgetService();
-
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const req = {
-        body: {},
-      } as unknown as Request;
-
-      const updateSpy = jest.spyOn(service, 'updateExpense');
-
-      await expect(() => controller.updateExpense(req)).rejects.toThrow(
-        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
-      );
-      expect(updateSpy).not.toHaveBeenCalled();
-    });
-
-    test('throws an error if updateExpense throws an error', async () => {
-      const service = new InMemoryBudgetService();
-
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const updatedExpenseJSON = {
-        ...validExpense1,
-        description: 'Updated Expense',
-      };
-      const updatedExpense = Expense.fromJSON(updatedExpenseJSON);
-
-      const req = {
-        body: {
-          expense: updatedExpenseJSON,
-        },
-      } as unknown as Request;
-
-      const updateSpy = jest.spyOn(service, 'updateExpense');
-      updateSpy.mockRejectedValue(new Error('Test Error'));
-
-      await expect(() => controller.updateExpense(req)).rejects.toThrow(
-        new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
-      );
-      expect(updateSpy).toHaveBeenCalledTimes(1);
-      expect(updateSpy).toHaveBeenCalledWith(updatedExpense);
-    });
-  });
-
-  describe('deleteExpense', () => {
-    test('deletes a budget using the BudgetService', async () => {
-      const service = new InMemoryBudgetService({
-        expenses: [expense1, expense2],
-      });
-
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const req = {
-        body: {
-          expenseId,
-        },
-      } as unknown as Request;
-
-      const delSpy = jest.spyOn(service, 'deleteExpense');
-      delSpy.mockResolvedValue(expense1);
-
-      const response = await controller.deleteExpense(req);
-
-      expect(response.expense).toEqual(expense1.toJSON());
-      expect(delSpy).toHaveBeenCalledTimes(1);
-      expect(delSpy).toHaveBeenCalledWith(expenseId);
-    });
-
-    test('throws an error if the budgetId is not a string', async () => {
-      const service = new InMemoryBudgetService({
-        expenses: [expense1, expense2],
-      });
-
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const req = {
-        body: {
-          expenseId: 1,
-        },
-      } as unknown as Request;
-
-      const delSpy = jest.spyOn(service, 'deleteExpense');
-
-      await expect(() => controller.deleteExpense(req)).rejects.toThrow(
-        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
-      );
-      expect(delSpy).not.toHaveBeenCalled();
-    });
-
-    test('throws an error if deleteExpense throws an error', async () => {
-      const service = new InMemoryBudgetService({
-        expenses: [expense1, expense2],
-      });
-
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const req = {
-        body: {
-          expenseId,
-        },
-      } as unknown as Request;
-
-      const delSpy = jest.spyOn(service, 'deleteExpense');
-      delSpy.mockRejectedValue(new Error('Test Error'));
-
-      await expect(() => controller.deleteExpense(req)).rejects.toThrow(
-        new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
-      );
-      expect(delSpy).toHaveBeenCalledTimes(1);
-      expect(delSpy).toHaveBeenCalledWith(expenseId);
-    });
-  });
-
-  describe('getDeposits', () => {
-    test('gets budgets from the BudgetService', async () => {
-      const service = new InMemoryBudgetService({
-        budgets: [budget1, budget2],
-        categories: [category1, category2],
-        expenses: [expense1, expense2],
-        deposits: [deposit1, deposit2],
-        withdrawals: [withdrawal1, withdrawal2],
-        reconciliations: [reconciliation1, reconciliation2],
-      });
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const req = {
-        query: {
-          budgetId,
-          startDate: '2024-01-01',
-          endDate: '2024-01-31',
-        },
-      } as unknown as Request;
-
-      const response = await controller.getDeposits(req);
-
-      expect(response.deposits).toHaveLength(2);
-      expect(response.deposits).toContainEqual(validDeposit1);
-      expect(response.deposits).toContainEqual(validDeposit2);
-    });
-
-    test('throws an error if the budgetId or dates are missing or not a valid string', async () => {
-      const service = new InMemoryBudgetService({
-        budgets: [budget1, budget2],
-        categories: [category1, category2],
-        expenses: [expense1, expense2],
-        deposits: [deposit1, deposit2],
-        withdrawals: [withdrawal1, withdrawal2],
-        reconciliations: [reconciliation1, reconciliation2],
-      });
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const validQuery: Record<string, unknown> = {
-        budgetId,
-        startDate: '2024-01-01',
-        endDate: '2024-01-31',
-      };
-
-      let invalidQuery = { ...validQuery };
-      let req = {
-        query: invalidQuery,
-      } as unknown as Request;
-
-      invalidQuery = { ...validQuery };
-      invalidQuery.budgetId = 1;
-      req = {
-        query: invalidQuery,
-      } as unknown as Request;
-
-      await expect(() => controller.getDeposits(req)).rejects.toThrow(
-        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
-      );
-
-      invalidQuery = { ...validQuery };
-      delete invalidQuery.budgetId;
-      req = {
-        query: invalidQuery,
-      } as unknown as Request;
-
-      await expect(() => controller.getDeposits(req)).rejects.toThrow(
-        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
-      );
-
-      invalidQuery = { ...validQuery };
-      invalidQuery.startDate = '1';
-      req = {
-        query: invalidQuery,
-      } as unknown as Request;
-
-      await expect(() => controller.getDeposits(req)).rejects.toThrow(
-        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
-      );
-
-      invalidQuery = { ...validQuery };
-      delete invalidQuery.startDate;
-      req = {
-        query: invalidQuery,
-      } as unknown as Request;
-
-      await expect(() => controller.getDeposits(req)).rejects.toThrow(
-        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
-      );
-
-      invalidQuery = { ...validQuery };
-      invalidQuery.endDate = '1';
-      req = {
-        query: invalidQuery,
-      } as unknown as Request;
-
-      await expect(() => controller.getDeposits(req)).rejects.toThrow(
-        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
-      );
-
-      invalidQuery = { ...validQuery };
-      delete invalidQuery.endDate;
-      req = {
-        query: invalidQuery,
-      } as unknown as Request;
-
-      await expect(() => controller.getDeposits(req)).rejects.toThrow(
-        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
-      );
-    });
-
-    test('throws an error if getDeposits throws an error', async () => {
-      const service = new InMemoryBudgetService({
-        budgets: [budget1, budget2],
-        categories: [category1, category2],
-        expenses: [expense1, expense2],
-        deposits: [deposit1, deposit2],
-        withdrawals: [withdrawal1, withdrawal2],
-        reconciliations: [reconciliation1, reconciliation2],
-      });
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const req = {
-        query: {
+      test('throws an error if the budgetId or dates are missing or not a valid string', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1, budget2],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+          deposits: [deposit1, deposit2],
+          withdrawals: [withdrawal1, withdrawal2],
+          reconciliations: [reconciliation1, reconciliation2],
+        });
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const validQuery: Record<string, unknown> = {
           budgetId,
           startDate: '2024-01-01',
           endDate: '2024-01-31',
-        },
-      } as unknown as Request;
+        };
 
-      jest
-        .spyOn(service, 'getDeposits')
-        .mockRejectedValue(new Error('Test Error'));
+        let invalidQuery = { ...validQuery };
+        let req = {
+          query: invalidQuery,
+        } as unknown as Request;
 
-      await expect(() => controller.getDeposits(req)).rejects.toThrow(
-        new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
-      );
+        invalidQuery = { ...validQuery };
+        invalidQuery.budgetId = 1;
+        req = {
+          query: invalidQuery,
+        } as unknown as Request;
+
+        await expect(() => controller.getDeposits(req)).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+
+        invalidQuery = { ...validQuery };
+        delete invalidQuery.budgetId;
+        req = {
+          query: invalidQuery,
+        } as unknown as Request;
+
+        await expect(() => controller.getDeposits(req)).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+
+        invalidQuery = { ...validQuery };
+        invalidQuery.startDate = '1';
+        req = {
+          query: invalidQuery,
+        } as unknown as Request;
+
+        await expect(() => controller.getDeposits(req)).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+
+        invalidQuery = { ...validQuery };
+        delete invalidQuery.startDate;
+        req = {
+          query: invalidQuery,
+        } as unknown as Request;
+
+        await expect(() => controller.getDeposits(req)).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+
+        invalidQuery = { ...validQuery };
+        invalidQuery.endDate = '1';
+        req = {
+          query: invalidQuery,
+        } as unknown as Request;
+
+        await expect(() => controller.getDeposits(req)).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+
+        invalidQuery = { ...validQuery };
+        delete invalidQuery.endDate;
+        req = {
+          query: invalidQuery,
+        } as unknown as Request;
+
+        await expect(() => controller.getDeposits(req)).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+      });
+
+      test('throws an error if getDeposits throws an error', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1, budget2],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+          deposits: [deposit1, deposit2],
+          withdrawals: [withdrawal1, withdrawal2],
+          reconciliations: [reconciliation1, reconciliation2],
+        });
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          query: {
+            budgetId,
+            startDate: '2024-01-01',
+            endDate: '2024-01-31',
+          },
+        } as unknown as Request;
+
+        jest
+          .spyOn(service, 'getDeposits')
+          .mockRejectedValue(new Error('Test Error'));
+
+        await expect(() => controller.getDeposits(req)).rejects.toThrow(
+          new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+        );
+      });
+    });
+
+    describe('addDeposit', () => {
+      test('adds a deposit, calculates the balance, and returns the deposit', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+        });
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          body: {
+            deposit: validDeposit1,
+          },
+        } as unknown as Request;
+
+        const addDepositSpy = jest.spyOn(service, 'addDeposit');
+        const getBudgetSpy = jest.spyOn(service, 'getBudget');
+        const updateBudgetSpy = jest.spyOn(service, 'updateBudget');
+
+        uuidv4.mockImplementation(() => depositId);
+
+        const response = await controller.addDeposit(req);
+
+        expect(response.deposit).toEqual(validDeposit1);
+        expect(response.currentFunds).toBe(validDeposit1.amount);
+
+        expect(addDepositSpy).toHaveBeenCalledTimes(1);
+        expect(addDepositSpy).toHaveBeenCalledWith(deposit1);
+
+        expect(getBudgetSpy).toHaveBeenCalledTimes(1);
+        expect(getBudgetSpy).toHaveBeenCalledWith(budgetId);
+
+        expect(updateBudgetSpy).toHaveBeenCalledTimes(1);
+        expect(updateBudgetSpy).toHaveBeenCalledWith(
+          Budget.fromJSON({
+            ...validBudget1,
+            currentFunds: validDeposit1.amount,
+          }),
+        );
+      });
+
+      test('adds a deposit to a budget with existing deposits, calculates the balance, and returns the deposit', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+        });
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req1 = {
+          body: {
+            deposit: validDeposit1,
+          },
+        } as unknown as Request;
+        const req2 = {
+          body: {
+            deposit: validDeposit2,
+          },
+        } as unknown as Request;
+
+        const addDepositSpy = jest.spyOn(service, 'addDeposit');
+        const getBudgetSpy = jest.spyOn(service, 'getBudget');
+        const updateBudgetSpy = jest.spyOn(service, 'updateBudget');
+
+        uuidv4.mockImplementation(() => validDeposit2.id);
+
+        await controller.addDeposit(req1);
+        const response = await controller.addDeposit(req2);
+
+        expect(response.deposit).toEqual(validDeposit2);
+        expect(response.currentFunds).toBe(
+          validDeposit2.amount + validDeposit1.amount,
+        );
+
+        expect(addDepositSpy).toHaveBeenCalledTimes(2);
+        expect(getBudgetSpy).toHaveBeenCalledTimes(2);
+        expect(updateBudgetSpy).toHaveBeenCalledTimes(2);
+      });
+
+      test('throws an error if body is not an object', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+        });
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          body: {
+            deposit: undefined,
+          },
+        } as unknown as Request;
+
+        const addDepositSpy = jest.spyOn(service, 'addDeposit');
+        const getBudgetSpy = jest.spyOn(service, 'getBudget');
+        const updateBudgetSpy = jest.spyOn(service, 'updateBudget');
+
+        await expect(() => controller.addDeposit(req)).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+
+        expect(addDepositSpy).not.toHaveBeenCalled();
+        expect(getBudgetSpy).not.toHaveBeenCalled();
+        expect(updateBudgetSpy).not.toHaveBeenCalled();
+      });
+
+      test('throws an error if body cannot be parsed into a DepositTransaction', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+        });
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          body: {
+            deposit: {},
+          },
+        } as unknown as Request;
+
+        const addDepositSpy = jest.spyOn(service, 'addDeposit');
+        const getBudgetSpy = jest.spyOn(service, 'getBudget');
+        const updateBudgetSpy = jest.spyOn(service, 'updateBudget');
+
+        await expect(() => controller.addDeposit(req)).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+
+        expect(addDepositSpy).not.toHaveBeenCalled();
+        expect(getBudgetSpy).not.toHaveBeenCalled();
+        expect(updateBudgetSpy).not.toHaveBeenCalled();
+      });
+
+      test('throws an error if the amount is lte zero', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+        });
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const deposit = {
+          ...validDeposit1,
+          amount: 0,
+        };
+
+        const req = {
+          body: {
+            deposit,
+          },
+        } as unknown as Request;
+
+        const addDepositSpy = jest.spyOn(service, 'addDeposit');
+        const getBudgetSpy = jest.spyOn(service, 'getBudget');
+        const updateBudgetSpy = jest.spyOn(service, 'updateBudget');
+
+        await expect(() => controller.addDeposit(req)).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+
+        expect(addDepositSpy).not.toHaveBeenCalled();
+        expect(getBudgetSpy).not.toHaveBeenCalled();
+        expect(updateBudgetSpy).not.toHaveBeenCalled();
+      });
+
+      test('throws an error if addDeposit throws an error', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+        });
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          body: {
+            deposit: validDeposit1,
+          },
+        } as unknown as Request;
+
+        const addDepositSpy = jest.spyOn(service, 'addDeposit');
+        const getBudgetSpy = jest.spyOn(service, 'getBudget');
+        const updateBudgetSpy = jest.spyOn(service, 'updateBudget');
+
+        addDepositSpy.mockImplementationOnce(() => {
+          throw new Error('Test Error');
+        });
+
+        await expect(() => controller.addDeposit(req)).rejects.toThrow(
+          new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+        );
+
+        expect(addDepositSpy).toHaveBeenCalledTimes(1);
+        expect(getBudgetSpy).not.toHaveBeenCalled();
+        expect(updateBudgetSpy).not.toHaveBeenCalled();
+      });
+
+      test('throws an error if getBudget throws an error', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+        });
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          body: {
+            deposit: validDeposit1,
+          },
+        } as unknown as Request;
+
+        const addDepositSpy = jest.spyOn(service, 'addDeposit');
+        const getBudgetSpy = jest.spyOn(service, 'getBudget');
+        const updateBudgetSpy = jest.spyOn(service, 'updateBudget');
+
+        addDepositSpy.mockImplementationOnce(async () => deposit1);
+
+        getBudgetSpy.mockImplementationOnce(() => {
+          throw new Error('Test Error');
+        });
+
+        await expect(() => controller.addDeposit(req)).rejects.toThrow(
+          new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+        );
+
+        expect(addDepositSpy).toHaveBeenCalledTimes(1);
+        expect(getBudgetSpy).toHaveBeenCalledTimes(1);
+        expect(updateBudgetSpy).not.toHaveBeenCalled();
+      });
+
+      test('throws an error if updateBudget throws an error', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+        });
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          body: {
+            deposit: validDeposit1,
+          },
+        } as unknown as Request;
+
+        const addDepositSpy = jest.spyOn(service, 'addDeposit');
+        const getBudgetSpy = jest.spyOn(service, 'getBudget');
+        const updateBudgetSpy = jest.spyOn(service, 'updateBudget');
+
+        addDepositSpy.mockImplementationOnce(() => {
+          throw new Error('Test Error');
+        });
+
+        await expect(() => controller.addDeposit(req)).rejects.toThrow(
+          new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+        );
+
+        expect(addDepositSpy).toHaveBeenCalledTimes(1);
+        expect(getBudgetSpy).not.toHaveBeenCalled();
+        expect(updateBudgetSpy).not.toHaveBeenCalled();
+      });
+
+      test('throws an error if getBudget throws an error', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+        });
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          body: {
+            deposit: validDeposit1,
+          },
+        } as unknown as Request;
+
+        const addDepositSpy = jest.spyOn(service, 'addDeposit');
+        const getBudgetSpy = jest.spyOn(service, 'getBudget');
+        const updateBudgetSpy = jest.spyOn(service, 'updateBudget');
+
+        addDepositSpy.mockImplementationOnce(async () => deposit1);
+
+        getBudgetSpy.mockImplementationOnce(async () => budget1);
+
+        updateBudgetSpy.mockImplementationOnce(() => {
+          throw new Error('Test Error');
+        });
+
+        await expect(() => controller.addDeposit(req)).rejects.toThrow(
+          new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+        );
+
+        expect(addDepositSpy).toHaveBeenCalledTimes(1);
+        expect(getBudgetSpy).toHaveBeenCalledTimes(1);
+        expect(updateBudgetSpy).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('updateDeposit', () => {
+      test('updates the budget in the service and updates current funds given a budget with an existing deposit', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+        });
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req1 = {
+          body: {
+            deposit: validDeposit1,
+          },
+        } as unknown as Request;
+
+        const updatedAmount = 100;
+
+        const updateDepositSpy = jest.spyOn(service, 'updateDeposit');
+        const getBudgetSpy = jest.spyOn(service, 'getBudget');
+        const updateBudgetSpy = jest.spyOn(service, 'updateBudget');
+
+        uuidv4.mockImplementation(() => depositId);
+
+        await controller.addDeposit(req1);
+
+        const updatedDeposit = DepositTransaction.fromJSON({
+          ...validDeposit1,
+          amount: validDeposit1.amount + updatedAmount,
+        });
+
+        const req2 = {
+          body: {
+            deposit: updatedDeposit.toJSON(),
+          },
+        } as unknown as Request;
+
+        const result = await controller.updateDeposit(req2);
+
+        expect(result.currentFunds).toBe(validDeposit1.amount + updatedAmount);
+        expect(result.deposit).toEqual(updatedDeposit.toJSON());
+        expect(result.oldDeposit).toEqual(validDeposit1);
+
+        expect(updateDepositSpy).toHaveBeenCalledTimes(1);
+        expect(updateDepositSpy).toHaveBeenCalledWith(updatedDeposit);
+
+        expect(getBudgetSpy).toHaveBeenCalledTimes(2);
+        expect(getBudgetSpy).toHaveBeenCalledWith(budgetId);
+
+        expect(updateBudgetSpy).toHaveBeenCalledTimes(2);
+        expect(updateBudgetSpy).toHaveBeenCalledWith(
+          Budget.fromJSON({
+            ...validBudget1,
+            currentFunds: validDeposit1.amount + updatedAmount,
+          }),
+        );
+      });
+
+      test('reduces budget amount given an update with a reduced deposit amount', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+        });
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req1 = {
+          body: {
+            deposit: validDeposit1,
+          },
+        } as unknown as Request;
+
+        const updatedAmount = -25;
+
+        const updateDepositSpy = jest.spyOn(service, 'updateDeposit');
+        const getBudgetSpy = jest.spyOn(service, 'getBudget');
+        const updateBudgetSpy = jest.spyOn(service, 'updateBudget');
+
+        uuidv4.mockImplementation(() => depositId);
+
+        await controller.addDeposit(req1);
+
+        const updatedDeposit = DepositTransaction.fromJSON({
+          ...validDeposit1,
+          amount: validDeposit1.amount + updatedAmount,
+        });
+
+        const req2 = {
+          body: {
+            deposit: updatedDeposit.toJSON(),
+          },
+        } as unknown as Request;
+
+        const result = await controller.updateDeposit(req2);
+
+        expect(result.currentFunds).toBe(validDeposit1.amount + updatedAmount);
+        expect(result.deposit).toEqual(updatedDeposit.toJSON());
+        expect(result.oldDeposit).toEqual(validDeposit1);
+
+        expect(updateDepositSpy).toHaveBeenCalledTimes(1);
+        expect(updateDepositSpy).toHaveBeenCalledWith(updatedDeposit);
+
+        expect(getBudgetSpy).toHaveBeenCalledTimes(2);
+        expect(getBudgetSpy).toHaveBeenCalledWith(budgetId);
+
+        expect(updateBudgetSpy).toHaveBeenCalledTimes(2);
+        expect(updateBudgetSpy).toHaveBeenCalledWith(
+          Budget.fromJSON({
+            ...validBudget1,
+            currentFunds: validDeposit1.amount + updatedAmount,
+          }),
+        );
+      });
+
+      test('throws an error if body is not an object', async () => {});
+      test('throws an error if body cannot be parsed into a DepositTransaction', async () => {});
+      test('throws an error if the amount is lte zero', async () => {});
+      test('throws an error if updateDeposit throws an error', async () => {});
+      test('throws an error if getBudget throws an error', async () => {});
+      test('throws an error if updateBudget throws an error', async () => {});
+    });
+
+    describe('deleteDeposit', () => {
+      test('updates the budget by removing the deposit and updating the current funds', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+        });
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req1 = {
+          body: {
+            deposit: validDeposit1,
+          },
+        } as unknown as Request;
+
+        const deleteDepositSpy = jest.spyOn(service, 'deleteDeposit');
+        const getBudgetSpy = jest.spyOn(service, 'getBudget');
+        const updateBudgetSpy = jest.spyOn(service, 'updateBudget');
+
+        uuidv4.mockImplementation(() => depositId);
+
+        await controller.addDeposit(req1);
+
+        const req2 = {
+          body: {
+            depositId,
+          },
+        } as unknown as Request;
+
+        const result = await controller.deleteDeposit(req2);
+
+        expect(result.currentFunds).toBe(0);
+        expect(result.deposit).toEqual(validDeposit1);
+
+        expect(deleteDepositSpy).toHaveBeenCalledTimes(1);
+        expect(deleteDepositSpy).toHaveBeenCalledWith(depositId);
+
+        expect(getBudgetSpy).toHaveBeenCalledTimes(2);
+        expect(getBudgetSpy).toHaveBeenCalledWith(budgetId);
+
+        expect(updateBudgetSpy).toHaveBeenCalledTimes(2);
+        expect(updateBudgetSpy).toHaveBeenCalledWith(
+          Budget.fromJSON({
+            ...validBudget1,
+            currentFunds: 0,
+          }),
+        );
+      });
+
+      test('throws an error if body is not an object', async () => {});
+      test('throws an error if depositId is not a string', async () => {});
+      test('throws an error if deleteDeposit throws an error', async () => {});
+      test('throws an error if getBudget throws an error', async () => {});
+      test('throws an error if updateBudget throws an error', async () => {});
     });
   });
 
-  describe('addDeposit', () => {});
-  describe('updateDeposit', () => {});
-  describe('deleteDeposit', () => {});
+  describe('withdrawals', () => {
+    describe('getWithdrawals', () => {
+      test('gets budgets from the BudgetService', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1, budget2],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+          deposits: [deposit1, deposit2],
+          withdrawals: [withdrawal1, withdrawal2],
+          reconciliations: [reconciliation1, reconciliation2],
+        });
+        const loggerService = new LoggerService();
 
-  describe('getWithdrawals', () => {
-    test('gets budgets from the BudgetService', async () => {
-      const service = new InMemoryBudgetService({
-        budgets: [budget1, budget2],
-        categories: [category1, category2],
-        expenses: [expense1, expense2],
-        deposits: [deposit1, deposit2],
-        withdrawals: [withdrawal1, withdrawal2],
-        reconciliations: [reconciliation1, reconciliation2],
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          query: {
+            budgetId,
+            startDate: '2024-01-01',
+            endDate: '2024-01-31',
+          },
+        } as unknown as Request;
+
+        const response = await controller.getWithdrawals(req);
+
+        expect(response.withdrawals).toHaveLength(2);
+        expect(response.withdrawals).toContainEqual(validWithdrawal1);
+        expect(response.withdrawals).toContainEqual(validWithdrawal2);
       });
-      const loggerService = new LoggerService();
 
-      const controller = new BudgetController(service, loggerService);
+      test('throws an error if the budgetId or dates are missing or not a valid string', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1, budget2],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+          deposits: [deposit1, deposit2],
+          withdrawals: [withdrawal1, withdrawal2],
+          reconciliations: [reconciliation1, reconciliation2],
+        });
+        const loggerService = new LoggerService();
 
-      const req = {
-        query: {
+        const controller = new BudgetController(service, loggerService);
+
+        const validQuery: Record<string, unknown> = {
           budgetId,
           startDate: '2024-01-01',
           endDate: '2024-01-31',
-        },
-      } as unknown as Request;
+        };
 
-      const response = await controller.getWithdrawals(req);
+        let invalidQuery = { ...validQuery };
+        let req = {
+          query: invalidQuery,
+        } as unknown as Request;
 
-      expect(response.withdrawals).toHaveLength(2);
-      expect(response.withdrawals).toContainEqual(validWithdrawal1);
-      expect(response.withdrawals).toContainEqual(validWithdrawal2);
+        invalidQuery = { ...validQuery };
+        invalidQuery.budgetId = 1;
+        req = {
+          query: invalidQuery,
+        } as unknown as Request;
+
+        await expect(() => controller.getWithdrawals(req)).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+
+        invalidQuery = { ...validQuery };
+        delete invalidQuery.budgetId;
+        req = {
+          query: invalidQuery,
+        } as unknown as Request;
+
+        await expect(() => controller.getWithdrawals(req)).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+
+        invalidQuery = { ...validQuery };
+        invalidQuery.startDate = '1';
+        req = {
+          query: invalidQuery,
+        } as unknown as Request;
+
+        await expect(() => controller.getWithdrawals(req)).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+
+        invalidQuery = { ...validQuery };
+        delete invalidQuery.startDate;
+        req = {
+          query: invalidQuery,
+        } as unknown as Request;
+
+        await expect(() => controller.getWithdrawals(req)).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+
+        invalidQuery = { ...validQuery };
+        invalidQuery.endDate = '1';
+        req = {
+          query: invalidQuery,
+        } as unknown as Request;
+
+        await expect(() => controller.getWithdrawals(req)).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+
+        invalidQuery = { ...validQuery };
+        delete invalidQuery.endDate;
+        req = {
+          query: invalidQuery,
+        } as unknown as Request;
+
+        await expect(() => controller.getWithdrawals(req)).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+      });
+
+      test('throws an error if getWithdrawals throws an error', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1, budget2],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+          deposits: [deposit1, deposit2],
+          withdrawals: [withdrawal1, withdrawal2],
+          reconciliations: [reconciliation1, reconciliation2],
+        });
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          query: {
+            budgetId,
+            startDate: '2024-01-01',
+            endDate: '2024-01-31',
+          },
+        } as unknown as Request;
+
+        jest
+          .spyOn(service, 'getWithdrawals')
+          .mockRejectedValue(new Error('Test Error'));
+
+        await expect(() => controller.getWithdrawals(req)).rejects.toThrow(
+          new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+        );
+      });
     });
 
-    test('throws an error if the budgetId or dates are missing or not a valid string', async () => {
-      const service = new InMemoryBudgetService({
-        budgets: [budget1, budget2],
-        categories: [category1, category2],
-        expenses: [expense1, expense2],
-        deposits: [deposit1, deposit2],
-        withdrawals: [withdrawal1, withdrawal2],
-        reconciliations: [reconciliation1, reconciliation2],
-      });
-      const loggerService = new LoggerService();
-
-      const controller = new BudgetController(service, loggerService);
-
-      const validQuery: Record<string, unknown> = {
-        budgetId,
-        startDate: '2024-01-01',
-        endDate: '2024-01-31',
-      };
-
-      let invalidQuery = { ...validQuery };
-      let req = {
-        query: invalidQuery,
-      } as unknown as Request;
-
-      invalidQuery = { ...validQuery };
-      invalidQuery.budgetId = 1;
-      req = {
-        query: invalidQuery,
-      } as unknown as Request;
-
-      await expect(() => controller.getWithdrawals(req)).rejects.toThrow(
-        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
-      );
-
-      invalidQuery = { ...validQuery };
-      delete invalidQuery.budgetId;
-      req = {
-        query: invalidQuery,
-      } as unknown as Request;
-
-      await expect(() => controller.getWithdrawals(req)).rejects.toThrow(
-        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
-      );
-
-      invalidQuery = { ...validQuery };
-      invalidQuery.startDate = '1';
-      req = {
-        query: invalidQuery,
-      } as unknown as Request;
-
-      await expect(() => controller.getWithdrawals(req)).rejects.toThrow(
-        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
-      );
-
-      invalidQuery = { ...validQuery };
-      delete invalidQuery.startDate;
-      req = {
-        query: invalidQuery,
-      } as unknown as Request;
-
-      await expect(() => controller.getWithdrawals(req)).rejects.toThrow(
-        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
-      );
-
-      invalidQuery = { ...validQuery };
-      invalidQuery.endDate = '1';
-      req = {
-        query: invalidQuery,
-      } as unknown as Request;
-
-      await expect(() => controller.getWithdrawals(req)).rejects.toThrow(
-        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
-      );
-
-      invalidQuery = { ...validQuery };
-      delete invalidQuery.endDate;
-      req = {
-        query: invalidQuery,
-      } as unknown as Request;
-
-      await expect(() => controller.getWithdrawals(req)).rejects.toThrow(
-        new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
-      );
+    const budget = Budget.fromJSON({
+      ...budget1.toJSON(),
+      currentFunds: 100,
     });
 
-    test('throws an error if getWithdrawals throws an error', async () => {
-      const service = new InMemoryBudgetService({
-        budgets: [budget1, budget2],
-        categories: [category1, category2],
-        expenses: [expense1, expense2],
-        deposits: [deposit1, deposit2],
-        withdrawals: [withdrawal1, withdrawal2],
-        reconciliations: [reconciliation1, reconciliation2],
+    describe('addWithdrawal', () => {
+      test('adds a withdrawal, calculates the balance, and returns the withdrawal', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+        });
+
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          body: {
+            withdrawal: validWithdrawal1,
+          },
+        } as unknown as Request;
+
+        const addWithdrawalSpy = jest.spyOn(service, 'addWithdrawal');
+        const getBudgetSpy = jest.spyOn(service, 'getBudget');
+        const updateBudgetSpy = jest.spyOn(service, 'updateBudget');
+
+        uuidv4.mockImplementation(() => withdrawalId);
+
+        const response = await controller.addWithdrawal(req);
+
+        expect(response.withdrawal).toEqual(validWithdrawal1);
+        expect(response.currentFunds).toBe(
+          budget.currentFunds - validWithdrawal1.amount,
+        );
+
+        expect(response.currentFunds).toBeLessThan(budget.currentFunds);
+
+        expect(addWithdrawalSpy).toHaveBeenCalledTimes(1);
+        expect(addWithdrawalSpy).toHaveBeenCalledWith(withdrawal1);
+
+        expect(getBudgetSpy).toHaveBeenCalledTimes(1);
+        expect(getBudgetSpy).toHaveBeenCalledWith(budgetId);
+
+        expect(updateBudgetSpy).toHaveBeenCalledTimes(1);
+        expect(updateBudgetSpy).toHaveBeenCalledWith(
+          Budget.fromJSON({
+            ...budget.toJSON(),
+            currentFunds: budget.currentFunds - validWithdrawal1.amount,
+          }),
+        );
       });
-      const loggerService = new LoggerService();
 
-      const controller = new BudgetController(service, loggerService);
+      test('adds a withdrawal to a budget with existing withdrawals, calculates the balance, and returns the withdrawal', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+        });
 
-      const req = {
-        query: {
-          budgetId,
-          startDate: '2024-01-01',
-          endDate: '2024-01-31',
-        },
-      } as unknown as Request;
+        const loggerService = new LoggerService();
 
-      jest
-        .spyOn(service, 'getWithdrawals')
-        .mockRejectedValue(new Error('Test Error'));
+        const controller = new BudgetController(service, loggerService);
 
-      await expect(() => controller.getWithdrawals(req)).rejects.toThrow(
-        new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
-      );
+        const req1 = {
+          body: {
+            withdrawal: validWithdrawal1,
+          },
+        } as unknown as Request;
+        const req2 = {
+          body: {
+            withdrawal: validWithdrawal2,
+          },
+        } as unknown as Request;
+
+        const addWithdrawalSpy = jest.spyOn(service, 'addWithdrawal');
+        const getBudgetSpy = jest.spyOn(service, 'getBudget');
+        const updateBudgetSpy = jest.spyOn(service, 'updateBudget');
+
+        uuidv4.mockImplementation(() => withdrawalId);
+
+        await controller.addWithdrawal(req1);
+
+        const result = await controller.addWithdrawal(req2);
+
+        expect(result.currentFunds).toBe(
+          budget.currentFunds -
+            validWithdrawal1.amount -
+            validWithdrawal2.amount,
+        );
+
+        expect(addWithdrawalSpy).toHaveBeenCalledTimes(2);
+        expect(getBudgetSpy).toHaveBeenCalledTimes(2);
+        expect(updateBudgetSpy).toHaveBeenCalledTimes(2);
+      });
+
+      test('throws an error if body is not an object', async () => {});
+      test('throws an error if body cannot be parsed into a WithdrawalTransaction', async () => {});
+      test('throws an error if the amount is lte zero', async () => {});
+      test('throws an error if addDeposit throws an error', async () => {});
+      test('throws an error if getBudget throws an error', async () => {});
+      test('throws an error if updateBudget throws an error', async () => {});
+    });
+
+    describe('updateWithdrawal', () => {
+      test('updates the budget in the service and updates current funds given a budget with an existing withdrawal', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+        });
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req1 = {
+          body: {
+            withdrawal: validWithdrawal1,
+          },
+        } as unknown as Request;
+
+        const updatedAmount = 20;
+
+        const updateWithdrawalSpy = jest.spyOn(service, 'updateWithdrawal');
+        const getBudgetSpy = jest.spyOn(service, 'getBudget');
+        const updateBudgetSpy = jest.spyOn(service, 'updateBudget');
+
+        uuidv4.mockImplementation(() => withdrawalId);
+
+        const result1 = await controller.addWithdrawal(req1);
+        expect(result1.currentFunds).toBe(
+          budget.currentFunds - validWithdrawal1.amount,
+        );
+
+        const updatedWithdrawal = WithdrawalTransaction.fromJSON({
+          ...validWithdrawal1,
+          amount: validWithdrawal1.amount + updatedAmount,
+        });
+
+        const req2 = {
+          body: {
+            withdrawal: updatedWithdrawal.toJSON(),
+          },
+        } as unknown as Request;
+
+        const result2 = await controller.updateWithdrawal(req2);
+
+        const updatedFunds = -(
+          updatedWithdrawal.amount - validWithdrawal1.amount
+        );
+
+        expect(result2.currentFunds).toBe(
+          budget.currentFunds - updatedWithdrawal.amount,
+        );
+        expect(result2.currentFunds).toBe(result1.currentFunds + updatedFunds);
+        expect(result2.withdrawal).toEqual(updatedWithdrawal.toJSON());
+        expect(result2.oldWithdrawal).toEqual(validWithdrawal1);
+
+        expect(result2.currentFunds).toBeLessThan(result1.currentFunds);
+
+        expect(updateWithdrawalSpy).toHaveBeenCalledTimes(1);
+        expect(getBudgetSpy).toHaveBeenCalledTimes(2);
+        expect(updateBudgetSpy).toHaveBeenCalledTimes(2);
+      });
+
+      test('reduces budget amount given an update with a reduced withdrawal amount', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+        });
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req1 = {
+          body: {
+            withdrawal: validWithdrawal1,
+          },
+        } as unknown as Request;
+
+        const updatedAmount = -10;
+
+        const updateWithdrawalSpy = jest.spyOn(service, 'updateWithdrawal');
+        const getBudgetSpy = jest.spyOn(service, 'getBudget');
+        const updateBudgetSpy = jest.spyOn(service, 'updateBudget');
+
+        uuidv4.mockImplementation(() => withdrawalId);
+
+        const result1 = await controller.addWithdrawal(req1);
+        expect(result1.currentFunds).toBe(
+          budget.currentFunds - validWithdrawal1.amount,
+        );
+
+        const updatedWithdrawal = WithdrawalTransaction.fromJSON({
+          ...validWithdrawal1,
+          amount: validWithdrawal1.amount + updatedAmount,
+        });
+
+        const req2 = {
+          body: {
+            withdrawal: updatedWithdrawal.toJSON(),
+          },
+        } as unknown as Request;
+
+        const result2 = await controller.updateWithdrawal(req2);
+
+        const updatedFunds = -(
+          updatedWithdrawal.amount - validWithdrawal1.amount
+        );
+
+        expect(result2.currentFunds).toBe(
+          budget.currentFunds - updatedWithdrawal.amount,
+        );
+        expect(result2.currentFunds).toBe(result1.currentFunds + updatedFunds);
+        expect(result2.withdrawal).toEqual(updatedWithdrawal.toJSON());
+        expect(result2.oldWithdrawal).toEqual(validWithdrawal1);
+
+        expect(result2.currentFunds).toBeGreaterThan(result1.currentFunds);
+
+        expect(updateWithdrawalSpy).toHaveBeenCalledTimes(1);
+        expect(getBudgetSpy).toHaveBeenCalledTimes(2);
+        expect(updateBudgetSpy).toHaveBeenCalledTimes(2);
+      });
+
+      test('throws an error if body is not an object', async () => {});
+      test('throws an error if body cannot be parsed into a WithdrawalTransaction', async () => {});
+      test('throws an error if the amount is lte zero', async () => {});
+      test('throws an error if updateDeposit throws an error', async () => {});
+      test('throws an error if getBudget throws an error', async () => {});
+      test('throws an error if updateBudget throws an error', async () => {});
+    });
+
+    describe('deleteWithdrawal', () => {
+      test('updates the budget by removing the withdrawal and updating the current funds', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+        });
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req1 = {
+          body: {
+            withdrawal: validWithdrawal1,
+          },
+        } as unknown as Request;
+
+        uuidv4.mockImplementation(() => withdrawalId);
+
+        const result1 = await controller.addWithdrawal(req1);
+        expect(result1.currentFunds).toBe(
+          budget.currentFunds - validWithdrawal1.amount,
+        );
+
+        const deleteWithdrawalSpy = jest.spyOn(service, 'deleteWithdrawal');
+        const getBudgetSpy = jest.spyOn(service, 'getBudget');
+        const updateBudgetSpy = jest.spyOn(service, 'updateBudget');
+
+        const req2 = {
+          body: {
+            withdrawalId,
+          },
+        } as unknown as Request;
+
+        const result = await controller.deleteWithdrawal(req2);
+
+        expect(result.currentFunds).toBe(budget.currentFunds);
+        expect(result.withdrawal).toEqual(validWithdrawal1);
+
+        expect(result.currentFunds).toBe(
+          result1.currentFunds + validWithdrawal1.amount,
+        );
+
+        expect(deleteWithdrawalSpy).toHaveBeenCalledTimes(1);
+        expect(deleteWithdrawalSpy).toHaveBeenCalledWith(withdrawalId);
+
+        expect(getBudgetSpy).toHaveBeenCalledTimes(1);
+        expect(getBudgetSpy).toHaveBeenCalledWith(budgetId);
+
+        expect(updateBudgetSpy).toHaveBeenCalledTimes(1);
+        expect(updateBudgetSpy).toHaveBeenCalledWith(
+          Budget.fromJSON({
+            ...budget.toJSON(),
+            currentFunds: budget.currentFunds,
+          }),
+        );
+      });
+
+      test('throws an error if body is not an object', async () => {});
+      test('throws an error if depositId is not a string', async () => {});
+      test('throws an error if deleteDeposit throws an error', async () => {});
+      test('throws an error if getBudget throws an error', async () => {});
+      test('throws an error if updateBudget throws an error', async () => {});
     });
   });
-
-  describe('addWithdrawal', () => {});
-  describe('updateWithdrawal', () => {});
-  describe('deleteWithdrawal', () => {});
 });

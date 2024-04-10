@@ -78,13 +78,16 @@ interface GetDepositsResponse {
 }
 interface AddDepositResponse {
   deposit: DepositTransactionJSON;
+  currentFunds: number;
 }
 interface UpdateDepositResponse {
   deposit: DepositTransactionJSON;
   oldDeposit: DepositTransactionJSON;
+  currentFunds: number;
 }
 interface DeleteDepositResponse {
   deposit: DepositTransactionJSON;
+  currentFunds: number;
 }
 
 interface GetWithdrawalsResponse {
@@ -92,13 +95,16 @@ interface GetWithdrawalsResponse {
 }
 interface AddWithdrawalResponse {
   withdrawal: WithdrawalTransactionJSON;
+  currentFunds: number;
 }
 interface UpdateWithdrawalResponse {
   withdrawal: WithdrawalTransactionJSON;
   oldWithdrawal: WithdrawalTransactionJSON;
+  currentFunds: number;
 }
 interface DeleteWithdrawalResponse {
   withdrawal: WithdrawalTransactionJSON;
+  currentFunds: number;
 }
 
 @UseInterceptors(RequestLogInterceptor)
@@ -402,11 +408,26 @@ export class BudgetController {
         throw new InvalidInputError('Invalid Deposit Input');
       }
 
-      const deposit = DepositTransaction.fromJSON(body.deposit);
+      const depositToAdd = DepositTransaction.fromJSON(body.deposit);
 
-      const res = await this.budgetService.addDeposit(deposit);
+      if (depositToAdd.amount <= 0) {
+        throw new InvalidInputError('Invalid Deposit Amount');
+      }
 
-      return { deposit: res.toJSON() };
+      const [deposit, budget] = await Promise.all([
+        this.budgetService.addDeposit(depositToAdd),
+        this.budgetService.getBudget(depositToAdd.budgetId),
+      ]);
+
+      const addedFunds = deposit.amount;
+      const updatedBudget = budget.updateFunds(addedFunds);
+
+      await this.budgetService.updateBudget(updatedBudget);
+
+      return {
+        deposit: deposit.toJSON(),
+        currentFunds: updatedBudget.currentFunds,
+      };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
@@ -421,11 +442,30 @@ export class BudgetController {
         throw new InvalidInputError('Invalid Deposit Input');
       }
 
-      const deposit = DepositTransaction.fromJSON(body.deposit);
+      const depositToUpdate = DepositTransaction.fromJSON(body.deposit);
 
-      const res = await this.budgetService.updateDeposit(deposit);
+      if (depositToUpdate.amount <= 0) {
+        throw new InvalidInputError('Invalid Deposit Amount');
+      }
 
-      return { oldDeposit: res.toJSON(), deposit: deposit.toJSON() };
+      const [deposit, budget] = await Promise.all([
+        this.budgetService.updateDeposit(depositToUpdate),
+        this.budgetService.getBudget(depositToUpdate.budgetId),
+      ]);
+
+      // If update is less than the original amount, fundsDif will be positive and we need
+      // to add it to the current funds. If update is more than the original amount, fundsDif
+      // will be negative and we need to subtract it from the current funds.
+      const fundsDif = depositToUpdate.amount - deposit.amount;
+      const updatedBudget = budget.updateFunds(fundsDif);
+
+      await this.budgetService.updateBudget(updatedBudget);
+
+      return {
+        oldDeposit: deposit.toJSON(),
+        deposit: depositToUpdate.toJSON(),
+        currentFunds: updatedBudget.currentFunds,
+      };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
@@ -442,7 +482,15 @@ export class BudgetController {
 
       const res = await this.budgetService.deleteDeposit(body.depositId);
 
-      return { deposit: res.toJSON() };
+      const budget = await this.budgetService.getBudget(res.budgetId);
+      const updatedBudget = budget.updateFunds(-res.amount);
+
+      await this.budgetService.updateBudget(updatedBudget);
+
+      return {
+        deposit: res.toJSON(),
+        currentFunds: updatedBudget.currentFunds,
+      };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
@@ -497,11 +545,22 @@ export class BudgetController {
         throw new InvalidInputError('Invalid Withdrawal Input');
       }
 
-      const withdrawal = WithdrawalTransaction.fromJSON(body.withdrawal);
+      const withdrawalToAdd = WithdrawalTransaction.fromJSON(body.withdrawal);
 
-      const res = await this.budgetService.addWithdrawal(withdrawal);
+      const [withdrawal, budget] = await Promise.all([
+        this.budgetService.addWithdrawal(withdrawalToAdd),
+        this.budgetService.getBudget(withdrawalToAdd.budgetId),
+      ]);
 
-      return { withdrawal: res.toJSON() };
+      const addedFunds = -withdrawal.amount;
+      const updatedBudget = budget.updateFunds(addedFunds);
+
+      await this.budgetService.updateBudget(updatedBudget);
+
+      return {
+        withdrawal: withdrawal.toJSON(),
+        currentFunds: updatedBudget.currentFunds,
+      };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
@@ -518,11 +577,28 @@ export class BudgetController {
         throw new InvalidInputError('Invalid Withdrawal Input');
       }
 
-      const withdrawal = WithdrawalTransaction.fromJSON(body.withdrawal);
+      const withdrawalToUpdate = WithdrawalTransaction.fromJSON(
+        body.withdrawal,
+      );
 
-      const res = await this.budgetService.updateWithdrawal(withdrawal);
+      const [withdrawal, budget] = await Promise.all([
+        this.budgetService.updateWithdrawal(withdrawalToUpdate),
+        this.budgetService.getBudget(withdrawalToUpdate.budgetId),
+      ]);
 
-      return { oldWithdrawal: res.toJSON(), withdrawal: withdrawal.toJSON() };
+      // If update is less than the original amount, fundsDif will be positive and we need
+      // to add it to the current funds. If update is more than the original amount, fundsDif
+      // will be negative and we need to subtract it from the current funds.
+      const fundsDif = withdrawalToUpdate.amount - withdrawal.amount;
+      const updatedBudget = budget.updateFunds(-fundsDif);
+
+      await this.budgetService.updateBudget(updatedBudget);
+
+      return {
+        oldWithdrawal: withdrawal.toJSON(),
+        withdrawal: withdrawalToUpdate.toJSON(),
+        currentFunds: updatedBudget.currentFunds,
+      };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
@@ -539,9 +615,18 @@ export class BudgetController {
         throw new InvalidInputError('Invalid Withdrawal Input');
       }
 
-      const res = await this.budgetService.deleteWithdrawal(body.withdrawalId);
+      const withdrawal = await this.budgetService.deleteWithdrawal(
+        body.withdrawalId,
+      );
+      const budget = await this.budgetService.getBudget(withdrawal.budgetId);
 
-      return { withdrawal: res.toJSON() };
+      const updatedBudget = budget.updateFunds(withdrawal.amount);
+      await this.budgetService.updateBudget(updatedBudget);
+
+      return {
+        withdrawal: withdrawal.toJSON(),
+        currentFunds: updatedBudget.currentFunds,
+      };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);
     }
