@@ -12,7 +12,11 @@ import { RequestLogInterceptor } from '@/src/middleware/request_log.interceptor'
 import { BudgetService } from '@/src/budget/services/budget.service';
 import { LoggerService } from '@/src/logger/logger.service';
 import { pageAndPagination } from '@/src/utils/page_and_pagination';
-import { isRecord, isString } from '@/src/utils/type_guards';
+import {
+  isRecord,
+  isString,
+  isValidDateTimeString,
+} from '@/src/utils/type_guards';
 import { InvalidInputError } from '@/src/errors';
 import { commonErrorHandler } from '@/src/utils/common_error_handler';
 import { Budget, BudgetJSON } from '@/src/budget/models/budget';
@@ -26,7 +30,6 @@ import {
   DepositTransaction,
   DepositTransactionJSON,
 } from '@/src/budget/models/deposit_transaction';
-import { isValidDateString } from '@/src/utils/valid_date';
 
 interface GetBudgetsResponse {
   budgets: BudgetJSON[];
@@ -367,7 +370,10 @@ export class BudgetController {
         throw new InvalidInputError('Invalid User Id');
       }
 
-      if (!isValidDateString(startDate) || !isValidDateString(endDate)) {
+      if (
+        !isValidDateTimeString(startDate) ||
+        !isValidDateTimeString(endDate)
+      ) {
         throw new InvalidInputError('Invalid Dates');
       }
 
@@ -459,7 +465,10 @@ export class BudgetController {
         throw new InvalidInputError('Invalid User Id');
       }
 
-      if (!isValidDateString(startDate) || !isValidDateString(endDate)) {
+      if (
+        !isValidDateTimeString(startDate) ||
+        !isValidDateTimeString(endDate)
+      ) {
         throw new InvalidInputError('Invalid Dates');
       }
 
@@ -537,4 +546,6 @@ export class BudgetController {
       throw await commonErrorHandler(e, this.loggerService);
     }
   }
+
+  // TODO Reconciliations
 }

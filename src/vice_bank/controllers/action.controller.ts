@@ -96,7 +96,7 @@ export class ActionController {
       const { body } = request;
 
       if (!isRecord(body)) {
-        throw new InvalidInputError('Invalid Deposit Conversion Input');
+        throw new InvalidInputError('Invalid Action Input');
       }
 
       const action = Action.fromJSON(body.action);

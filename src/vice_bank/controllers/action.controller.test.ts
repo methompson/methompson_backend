@@ -198,7 +198,7 @@ describe('ActionController', () => {
   });
 
   describe('addAction', () => {
-    test('adds a deposit conversion using the ActionsService', async () => {
+    test('adds an action using the ActionsService', async () => {
       const service = new InMemoryActionService();
       const loggerService = new LoggerService();
 
@@ -281,7 +281,7 @@ describe('ActionController', () => {
   });
 
   describe('updateAction', () => {
-    test('updates a deposit conversion using the ActionsService', async () => {
+    test('updates an action using the ActionsService', async () => {
       const service = new InMemoryActionService({ actions: [action1] });
       const loggerService = new LoggerService();
 
@@ -368,7 +368,7 @@ describe('ActionController', () => {
   });
 
   describe('deleteAction', () => {
-    test('deletes a deposit conversion using the ActionsService', async () => {
+    test('deletes an action using the ActionsService', async () => {
       const service = new InMemoryActionService({ actions: [action1] });
       const loggerService = new LoggerService();
 
