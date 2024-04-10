@@ -2,6 +2,7 @@ import {
   ExpenseTarget,
   ExpenseTargetJSON,
 } from '@/src/budget/models/expense_target';
+import { InvalidInputError } from '@/src/errors';
 import { isNumber, isRecord, isString } from '@/src/utils/type_guards';
 
 export interface ExpenseJSON {
@@ -64,7 +65,7 @@ export class Expense {
   static fromJSON(input: unknown): Expense {
     if (!Expense.isExpenseJSON(input)) {
       const errors = Expense.expenseJSONTest(input);
-      throw new Error(`Invalid JSON ${errors.join(', ')}`);
+      throw new InvalidInputError(`Invalid JSON ${errors.join(', ')}`);
     }
 
     const { id, budgetId, categoryId, description, amount, expenseTarget } =

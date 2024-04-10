@@ -1,3 +1,4 @@
+import { InvalidInputError } from '@/src/errors';
 import { isRecord, isString } from '@/src/utils/type_guards';
 
 export interface CategoryJSON {
@@ -37,7 +38,7 @@ export class Category {
   static fromJSON(input: unknown): Category {
     if (!Category.isCategoryJSON(input)) {
       const errors = Category.categoryJSONTest(input);
-      throw new Error(`Invalid JSON ${errors.join(', ')}`);
+      throw new InvalidInputError(`Invalid JSON ${errors.join(', ')}`);
     }
 
     return new Category(input.id, input.budgetId, input.name);

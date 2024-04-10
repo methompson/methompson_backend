@@ -2,6 +2,7 @@ import { DateTime } from 'luxon';
 
 import { isNumber, isRecord, isString } from '@/src/utils/type_guards';
 import { isValidDateString } from '@/src/utils/valid_date';
+import { InvalidInputError } from '@/src/errors';
 
 export interface DepositTransactionJSON {
   id: string;
@@ -61,14 +62,14 @@ export class DepositTransaction {
   static fromJSON(input: unknown): DepositTransaction {
     if (!DepositTransaction.isDepositTransactionJSON(input)) {
       const errors = DepositTransaction.depositTransactionTest(input);
-      throw new Error(`Invalid JSON ${errors.join(', ')}`);
+      throw new InvalidInputError(`Invalid JSON ${errors.join(', ')}`);
     }
 
     const { id, budgetId, description, dateTime: date, amount } = input;
 
     const dt = DateTime.fromISO(date, { zone: 'America/Chicago' });
     if (!dt.isValid) {
-      throw new Error(`Invalid date: ${date}`);
+      throw new InvalidInputError(`Invalid date: ${date}`);
     }
 
     return new DepositTransaction(id, budgetId, description, dt, amount);

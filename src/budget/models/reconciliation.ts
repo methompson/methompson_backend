@@ -2,6 +2,7 @@ import { DateTime } from 'luxon';
 
 import { isNumber, isRecord, isString } from '@/src/utils/type_guards';
 import { isValidDateString } from '@/src/utils/valid_date';
+import { InvalidInputError } from '@/src/errors';
 
 export interface ReconciliationJSON {
   id: string;
@@ -56,13 +57,13 @@ export class Reconciliation {
   static fromJSON(input: unknown): Reconciliation {
     if (!Reconciliation.isReconciliationJSON(input)) {
       const errors = Reconciliation.reconciliationJSONTest(input);
-      throw new Error(`Invalid JSON ${errors.join(', ')}`);
+      throw new InvalidInputError(`Invalid JSON ${errors.join(', ')}`);
     }
 
     const dt = DateTime.fromISO(input.date, { zone: 'America/Chicago' });
 
     if (!dt.isValid) {
-      throw new Error(`Invalid date, ${input.date}`);
+      throw new InvalidInputError(`Invalid date, ${input.date}`);
     }
 
     return new Reconciliation(input.id, input.budgetId, dt, input.balance);

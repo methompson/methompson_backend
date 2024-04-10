@@ -1,3 +1,4 @@
+import { InvalidInputError } from '@/src/errors';
 import { isNumber, isRecord, isString } from '@/src/utils/type_guards';
 
 export interface BudgetJSON {
@@ -50,7 +51,7 @@ export class Budget {
   static fromJSON(input: unknown): Budget {
     if (!Budget.isBudgetJSON(input)) {
       const errors = Budget.budgetJSONTest(input);
-      throw new Error(`Invalid JSON ${errors.join(', ')}`);
+      throw new InvalidInputError(`Invalid JSON ${errors.join(', ')}`);
     }
 
     return new Budget(input.id, input.userId, input.name, input.currentFunds);

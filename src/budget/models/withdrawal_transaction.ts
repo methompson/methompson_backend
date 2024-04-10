@@ -2,6 +2,7 @@ import { DateTime } from 'luxon';
 
 import { isNumber, isRecord, isString } from '@/src/utils/type_guards';
 import { isValidDateString } from '@/src/utils/valid_date';
+import { InvalidInputError } from '@/src/errors';
 
 // All numeric values should be in CENTS, not dollars
 
@@ -67,7 +68,7 @@ export class WithdrawalTransaction {
   static fromJSON(input: unknown): WithdrawalTransaction {
     if (!WithdrawalTransaction.isWithdrawalTransactionJSON(input)) {
       const errors = WithdrawalTransaction.withdrawalTransactionTest(input);
-      throw new Error(`Invalid JSON ${errors.join(', ')}`);
+      throw new InvalidInputError(`Invalid JSON ${errors.join(', ')}`);
     }
 
     const {
@@ -81,7 +82,7 @@ export class WithdrawalTransaction {
 
     const dt = DateTime.fromISO(date, { zone: 'America/Chicago' });
     if (!dt.isValid) {
-      throw new Error(`Invalid date: ${date}`);
+      throw new InvalidInputError(`Invalid date: ${date}`);
     }
 
     return new WithdrawalTransaction(

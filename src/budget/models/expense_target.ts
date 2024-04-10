@@ -2,6 +2,7 @@ import { DateTime } from 'luxon';
 
 import { isNumber, isRecord, isString } from '@/src/utils/type_guards';
 import { isValidDateString } from '@/src/utils/valid_date';
+import { InvalidInputError } from '@/src/errors';
 
 export enum ExpenseTargetType {
   Weekly = 'weekly',
@@ -19,7 +20,7 @@ export function expenseTargetTypeFromString(input: string): ExpenseTargetType {
     case 'dated':
       return ExpenseTargetType.Dated;
     default:
-      throw new Error('Invalid ExpenseTargetType');
+      throw new InvalidInputError('Invalid ExpenseTargetType');
   }
 }
 
@@ -47,7 +48,7 @@ export abstract class ExpenseTarget {
   static fromJSON(json: unknown): ExpenseTarget {
     if (!ExpenseTarget.isExpenseTargetJSON(json)) {
       const errors = ExpenseTarget.expenseTargetJSONTest(json);
-      throw new Error(`Invalid JSON ${errors.join(', ')}`);
+      throw new InvalidInputError(`Invalid JSON ${errors.join(', ')}`);
     }
 
     switch (json.type) {
@@ -58,7 +59,7 @@ export abstract class ExpenseTarget {
       case ExpenseTargetType.Dated:
         return DatedExpenseTarget.fromJSON(json);
       default:
-        throw new Error('Invalid ExpenseTargetType');
+        throw new InvalidInputError('Invalid ExpenseTargetType');
     }
   }
 
@@ -109,18 +110,18 @@ export class WeeklyExpenseTarget extends ExpenseTarget {
   static fromJSON(input: unknown): WeeklyExpenseTarget {
     if (!WeeklyExpenseTarget.isExpenseTargetJSON(input)) {
       const errors = WeeklyExpenseTarget.expenseTargetJSONTest(input);
-      throw new Error(`Invalid JSON ${errors.join(', ')}`);
+      throw new InvalidInputError(`Invalid JSON ${errors.join(', ')}`);
     }
 
     const data = input.data;
 
     if (!WeeklyExpenseTarget.isWeeklyExpenseTargetJSON(data)) {
       const errors = WeeklyExpenseTarget.weeklyExpenseTargetJSONTest(data);
-      throw new Error(`Invalid JSON ${errors.join(', ')}`);
+      throw new InvalidInputError(`Invalid JSON ${errors.join(', ')}`);
     }
 
     if (data.dayOfWeek < 0 || data.dayOfWeek > 6) {
-      throw new Error('Invalid day of week');
+      throw new InvalidInputError('Invalid day of week');
     }
 
     return new WeeklyExpenseTarget(data.dayOfWeek);
@@ -174,18 +175,18 @@ export class MonthlyExpenseTarget extends ExpenseTarget {
   static fromJSON(input: unknown): MonthlyExpenseTarget {
     if (!MonthlyExpenseTarget.isExpenseTargetJSON(input)) {
       const errors = MonthlyExpenseTarget.expenseTargetJSONTest(input);
-      throw new Error(`Invalid JSON ${errors.join(', ')}`);
+      throw new InvalidInputError(`Invalid JSON ${errors.join(', ')}`);
     }
 
     const data = input.data;
 
     if (!MonthlyExpenseTarget.isMonthlyExpenseTargetJSON(data)) {
       const errors = MonthlyExpenseTarget.monthlyExpenseTargetJSONTest(data);
-      throw new Error(`Invalid JSON ${errors.join(', ')}`);
+      throw new InvalidInputError(`Invalid JSON ${errors.join(', ')}`);
     }
 
     if (data.dayOfMonth < -1 || data.dayOfMonth > 31) {
-      throw new Error('Invalid day of month');
+      throw new InvalidInputError('Invalid day of month');
     }
 
     return new MonthlyExpenseTarget(data.dayOfMonth);
@@ -242,20 +243,20 @@ export class DatedExpenseTarget extends ExpenseTarget {
   static fromJSON(input: unknown): DatedExpenseTarget {
     if (!DatedExpenseTarget.isExpenseTargetJSON(input)) {
       const errors = DatedExpenseTarget.expenseTargetJSONTest(input);
-      throw new Error(`Invalid JSON ${errors.join(', ')}`);
+      throw new InvalidInputError(`Invalid JSON ${errors.join(', ')}`);
     }
 
     const data = input.data;
 
     if (!DatedExpenseTarget.isDatedExpenseTargetJSON(data)) {
       const errors = DatedExpenseTarget.datedExpenseTargetJSONTest(data);
-      throw new Error(`Invalid JSON ${errors.join(', ')}`);
+      throw new InvalidInputError(`Invalid JSON ${errors.join(', ')}`);
     }
 
     const date = DateTime.fromISO(data.date, { zone: 'America/Chicago' });
 
     if (!date.isValid) {
-      throw new Error('Invalid date');
+      throw new InvalidInputError('Invalid date');
     }
 
     return new DatedExpenseTarget(date);
