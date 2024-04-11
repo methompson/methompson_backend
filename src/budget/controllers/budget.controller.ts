@@ -547,6 +547,10 @@ export class BudgetController {
 
       const withdrawalToAdd = WithdrawalTransaction.fromJSON(body.withdrawal);
 
+      if (withdrawalToAdd.amount <= 0) {
+        throw new InvalidInputError('Invalid Deposit Amount');
+      }
+
       const [withdrawal, budget] = await Promise.all([
         this.budgetService.addWithdrawal(withdrawalToAdd),
         this.budgetService.getBudget(withdrawalToAdd.budgetId),
@@ -580,6 +584,10 @@ export class BudgetController {
       const withdrawalToUpdate = WithdrawalTransaction.fromJSON(
         body.withdrawal,
       );
+
+      if (withdrawalToUpdate.amount <= 0) {
+        throw new InvalidInputError('Invalid Deposit Amount');
+      }
 
       const [withdrawal, budget] = await Promise.all([
         this.budgetService.updateWithdrawal(withdrawalToUpdate),
