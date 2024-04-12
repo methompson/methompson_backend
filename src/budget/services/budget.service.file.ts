@@ -2,7 +2,7 @@ import { join } from 'path';
 import { Injectable } from '@nestjs/common';
 
 import {
-  BudgetInputOptions,
+  type BudgetInputOptions,
   InMemoryBudgetService,
 } from './budget.service.memory';
 import { FileServiceWriter } from '@/src/utils/file_service_writer';
