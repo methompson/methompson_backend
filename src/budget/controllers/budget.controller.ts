@@ -30,6 +30,10 @@ import {
   DepositTransaction,
   DepositTransactionJSON,
 } from '@/src/budget/models/deposit_transaction';
+import {
+  Reconciliation,
+  ReconciliationJSON,
+} from '@/src/budget/models/reconciliation';
 
 interface GetBudgetsResponse {
   budgets: BudgetJSON[];
@@ -105,6 +109,16 @@ interface UpdateWithdrawalResponse {
 interface DeleteWithdrawalResponse {
   withdrawal: WithdrawalTransactionJSON;
   currentFunds: number;
+}
+
+interface GetReconciliationsResponse {
+  reconciliations: ReconciliationJSON[];
+}
+interface AddReconciliationResponse {
+  reconciliation: ReconciliationJSON;
+}
+interface DeleteReconciliationResponse {
+  reconciliation: ReconciliationJSON;
 }
 
 @UseInterceptors(RequestLogInterceptor)
@@ -641,4 +655,96 @@ export class BudgetController {
   }
 
   // TODO Reconciliations
+
+  @Get('reconciliations')
+  async getReconciliations(
+    @Req() request: Request,
+  ): Promise<GetReconciliationsResponse> {
+    const { page, pagination } = pageAndPagination(request);
+    try {
+      const budgetId = request.query?.budgetId;
+
+      if (!isString(budgetId)) {
+        throw new InvalidInputError('Invalid User Id');
+      }
+
+      const reconciliations = (
+        await this.budgetService.getReconciliations({
+          page,
+          pagination,
+          budgetId,
+        })
+      ).map((action) => action.toJSON());
+
+      return { reconciliations };
+    } catch (e) {
+      throw await commonErrorHandler(e, this.loggerService);
+    }
+  }
+
+  @Post('addReconciliation')
+  async addReconciliation(
+    @Req() request: Request,
+  ): Promise<AddReconciliationResponse> {
+    try {
+      const { body } = request;
+
+      if (!isRecord(body)) {
+        throw new InvalidInputError('Invalid Category Input');
+      }
+
+      const reconciliationToAdd = Reconciliation.fromJSON(body.reconciliation);
+
+      const [reconciliation, budget] = await Promise.all([
+        this.budgetService.addReconciliation(reconciliationToAdd),
+        this.budgetService.getBudget(reconciliationToAdd.budgetId),
+      ]);
+
+      const funds = await this.budgetService.recalculateFunds({
+        budgetId: reconciliation.budgetId,
+      });
+
+      const updatedBudget = budget.updateFunds(funds);
+
+      await this.budgetService.updateBudget(updatedBudget);
+
+      return {
+        reconciliation: reconciliation.toJSON(),
+      };
+    } catch (e) {
+      throw await commonErrorHandler(e, this.loggerService);
+    }
+  }
+
+  @Post('deleteReconciliation')
+  async deleteReconciliation(
+    @Req() request: Request,
+  ): Promise<DeleteReconciliationResponse> {
+    try {
+      const { body } = request;
+
+      if (!isRecord(body) || !isString(body.reconciliationId)) {
+        throw new InvalidInputError('Invalid Category Input');
+      }
+
+      const deletedReconciliation =
+        await this.budgetService.deleteReconciliation(body.reconciliationId);
+      const funds = await this.budgetService.recalculateFunds({
+        budgetId: deletedReconciliation.budgetId,
+      });
+
+      const budget = await this.budgetService.getBudget(
+        deletedReconciliation.budgetId,
+      );
+      const updatedBudget = budget.updateFunds(funds);
+
+      await this.budgetService.updateBudget(updatedBudget);
+
+      return {
+        reconciliation: deletedReconciliation.toJSON(),
+      };
+    } catch (e) {
+      throw await commonErrorHandler(e, this.loggerService);
+    }
+  }
 }

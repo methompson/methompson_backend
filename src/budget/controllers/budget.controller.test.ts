@@ -110,7 +110,7 @@ const validWithdrawal1: WithdrawalTransactionJSON = {
   budgetId,
   expenseId,
   description: 'Withdrawal',
-  dateTime: '2024-01-25T12:00:00.000-06:00',
+  dateTime: '2024-01-20T12:00:00.000-06:00',
   amount: 25,
 };
 
@@ -119,7 +119,7 @@ const validWithdrawal2: WithdrawalTransactionJSON = {
   budgetId,
   expenseId,
   description: 'Withdrawal 2',
-  dateTime: '2024-01-25T12:01:00.000-06:00',
+  dateTime: '2024-01-25T12:00:00.000-06:00',
   amount: 32,
 };
 
@@ -138,7 +138,7 @@ const validDeposit2: DepositTransactionJSON = {
   id: 'depositId2',
   budgetId,
   description: 'Deposit 2',
-  dateTime: '2024-01-20T12:01:00.000-06:00',
+  dateTime: '2024-01-21T12:00:00.000-06:00',
   amount: 100,
 };
 
@@ -150,13 +150,13 @@ const reconciliationId = 'reconciliationId1';
 const validReconciliation1: ReconciliationJSON = {
   id: reconciliationId,
   budgetId,
-  date: '2024-01-22',
+  date: '2024-01-21',
   balance: 300,
 };
 const validReconciliation2: ReconciliationJSON = {
   id: 'reconciliationId2',
   budgetId,
-  date: '2024-01-20',
+  date: '2024-01-25',
   balance: 300,
 };
 
@@ -1202,7 +1202,7 @@ describe('Budget Controller', () => {
 
   describe('deposits', () => {
     describe('getDeposits', () => {
-      test('gets budgets from the BudgetService', async () => {
+      test('gets deposits from the BudgetService', async () => {
         const service = new InMemoryBudgetService({
           budgets: [budget1, budget2],
           categories: [category1, category2],
@@ -3141,6 +3141,449 @@ describe('Budget Controller', () => {
 
         expect(deleteWithdrawalSpy).toHaveBeenCalledTimes(1);
         expect(getBudgetSpy).toHaveBeenCalledTimes(1);
+        expect(updateBudgetSpy).toHaveBeenCalledTimes(1);
+      });
+    });
+  });
+
+  describe('reconciliations', () => {
+    describe('getReconciliations', () => {
+      test('gets reconciliation from the BudgetService', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1, budget2],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+          deposits: [deposit1, deposit2],
+          withdrawals: [withdrawal1, withdrawal2],
+          reconciliations: [reconciliation1, reconciliation2],
+        });
+
+        const loggerService = new LoggerService();
+
+        const controller = new BudgetController(service, loggerService);
+
+        const req = {
+          query: {
+            budgetId,
+          },
+        } as unknown as Request;
+
+        const response = await controller.getReconciliations(req);
+
+        expect(response.reconciliations).toHaveLength(2);
+        expect(response.reconciliations).toEqual([
+          validReconciliation2,
+          validReconciliation1,
+        ]);
+      });
+
+      test('throws an error if the budgetId or dates are missing or not a valid string', async () => {});
+
+      test('throws an error if getReconciliations throws an error', async () => {});
+    });
+
+    describe('addReconciliation', () => {
+      test('adds a reconciliation, calculates the balance, and returns the deposit', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1, budget2],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+        });
+
+        const loggerService = new LoggerService();
+        const controller = new BudgetController(service, loggerService);
+
+        uuidv4.mockImplementation(() => reconciliationId);
+
+        const req = {
+          body: {
+            reconciliation: validReconciliation1,
+          },
+        } as unknown as Request;
+
+        const addReconciliationSpy = jest.spyOn(service, 'addReconciliation');
+        const getBudgetSpy = jest.spyOn(service, 'getBudget');
+        const recalcSpy = jest.spyOn(service, 'recalculateFunds');
+        const updateBudgetSpy = jest.spyOn(service, 'updateBudget');
+
+        const res = await controller.addReconciliation(req);
+
+        expect(res.reconciliation).toEqual(validReconciliation1);
+
+        expect(addReconciliationSpy).toHaveBeenCalledTimes(1);
+        expect(addReconciliationSpy).toHaveBeenCalledWith(reconciliation1);
+
+        expect(getBudgetSpy).toHaveBeenCalledTimes(1);
+        expect(getBudgetSpy).toHaveBeenCalledWith(budgetId);
+
+        expect(recalcSpy).toHaveBeenCalledTimes(1);
+        expect(recalcSpy).toHaveBeenCalledWith({ budgetId: budgetId });
+
+        expect(updateBudgetSpy).toHaveBeenCalledTimes(1);
+        expect(updateBudgetSpy).toHaveBeenCalledWith(
+          Budget.fromJSON({
+            ...validBudget1,
+            currentFunds: reconciliation1.balance,
+          }),
+        );
+      });
+
+      test('takes into account deposits and withdrawals that happen after the reconciliation', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1, budget2],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+          deposits: [deposit1, deposit2],
+          withdrawals: [withdrawal1, withdrawal2],
+        });
+
+        const loggerService = new LoggerService();
+        const controller = new BudgetController(service, loggerService);
+
+        uuidv4.mockImplementation(() => reconciliationId);
+
+        const req = {
+          body: {
+            reconciliation: validReconciliation1,
+          },
+        } as unknown as Request;
+
+        const addReconciliationSpy = jest.spyOn(service, 'addReconciliation');
+        const getBudgetSpy = jest.spyOn(service, 'getBudget');
+        const recalcSpy = jest.spyOn(service, 'recalculateFunds');
+        const updateBudgetSpy = jest.spyOn(service, 'updateBudget');
+
+        const res = await controller.addReconciliation(req);
+
+        expect(res.reconciliation).toEqual(validReconciliation1);
+
+        expect(addReconciliationSpy).toHaveBeenCalledTimes(1);
+        expect(addReconciliationSpy).toHaveBeenCalledWith(reconciliation1);
+
+        expect(getBudgetSpy).toHaveBeenCalledTimes(1);
+        expect(getBudgetSpy).toHaveBeenCalledWith(budgetId);
+
+        expect(recalcSpy).toHaveBeenCalledTimes(1);
+        expect(recalcSpy).toHaveBeenCalledWith({ budgetId: budgetId });
+
+        const currentFunds =
+          reconciliation1.balance + deposit2.amount - withdrawal2.amount;
+
+        expect(updateBudgetSpy).toHaveBeenCalledTimes(1);
+        expect(updateBudgetSpy).toHaveBeenCalledWith(
+          Budget.fromJSON({
+            ...validBudget1,
+            currentFunds,
+          }),
+        );
+      });
+
+      test('adds a deposit to a budget with existing deposits, calculates the balance, and returns the deposit', async () => {});
+      test('throws an error if body is not an object', async () => {});
+      test('throws an error if body cannot be parsed into a DepositTransaction', async () => {});
+      test('throws an error if addDeposit throws an error', async () => {});
+      test('throws an error if addDeposit throws an error', async () => {});
+    });
+
+    describe('deleteReconciliation', () => {
+      test('deletes the reconciliation, recalculates funds and updates the budget', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1, budget2],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+          reconciliations: [reconciliation1],
+        });
+
+        const loggerService = new LoggerService();
+        const controller = new BudgetController(service, loggerService);
+
+        const delSpy = jest.spyOn(service, 'deleteReconciliation');
+        const getBudgetSpy = jest.spyOn(service, 'getBudget');
+        const recalcSpy = jest.spyOn(service, 'recalculateFunds');
+        const updateBudgetSpy = jest.spyOn(service, 'updateBudget');
+
+        const req = {
+          body: {
+            reconciliationId: reconciliation1.id,
+          },
+        } as unknown as Request;
+
+        const res = await controller.deleteReconciliation(req);
+
+        expect(res.reconciliation).toEqual(validReconciliation1);
+
+        expect(delSpy).toHaveBeenCalledTimes(1);
+        expect(delSpy).toHaveBeenCalledWith(reconciliation1.id);
+
+        expect(getBudgetSpy).toHaveBeenCalledTimes(1);
+        expect(getBudgetSpy).toHaveBeenCalledWith(budgetId);
+
+        expect(recalcSpy).toHaveBeenCalledTimes(1);
+        expect(recalcSpy).toHaveBeenCalledWith({ budgetId });
+
+        expect(updateBudgetSpy).toHaveBeenCalledTimes(1);
+        expect(updateBudgetSpy).toHaveBeenCalledWith(
+          Budget.fromJSON({
+            ...validBudget1,
+            currentFunds: 0,
+          }),
+        );
+      });
+
+      test('takes into account earlier reconciliations, deposits, and withdrawals', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1, budget2],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+          deposits: [deposit1, deposit2],
+          withdrawals: [withdrawal1, withdrawal2],
+          reconciliations: [reconciliation1, reconciliation2],
+        });
+
+        const loggerService = new LoggerService();
+        const controller = new BudgetController(service, loggerService);
+
+        const delSpy = jest.spyOn(service, 'deleteReconciliation');
+        const getBudgetSpy = jest.spyOn(service, 'getBudget');
+        const recalcSpy = jest.spyOn(service, 'recalculateFunds');
+        const updateBudgetSpy = jest.spyOn(service, 'updateBudget');
+
+        const req = {
+          body: {
+            reconciliationId: reconciliation2.id,
+          },
+        } as unknown as Request;
+
+        const res = await controller.deleteReconciliation(req);
+
+        expect(res.reconciliation).toEqual(validReconciliation2);
+
+        expect(delSpy).toHaveBeenCalledTimes(1);
+        expect(delSpy).toHaveBeenCalledWith(reconciliation2.id);
+
+        expect(getBudgetSpy).toHaveBeenCalledTimes(1);
+        expect(getBudgetSpy).toHaveBeenCalledWith(budgetId);
+
+        expect(recalcSpy).toHaveBeenCalledTimes(1);
+        expect(recalcSpy).toHaveBeenCalledWith({ budgetId });
+
+        const expectedFunds =
+          reconciliation1.balance + deposit2.amount - withdrawal2.amount;
+
+        expect(updateBudgetSpy).toHaveBeenCalledTimes(1);
+        expect(updateBudgetSpy).toHaveBeenCalledWith(
+          Budget.fromJSON({
+            ...validBudget1,
+            currentFunds: expectedFunds,
+          }),
+        );
+      });
+
+      test('throws an error if body is not an object', async () => {
+        const service = new InMemoryBudgetService();
+
+        const loggerService = new LoggerService();
+        const controller = new BudgetController(service, loggerService);
+
+        const delSpy = jest.spyOn(service, 'deleteReconciliation');
+        const getBudgetSpy = jest.spyOn(service, 'getBudget');
+        const recalcSpy = jest.spyOn(service, 'recalculateFunds');
+        const updateBudgetSpy = jest.spyOn(service, 'updateBudget');
+
+        const req = {
+          body: undefined,
+        } as unknown as Request;
+
+        await expect(() =>
+          controller.deleteReconciliation(req),
+        ).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+
+        expect(delSpy).toHaveBeenCalledTimes(0);
+        expect(getBudgetSpy).toHaveBeenCalledTimes(0);
+        expect(recalcSpy).toHaveBeenCalledTimes(0);
+        expect(updateBudgetSpy).toHaveBeenCalledTimes(0);
+      });
+
+      test('throws an error if reconciliationId is not a string', async () => {
+        const service = new InMemoryBudgetService();
+
+        const loggerService = new LoggerService();
+        const controller = new BudgetController(service, loggerService);
+
+        const delSpy = jest.spyOn(service, 'deleteReconciliation');
+        const getBudgetSpy = jest.spyOn(service, 'getBudget');
+        const recalcSpy = jest.spyOn(service, 'recalculateFunds');
+        const updateBudgetSpy = jest.spyOn(service, 'updateBudget');
+
+        const req = {
+          body: {
+            reconciliationId: 1,
+          },
+        } as unknown as Request;
+
+        await expect(() =>
+          controller.deleteReconciliation(req),
+        ).rejects.toThrow(
+          new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
+        );
+
+        expect(delSpy).toHaveBeenCalledTimes(0);
+        expect(getBudgetSpy).toHaveBeenCalledTimes(0);
+        expect(recalcSpy).toHaveBeenCalledTimes(0);
+        expect(updateBudgetSpy).toHaveBeenCalledTimes(0);
+      });
+
+      test('throws an error if deleteReconciliation throws an error', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1, budget2],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+          deposits: [deposit1, deposit2],
+          withdrawals: [withdrawal1, withdrawal2],
+          reconciliations: [reconciliation1, reconciliation2],
+        });
+
+        const loggerService = new LoggerService();
+        const controller = new BudgetController(service, loggerService);
+
+        const delSpy = jest.spyOn(service, 'deleteReconciliation');
+        const getBudgetSpy = jest.spyOn(service, 'getBudget');
+        const recalcSpy = jest.spyOn(service, 'recalculateFunds');
+        const updateBudgetSpy = jest.spyOn(service, 'updateBudget');
+
+        delSpy.mockRejectedValue(new Error('Test Error'));
+
+        const req = {
+          body: {
+            reconciliationId: reconciliation1.id,
+          },
+        } as unknown as Request;
+
+        await expect(() =>
+          controller.deleteReconciliation(req),
+        ).rejects.toThrow(
+          new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+        );
+
+        expect(delSpy).toHaveBeenCalledTimes(1);
+        expect(getBudgetSpy).toHaveBeenCalledTimes(0);
+        expect(recalcSpy).toHaveBeenCalledTimes(0);
+        expect(updateBudgetSpy).toHaveBeenCalledTimes(0);
+      });
+
+      test('throws an error if recalculateFunds throws an error', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1, budget2],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+          deposits: [deposit1, deposit2],
+          withdrawals: [withdrawal1, withdrawal2],
+          reconciliations: [reconciliation1, reconciliation2],
+        });
+
+        const loggerService = new LoggerService();
+        const controller = new BudgetController(service, loggerService);
+
+        const delSpy = jest.spyOn(service, 'deleteReconciliation');
+        const recalcSpy = jest.spyOn(service, 'recalculateFunds');
+        const getBudgetSpy = jest.spyOn(service, 'getBudget');
+        const updateBudgetSpy = jest.spyOn(service, 'updateBudget');
+
+        recalcSpy.mockRejectedValue(new Error('Test Error'));
+
+        const req = {
+          body: {
+            reconciliationId: reconciliation1.id,
+          },
+        } as unknown as Request;
+
+        await expect(() =>
+          controller.deleteReconciliation(req),
+        ).rejects.toThrow(
+          new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+        );
+
+        expect(delSpy).toHaveBeenCalledTimes(1);
+        expect(recalcSpy).toHaveBeenCalledTimes(1);
+        expect(getBudgetSpy).toHaveBeenCalledTimes(0);
+        expect(updateBudgetSpy).toHaveBeenCalledTimes(0);
+      });
+
+      test('throws an error if getBudget throws an error', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1, budget2],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+          deposits: [deposit1, deposit2],
+          withdrawals: [withdrawal1, withdrawal2],
+          reconciliations: [reconciliation1, reconciliation2],
+        });
+
+        const loggerService = new LoggerService();
+        const controller = new BudgetController(service, loggerService);
+
+        const delSpy = jest.spyOn(service, 'deleteReconciliation');
+        const recalcSpy = jest.spyOn(service, 'recalculateFunds');
+        const getBudgetSpy = jest.spyOn(service, 'getBudget');
+        const updateBudgetSpy = jest.spyOn(service, 'updateBudget');
+
+        getBudgetSpy.mockRejectedValue(new Error('Test Error'));
+
+        const req = {
+          body: {
+            reconciliationId: reconciliation1.id,
+          },
+        } as unknown as Request;
+
+        await expect(() =>
+          controller.deleteReconciliation(req),
+        ).rejects.toThrow(
+          new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+        );
+
+        expect(delSpy).toHaveBeenCalledTimes(1);
+        expect(recalcSpy).toHaveBeenCalledTimes(1);
+        expect(getBudgetSpy).toHaveBeenCalledTimes(1);
+        expect(updateBudgetSpy).toHaveBeenCalledTimes(0);
+      });
+
+      test('throws an error if updateBudget throws an error', async () => {
+        const service = new InMemoryBudgetService({
+          budgets: [budget1, budget2],
+          categories: [category1, category2],
+          expenses: [expense1, expense2],
+          deposits: [deposit1, deposit2],
+          withdrawals: [withdrawal1, withdrawal2],
+          reconciliations: [reconciliation1, reconciliation2],
+        });
+
+        const loggerService = new LoggerService();
+        const controller = new BudgetController(service, loggerService);
+
+        const delSpy = jest.spyOn(service, 'deleteReconciliation');
+        const getBudgetSpy = jest.spyOn(service, 'getBudget');
+        const recalcSpy = jest.spyOn(service, 'recalculateFunds');
+        const updateBudgetSpy = jest.spyOn(service, 'updateBudget');
+
+        updateBudgetSpy.mockRejectedValue(new Error('Test Error'));
+
+        const req = {
+          body: {
+            reconciliationId: reconciliation1.id,
+          },
+        } as unknown as Request;
+
+        await expect(() =>
+          controller.deleteReconciliation(req),
+        ).rejects.toThrow(
+          new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR),
+        );
+
+        expect(delSpy).toHaveBeenCalledTimes(1);
+        expect(getBudgetSpy).toHaveBeenCalledTimes(1);
+        expect(recalcSpy).toHaveBeenCalledTimes(1);
         expect(updateBudgetSpy).toHaveBeenCalledTimes(1);
       });
     });

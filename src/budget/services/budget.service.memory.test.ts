@@ -1551,7 +1551,7 @@ describe('InMemoryBudgetService', () => {
         const service = new InMemoryBudgetService();
         expect(service.reconciliationsList.length).toBe(0);
 
-        const result = await service.addRecociliation(reconciliation1);
+        const result = await service.addReconciliation(reconciliation1);
 
         expect(result.toJSON()).toEqual({
           ...reconciliation1.toJSON(),
@@ -1606,7 +1606,7 @@ describe('InMemoryBudgetService', () => {
         budgets: [budget1],
       });
 
-      const result = await service.recalcFunds({ budgetId });
+      const result = await service.recalculateFunds({ budgetId });
       expect(result).toBe(0);
     });
 
@@ -1617,7 +1617,7 @@ describe('InMemoryBudgetService', () => {
         withdrawals: [withdrawal1],
       });
 
-      const result = await service.recalcFunds({ budgetId });
+      const result = await service.recalculateFunds({ budgetId });
 
       expect(result).toBe(deposit1.amount - withdrawal1.amount);
     });
@@ -1630,7 +1630,7 @@ describe('InMemoryBudgetService', () => {
         reconciliations: [reconciliation1],
       });
 
-      const result = await service.recalcFunds({ budgetId });
+      const result = await service.recalculateFunds({ budgetId });
 
       expect(result).toBe(reconciliation1.balance - withdrawal1.amount);
     });

@@ -461,7 +461,7 @@ export class InMemoryBudgetService implements BudgetService {
     return reconciliations;
   }
 
-  async addRecociliation(
+  async addReconciliation(
     reconciliation: Reconciliation,
   ): Promise<Reconciliation> {
     const id = uuidv4();
@@ -493,7 +493,7 @@ export class InMemoryBudgetService implements BudgetService {
   // Find the latest reconciliation, subtract all withdrawals and add all deposits
   // If there are no reconciliations, start with 0 for the balance and start
   // with the earliest date possible.
-  async recalcFunds(input: RecalcFundsOptions): Promise<number> {
+  async recalculateFunds(input: RecalcFundsOptions): Promise<number> {
     const latestReconciliation = (
       await this.getReconciliations({
         budgetId: input.budgetId,

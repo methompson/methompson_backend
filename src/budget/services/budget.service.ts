@@ -68,12 +68,12 @@ export abstract class BudgetService {
   abstract getReconciliations(
     input: ReconciliationOptions,
   ): Promise<Reconciliation[]>;
-  abstract addRecociliation(
+  abstract addReconciliation(
     reconciliation: Reconciliation,
   ): Promise<Reconciliation>;
   abstract deleteReconciliation(
     reconciliationId: string,
   ): Promise<Reconciliation>;
 
-  abstract recalcFunds(input: RecalcFundsOptions): Promise<number>;
+  abstract recalculateFunds(input: RecalcFundsOptions): Promise<number>;
 }
