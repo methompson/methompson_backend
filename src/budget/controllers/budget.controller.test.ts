@@ -24,6 +24,8 @@ import { LoggerService } from '@/src/logger/logger.service';
 import { BudgetController } from './budget.controller';
 import { Request } from 'express';
 import { HttpException, HttpStatus } from '@nestjs/common';
+import { METIncomingMessage } from '@/src/utils/met_incoming_message';
+import { NoAuthModel } from '@/src/models/auth_model';
 
 jest.mock('uuid', () => {
   const v4 = jest.fn(() => 'uuidv4');
@@ -183,11 +185,15 @@ describe('Budget Controller', () => {
 
         const controller = new BudgetController(service, loggerService);
 
+        const authModel = new NoAuthModel();
+        jest.spyOn(authModel, 'userId', 'get').mockReturnValue('userId');
+
         const req = {
+          authModel,
           query: {
             userId,
           },
-        } as unknown as Request;
+        } as unknown as METIncomingMessage;
 
         const response = await controller.getBudgets(req);
 
@@ -213,7 +219,7 @@ describe('Budget Controller', () => {
           query: {
             userId: 1,
           },
-        } as unknown as Request;
+        } as unknown as METIncomingMessage;
 
         await expect(() => controller.getBudgets(req)).rejects.toThrow(
           new HttpException('Invalid Input', HttpStatus.BAD_REQUEST),
@@ -232,12 +238,15 @@ describe('Budget Controller', () => {
         const loggerService = new LoggerService();
 
         const controller = new BudgetController(service, loggerService);
+        const authModel = new NoAuthModel();
+        jest.spyOn(authModel, 'userId', 'get').mockReturnValue('userId');
 
         const req = {
+          authModel,
           query: {
             userId,
           },
-        } as unknown as Request;
+        } as unknown as METIncomingMessage;
 
         jest
           .spyOn(service, 'getBudgets')
@@ -256,12 +265,15 @@ describe('Budget Controller', () => {
         const loggerService = new LoggerService();
 
         const controller = new BudgetController(service, loggerService);
+        const authModel = new NoAuthModel();
+        jest.spyOn(authModel, 'userId', 'get').mockReturnValue('userId');
 
         const req = {
+          authModel,
           body: {
             budget: validBudget1,
           },
-        } as unknown as Request;
+        } as unknown as METIncomingMessage;
 
         const addSpy = jest.spyOn(service, 'addBudget');
         addSpy.mockResolvedValue(budget1);
@@ -282,7 +294,7 @@ describe('Budget Controller', () => {
 
         const req = {
           body: undefined,
-        } as unknown as Request;
+        } as unknown as METIncomingMessage;
 
         const addSpy = jest.spyOn(service, 'addBudget');
 
@@ -301,7 +313,7 @@ describe('Budget Controller', () => {
 
         const req = {
           body: {},
-        } as unknown as Request;
+        } as unknown as METIncomingMessage;
 
         const addSpy = jest.spyOn(service, 'addBudget');
 
@@ -317,12 +329,15 @@ describe('Budget Controller', () => {
         const loggerService = new LoggerService();
 
         const controller = new BudgetController(service, loggerService);
+        const authModel = new NoAuthModel();
+        jest.spyOn(authModel, 'userId', 'get').mockReturnValue('userId');
 
         const req = {
+          authModel,
           body: {
             budget: validBudget1,
           },
-        } as unknown as Request;
+        } as unknown as METIncomingMessage;
 
         const addSpy = jest.spyOn(service, 'addBudget');
         addSpy.mockRejectedValue(new Error('Test Error'));

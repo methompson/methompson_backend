@@ -13,6 +13,7 @@ import { BudgetService } from '@/src/budget/services/budget.service';
 import { LoggerService } from '@/src/logger/logger.service';
 import { pageAndPagination } from '@/src/utils/page_and_pagination';
 import {
+  isNullOrUndefined,
   isRecord,
   isString,
   isValidDateTimeString,
@@ -34,6 +35,7 @@ import {
   Reconciliation,
   ReconciliationJSON,
 } from '@/src/budget/models/reconciliation';
+import type { METIncomingMessage } from '@/src/utils/met_incoming_message';
 
 interface GetBudgetsResponse {
   budgets: BudgetJSON[];
@@ -132,13 +134,15 @@ export class BudgetController {
   ) {}
 
   @Get('budgets')
-  async getBudgets(@Req() request: Request): Promise<GetBudgetsResponse> {
+  async getBudgets(
+    @Req() request: METIncomingMessage,
+  ): Promise<GetBudgetsResponse> {
     const { page, pagination } = pageAndPagination(request);
 
-    const userId = request.query?.userId;
-
     try {
-      if (!isString(userId)) {
+      const auth = request.authModel;
+
+      if (isNullOrUndefined(auth)) {
         throw new InvalidInputError('Invalid User Id');
       }
 
@@ -146,7 +150,7 @@ export class BudgetController {
         await this.budgetService.getBudgets({
           page,
           pagination,
-          userId,
+          userId: auth.userId,
         })
       ).map((action) => action.toJSON());
 
@@ -157,15 +161,21 @@ export class BudgetController {
   }
 
   @Post('addBudget')
-  async addBudget(@Req() request: Request): Promise<AddBudgetResponse> {
+  async addBudget(
+    @Req() request: METIncomingMessage,
+  ): Promise<AddBudgetResponse> {
     try {
+      const auth = request.authModel;
       const { body } = request;
 
-      if (!isRecord(body)) {
+      if (!isRecord(body) || !isRecord(body.budget)) {
         throw new InvalidInputError('Invalid Budget Input');
       }
 
-      const budget = Budget.fromJSON(body.budget);
+      const budget = Budget.fromJSON({
+        ...body.budget,
+        userId: auth?.userId,
+      });
 
       const res = await this.budgetService.addBudget(budget);
 
