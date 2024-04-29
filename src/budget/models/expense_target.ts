@@ -87,6 +87,8 @@ export interface WeeklyExpenseTargetJSON {
 
 // Weekly expenses are paid every week. A day that I pay the money on is needed.
 // This day is used to determine when the expense is due or starts over.
+// Day of week is 0 indexed. 0 = Sunday and 1 = Monday. We use Mod 7 to ensure
+// that the day of week is valid for both Luxon and JS Date
 export class WeeklyExpenseTarget extends ExpenseTarget {
   constructor(protected _dayOfWeek: number) {
     super();
@@ -120,11 +122,7 @@ export class WeeklyExpenseTarget extends ExpenseTarget {
       throw new InvalidInputError(`Invalid JSON ${errors.join(', ')}`);
     }
 
-    if (data.dayOfWeek < 0 || data.dayOfWeek > 6) {
-      throw new InvalidInputError('Invalid day of week');
-    }
-
-    return new WeeklyExpenseTarget(data.dayOfWeek);
+    return new WeeklyExpenseTarget(data.dayOfWeek % 7);
   }
 
   static weeklyExpenseTargetJSONTest(input: unknown): string[] {

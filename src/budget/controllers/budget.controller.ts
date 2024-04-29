@@ -121,6 +121,7 @@ interface AddReconciliationResponse {
 }
 interface DeleteReconciliationResponse {
   reconciliation: ReconciliationJSON;
+  currentFunds: number;
 }
 
 @UseInterceptors(RequestLogInterceptor)
@@ -752,6 +753,7 @@ export class BudgetController {
 
       return {
         reconciliation: deletedReconciliation.toJSON(),
+        currentFunds: funds,
       };
     } catch (e) {
       throw await commonErrorHandler(e, this.loggerService);

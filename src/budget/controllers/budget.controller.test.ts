@@ -3325,6 +3325,10 @@ describe('Budget Controller', () => {
 
         const res = await controller.deleteReconciliation(req);
 
+        expect(res).toEqual({
+          reconciliation: validReconciliation1,
+          currentFunds: 0,
+        });
         expect(res.reconciliation).toEqual(validReconciliation1);
 
         expect(delSpy).toHaveBeenCalledTimes(1);
