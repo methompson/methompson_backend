@@ -7,6 +7,7 @@ describe('DepositTransaction', () => {
   const validInput: DepositTransactionJSON = {
     id: 'id',
     budgetId: 'budgetId',
+    payor: 'my job',
     description: 'description',
     dateTime: '2021-02-01T12:30:00.000-06:00',
     amount: 1,
@@ -53,6 +54,10 @@ describe('DepositTransaction', () => {
       expect(() => DepositTransaction.fromJSON(invalidInput)).toThrow();
 
       invalidInput = { ...validInput };
+      delete invalidInput.payor;
+      expect(() => DepositTransaction.fromJSON(invalidInput)).toThrow();
+
+      invalidInput = { ...validInput };
       delete invalidInput.description;
       expect(() => DepositTransaction.fromJSON(invalidInput)).toThrow();
 
@@ -76,6 +81,14 @@ describe('DepositTransaction', () => {
 
       invalidInput = { ...validInput };
       invalidInput.budgetId = 1;
+      expect(() => DepositTransaction.fromJSON(invalidInput)).toThrow();
+
+      invalidInput = { ...validInput };
+      invalidInput.payor = 1;
+      expect(() => DepositTransaction.fromJSON(invalidInput)).toThrow();
+
+      invalidInput = { ...validInput };
+      invalidInput.description = 1;
       expect(() => DepositTransaction.fromJSON(invalidInput)).toThrow();
 
       invalidInput = { ...validInput };
@@ -128,6 +141,12 @@ describe('DepositTransaction', () => {
       );
 
       invalidInput = { ...validInput };
+      delete invalidInput.payor;
+      expect(DepositTransaction.isDepositTransactionJSON(invalidInput)).toBe(
+        false,
+      );
+
+      invalidInput = { ...validInput };
       delete invalidInput.dateTime;
       expect(DepositTransaction.isDepositTransactionJSON(invalidInput)).toBe(
         false,
@@ -154,6 +173,18 @@ describe('DepositTransaction', () => {
 
       invalidInput = { ...validInput };
       invalidInput.budgetId = 1;
+      expect(DepositTransaction.isDepositTransactionJSON(invalidInput)).toBe(
+        false,
+      );
+
+      invalidInput = { ...validInput };
+      invalidInput.payor = 1;
+      expect(DepositTransaction.isDepositTransactionJSON(invalidInput)).toBe(
+        false,
+      );
+
+      invalidInput = { ...validInput };
+      invalidInput.description = 1;
       expect(DepositTransaction.isDepositTransactionJSON(invalidInput)).toBe(
         false,
       );
@@ -205,6 +236,12 @@ describe('DepositTransaction', () => {
       ]);
 
       invalidInput = { ...validInput };
+      delete invalidInput.payor;
+      expect(DepositTransaction.depositTransactionTest(invalidInput)).toEqual([
+        'payor',
+      ]);
+
+      invalidInput = { ...validInput };
       delete invalidInput.description;
       expect(DepositTransaction.depositTransactionTest(invalidInput)).toEqual([
         'description',
@@ -234,6 +271,18 @@ describe('DepositTransaction', () => {
       invalidInput.id = 1;
       expect(DepositTransaction.depositTransactionTest(invalidInput)).toEqual([
         'id',
+      ]);
+
+      invalidInput = { ...validInput };
+      invalidInput.payor = 1;
+      expect(DepositTransaction.depositTransactionTest(invalidInput)).toEqual([
+        'payor',
+      ]);
+
+      invalidInput = { ...validInput };
+      invalidInput.description = 1;
+      expect(DepositTransaction.depositTransactionTest(invalidInput)).toEqual([
+        'description',
       ]);
 
       invalidInput = { ...validInput };

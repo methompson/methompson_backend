@@ -106,6 +106,7 @@ const validWithdrawal1: WithdrawalTransactionJSON = {
   id: withdrawalId,
   budgetId,
   expenseId,
+  payee: 'Italian Restaurant',
   description: 'Withdrawal',
   dateTime: '2024-01-25T12:00:00-06:00',
   amount: 25,
@@ -115,6 +116,7 @@ const validWithdrawal2: WithdrawalTransactionJSON = {
   id: 'withdrawalId2',
   budgetId,
   expenseId,
+  payee: 'General Gas',
   description: 'Withdrawal 2',
   dateTime: '2024-01-25T12:01:00-06:00',
   amount: 25,
@@ -127,6 +129,7 @@ const depositId = 'depositId1';
 const validDeposit1: DepositTransactionJSON = {
   id: depositId,
   budgetId,
+  payor: 'my job',
   description: 'Deposit',
   dateTime: '2024-01-20T12:00:00-06:00',
   amount: 100,
@@ -134,6 +137,7 @@ const validDeposit1: DepositTransactionJSON = {
 const validDeposit2: DepositTransactionJSON = {
   id: 'depositId2',
   budgetId,
+  payor: 'freelance client',
   description: 'Deposit 2',
   dateTime: '2024-01-20T12:01:00-06:00',
   amount: 100,

@@ -7,6 +7,7 @@ import { InvalidInputError } from '@/src/errors';
 export interface DepositTransactionJSON {
   id: string;
   budgetId: string;
+  payor: string;
   description: string;
   dateTime: string;
   amount: number;
@@ -18,6 +19,7 @@ export class DepositTransaction {
   constructor(
     protected _id: string,
     protected _budgetId: string,
+    protected _payor: string,
     protected _description: string,
     protected _dateTime: DateTime<true>,
     protected _amount: number,
@@ -28,6 +30,9 @@ export class DepositTransaction {
   }
   get budgetId(): string {
     return this._budgetId;
+  }
+  get payor(): string {
+    return this._payor;
   }
   get description(): string {
     return this._description;
@@ -43,6 +48,7 @@ export class DepositTransaction {
     return {
       id: this._id,
       budgetId: this._budgetId,
+      payor: this._payor,
       description: this._description,
       dateTime: this._dateTime.toISO(),
       amount: this._amount,
@@ -65,14 +71,14 @@ export class DepositTransaction {
       throw new InvalidInputError(`Invalid JSON ${errors.join(', ')}`);
     }
 
-    const { id, budgetId, description, dateTime: date, amount } = input;
+    const { id, budgetId, payor, description, dateTime: date, amount } = input;
 
     const dt = DateTime.fromISO(date, { zone: 'America/Chicago' });
     if (!dt.isValid) {
       throw new InvalidInputError(`Invalid date: ${date}`);
     }
 
-    return new DepositTransaction(id, budgetId, description, dt, amount);
+    return new DepositTransaction(id, budgetId, payor, description, dt, amount);
   }
 
   static isDepositTransactionJSON(
@@ -90,6 +96,7 @@ export class DepositTransaction {
 
     if (!isString(input.id)) output.push('id');
     if (!isString(input.budgetId)) output.push('budgetId');
+    if (!isString(input.payor)) output.push('payor');
     if (!isString(input.description)) output.push('description');
     if (!isValidDateString(input.dateTime)) output.push('date');
     if (!isNumber(input.amount)) output.push('amount');

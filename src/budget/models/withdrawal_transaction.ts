@@ -10,6 +10,7 @@ export interface WithdrawalTransactionJSON {
   id: string;
   budgetId: string;
   expenseId: string;
+  payee: string;
   description: string;
   dateTime: string;
   amount: number;
@@ -20,6 +21,7 @@ export class WithdrawalTransaction {
     protected _id: string,
     protected _budgetId: string,
     protected _expenseId: string,
+    protected _payee: string,
     protected _description: string,
     protected _dateTime: DateTime<true>,
     protected _amount: number,
@@ -33,6 +35,9 @@ export class WithdrawalTransaction {
   }
   get expenseId(): string {
     return this._expenseId;
+  }
+  get payee(): string {
+    return this._payee;
   }
   get description(): string {
     return this._description;
@@ -49,6 +54,7 @@ export class WithdrawalTransaction {
       id: this._id,
       budgetId: this._budgetId,
       expenseId: this._expenseId,
+      payee: this._payee,
       description: this._description,
       dateTime: this._dateTime.toISO(),
       amount: this._amount,
@@ -75,6 +81,7 @@ export class WithdrawalTransaction {
       id,
       budgetId,
       expenseId,
+      payee,
       description,
       dateTime: date,
       amount,
@@ -89,6 +96,7 @@ export class WithdrawalTransaction {
       id,
       budgetId,
       expenseId,
+      payee,
       description,
       dt,
       amount,
@@ -111,6 +119,7 @@ export class WithdrawalTransaction {
     if (!isString(input.id)) output.push('id');
     if (!isString(input.budgetId)) output.push('budgetId');
     if (!isString(input.expenseId)) output.push('expenseId');
+    if (!isString(input.payee)) output.push('payee');
     if (!isString(input.description)) output.push('description');
     if (!isValidDateString(input.dateTime)) output.push('date');
     if (!isNumber(input.amount)) output.push('amount');

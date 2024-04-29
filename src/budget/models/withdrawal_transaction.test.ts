@@ -8,6 +8,7 @@ describe('WithdrawalTransaction', () => {
     id: 'id',
     budgetId: 'budgetId',
     expenseId: 'expenseId',
+    payee: 'Italian Restaurant',
     description: 'description',
     dateTime: '2021-02-01T12:30:00.000-06:00',
     amount: 1,
@@ -58,6 +59,10 @@ describe('WithdrawalTransaction', () => {
       expect(() => WithdrawalTransaction.fromJSON(invalidInput)).toThrow();
 
       invalidInput = { ...validInput };
+      delete invalidInput.payee;
+      expect(() => WithdrawalTransaction.fromJSON(invalidInput)).toThrow();
+
+      invalidInput = { ...validInput };
       delete invalidInput.description;
       expect(() => WithdrawalTransaction.fromJSON(invalidInput)).toThrow();
 
@@ -85,6 +90,10 @@ describe('WithdrawalTransaction', () => {
 
       invalidInput = { ...validInput };
       invalidInput.expenseId = 1;
+      expect(() => WithdrawalTransaction.fromJSON(invalidInput)).toThrow();
+
+      invalidInput = { ...validInput };
+      invalidInput.payee = 1;
       expect(() => WithdrawalTransaction.fromJSON(invalidInput)).toThrow();
 
       invalidInput = { ...validInput };
@@ -141,6 +150,12 @@ describe('WithdrawalTransaction', () => {
       ).toBe(false);
 
       invalidInput = { ...validInput };
+      delete invalidInput.payee;
+      expect(
+        WithdrawalTransaction.isWithdrawalTransactionJSON(invalidInput),
+      ).toBe(false);
+
+      invalidInput = { ...validInput };
       delete invalidInput.description;
       expect(
         WithdrawalTransaction.isWithdrawalTransactionJSON(invalidInput),
@@ -179,6 +194,12 @@ describe('WithdrawalTransaction', () => {
 
       invalidInput = { ...validInput };
       invalidInput.expenseId = 1;
+      expect(
+        WithdrawalTransaction.isWithdrawalTransactionJSON(invalidInput),
+      ).toBe(false);
+
+      invalidInput = { ...validInput };
+      invalidInput.payee = 1;
       expect(
         WithdrawalTransaction.isWithdrawalTransactionJSON(invalidInput),
       ).toBe(false);
@@ -224,7 +245,7 @@ describe('WithdrawalTransaction', () => {
       ).toEqual([]);
     });
 
-    test('returns an empty array if values are missing from the input', () => {
+    test('returns an array of values if values are missing from the input', () => {
       let invalidInput: Record<string, unknown> = { ...validInput };
 
       expect(
@@ -250,6 +271,12 @@ describe('WithdrawalTransaction', () => {
       ).toEqual(['expenseId']);
 
       invalidInput = { ...validInput };
+      delete invalidInput.payee;
+      expect(
+        WithdrawalTransaction.withdrawalTransactionTest(invalidInput),
+      ).toEqual(['payee']);
+
+      invalidInput = { ...validInput };
       delete invalidInput.description;
       expect(
         WithdrawalTransaction.withdrawalTransactionTest(invalidInput),
@@ -268,7 +295,7 @@ describe('WithdrawalTransaction', () => {
       ).toEqual(['amount']);
     });
 
-    test('returns an empty array if values are incorrect type in the input', () => {
+    test('returns an array of values if values are incorrect type in the input', () => {
       let invalidInput: Record<string, unknown> = { ...validInput };
 
       expect(
@@ -292,6 +319,12 @@ describe('WithdrawalTransaction', () => {
       expect(
         WithdrawalTransaction.withdrawalTransactionTest(invalidInput),
       ).toEqual(['expenseId']);
+
+      invalidInput = { ...validInput };
+      invalidInput.payee = 1;
+      expect(
+        WithdrawalTransaction.withdrawalTransactionTest(invalidInput),
+      ).toEqual(['payee']);
 
       invalidInput = { ...validInput };
       invalidInput.description = 1;
