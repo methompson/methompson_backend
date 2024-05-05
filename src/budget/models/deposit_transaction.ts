@@ -14,7 +14,8 @@ export interface DepositTransactionJSON {
 }
 
 // All numeric values should be in CENTS, not dollars
-
+// The payor represents where the money came from. i.e. who paid you
+// The description is a brief description of the transaction
 export class DepositTransaction {
   constructor(
     protected _id: string,
