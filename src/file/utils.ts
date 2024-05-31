@@ -19,3 +19,24 @@ export function getFilenameComponents(filename: string): FilenameComponents {
     extension: split[splitPoint] ?? '',
   };
 }
+
+const extensionMimetypeMap: Record<string, string> = {
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  gif: 'image/gif',
+  tiff: 'image/tiff',
+  bmp: 'image/bmp',
+  heic: 'image/heic',
+};
+
+export function isImageMimeType(mimetype: string): boolean {
+  return Object.values(extensionMimetypeMap).includes(mimetype);
+}
+
+export function extensionMatchesMimetype(
+  extension: string,
+  mimetype: string,
+): boolean {
+  return extensionMimetypeMap[extension] === mimetype;
+}

@@ -20,7 +20,11 @@ import { AuthModel } from '@/src/models/auth_model';
 import { FileDataService } from '@/src/file/file_data.service';
 import { FileSystemService } from '@/src/file/file_system_service';
 import { isPromiseRejected, isString } from '@/src/utils/type_guards';
-import { getFilenameComponents } from './utils';
+import {
+  extensionMatchesMimetype,
+  getFilenameComponents,
+  isImageMimeType,
+} from './utils';
 
 @UseInterceptors(RequestLogInterceptor)
 @Controller({ path: 'files' })
@@ -66,7 +70,8 @@ export class FileController {
       throw new HttpException('Invalid Filename', HttpStatus.BAD_REQUEST);
     }
 
-    const filename = getFilenameComponents(rawFilename).name;
+    const filenameComponents = getFilenameComponents(rawFilename);
+    const filename = filenameComponents.name;
 
     const pathToFile = path.join(this._savedFilePath, filename);
 
@@ -109,6 +114,17 @@ export class FileController {
       // We don't want to let the user know anything about the files from
       // the error codes.
       throw new HttpException('', HttpStatus.BAD_REQUEST);
+    }
+
+    const mimetype = fileDetailsResult.value.mimetype;
+
+    // If the file is an image, but the extension does not
+    // match the mimetype, we'll throw a 404 error
+    if (
+      isImageMimeType(mimetype) &&
+      !extensionMatchesMimetype(filenameComponents.extension, mimetype)
+    ) {
+      throw new HttpException('Invalid Extension', HttpStatus.NOT_FOUND);
     }
 
     // If we've made it this far, the file exists and the user has rights
