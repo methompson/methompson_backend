@@ -4,5 +4,5 @@
   cd docker && \
   rm -rf dist
   mkdir dist
-  docker save methompson-blog-backend -o ./dist/methompson-blog-backend.tar
+  docker save methompson_backend -o ./dist/methompson_backend.tar
 )
