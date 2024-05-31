@@ -8,11 +8,7 @@ import {
 } from '@/src/utils/type_guards';
 import { InvalidInputError } from '@/src/errors';
 import { UpdateFileRequest } from '@/src/file/file_data.service';
-
-interface FilenameComponents {
-  name: string;
-  extension: string;
-}
+import { FilenameComponents, getFilenameComponents } from '@/src/file/utils';
 
 export class UploadedFile {
   constructor(
@@ -36,20 +32,7 @@ export class UploadedFile {
   }
 
   get nameComponents(): FilenameComponents {
-    const split = this.originalFilename.split('.');
-    if (split.length === 1) {
-      return {
-        name: this.originalFilename,
-        extension: '',
-      };
-    }
-
-    const splitPoint = split.length - 1;
-
-    return {
-      name: split.slice(0, splitPoint).join('.'),
-      extension: split[splitPoint] ?? '',
-    };
+    return getFilenameComponents(this.originalFilename);
   }
 
   get sanitizedFilename(): string {

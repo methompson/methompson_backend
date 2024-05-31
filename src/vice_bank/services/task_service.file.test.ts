@@ -1,3 +1,5 @@
+import { join } from 'path';
+
 import { Task, TaskJSON } from '@/src/vice_bank/models/task';
 import {
   TaskDeposit,
@@ -5,7 +7,6 @@ import {
 } from '@/src/vice_bank/models/task_deposit';
 import { FileServiceWriter } from '@/src/utils/file_service_writer';
 import { FileTaskService } from './task_service.file';
-import { join } from 'path';
 
 const task1Id = 'taskId1';
 const task2Id = 'taskId2';
@@ -529,13 +530,13 @@ describe('FileTaskService', () => {
         fileServiceWriter: fsw,
       });
 
+      const backupPath = join(taskPath, 'backup');
+
       expect(rfSpy).toHaveBeenCalledTimes(1);
       expect(rfSpy).toHaveBeenCalledWith(taskPath);
 
       expect(svc.tasksList.length).toBe(0);
       expect(svc.taskDepositsList.length).toBe(0);
-
-      const backupPath = join(taskPath, 'backup');
 
       expect(wbSpy).toHaveBeenCalledTimes(1);
       expect(wbSpy).toHaveBeenCalledWith(backupPath, invalidData);

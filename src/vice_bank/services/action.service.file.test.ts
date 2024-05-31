@@ -531,12 +531,12 @@ describe('FileActionService', () => {
         fileServiceWriter: fsw,
       });
 
+      const backupPath = join(conversionsPath, 'backup');
+
       expect(rfSpy).toHaveBeenCalledTimes(1);
       expect(rfSpy).toHaveBeenCalledWith(conversionsPath);
 
       expect(svc.actionsList.length).toBe(0);
-
-      const backupPath = join(conversionsPath, 'backup');
 
       expect(wbSpy).toHaveBeenCalledTimes(1);
       expect(wbSpy).toHaveBeenCalledWith(backupPath, invalidData);
