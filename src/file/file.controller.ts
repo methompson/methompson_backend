@@ -121,6 +121,7 @@ export class FileController {
     // If the file is an image, but the extension does not
     // match the mimetype, we'll throw a 404 error
     if (
+      filenameComponents.extension.length > 0 &&
       isImageMimeType(mimetype) &&
       !extensionMatchesMimetype(filenameComponents.extension, mimetype)
     ) {
