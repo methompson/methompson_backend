@@ -20,6 +20,7 @@ import { AuthModel } from '@/src/models/auth_model';
 import { FileDataService } from '@/src/file/file_data.service';
 import { FileSystemService } from '@/src/file/file_system_service';
 import { isPromiseRejected, isString } from '@/src/utils/type_guards';
+import { getFilenameComponents } from './utils';
 
 @UseInterceptors(RequestLogInterceptor)
 @Controller({ path: 'files' })
@@ -59,10 +60,13 @@ export class FileController {
       throw new HttpException('', HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    const filename = request.params?.filename;
-    if (!isString(filename)) {
+    const rawFilename = request.params?.filename;
+
+    if (!isString(rawFilename)) {
       throw new HttpException('Invalid Filename', HttpStatus.BAD_REQUEST);
     }
+
+    const filename = getFilenameComponents(rawFilename).name;
 
     const pathToFile = path.join(this._savedFilePath, filename);
 
