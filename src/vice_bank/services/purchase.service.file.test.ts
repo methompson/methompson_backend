@@ -519,13 +519,15 @@ describe('FilePurchaseService', () => {
         fileServiceWriter: fsw,
       });
 
+      const backupPath = join(purchasePath, 'backup');
+
       expect(rfSpy).toHaveBeenCalledTimes(1);
       expect(rfSpy).toHaveBeenCalledWith(purchasePath);
 
       expect(svc.purchasesList.length).toBe(0);
 
       expect(wbSpy).toHaveBeenCalledTimes(1);
-      expect(wbSpy).toHaveBeenCalledWith(purchasePath, invalidData);
+      expect(wbSpy).toHaveBeenCalledWith(backupPath, invalidData);
       expect(cfSpy).toHaveBeenCalledTimes(1);
     });
   });
