@@ -2,10 +2,12 @@ import { DateTime } from 'luxon';
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return (
-    !isNullOrUndefined(value) &&
-    typeof value === 'object' &&
-    !Array.isArray(value)
+    !isNullOrUndefined(value) && typeof value === 'object' && !isArray(value)
   );
+}
+
+export function isArray(value: unknown): value is unknown[] {
+  return Array.isArray(value);
 }
 
 export function isString(value: unknown): value is string {

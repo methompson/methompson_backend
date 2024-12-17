@@ -5,17 +5,18 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug Unit Tests",
       "type": "node",
       "request": "launch",
-      "runtimeArgs": [
-        "--inspect-brk",
-        "${workspaceRoot}/node_modules/.bin/jest",
-        "${workspaceRoot}/test/unit",
-        "--runInBand"
+      "name": "Launch Tests",
+      "skipFiles": [
+        "<node_internals>/**"
       ],
-      "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
+      "runtimeArgs": [
+        "run-script",
+        "test"
+      ],
+      "runtimeExecutable": "npm",
+      "outputCapture": "std"
     },
     {
       "name": "Debug Specific Unit Test",
