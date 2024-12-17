@@ -122,22 +122,30 @@ describe('makeTypeGuardTest', () => {
       valueSet: vsTest,
     });
 
-    const trueVal = {
-      key: 'key',
-      num: 96,
-      bool: false,
-      valueSet: { value: 'hello', isTrue: true },
-    };
-
-    const falseVal = {
-      key: 'key',
-      num: 96,
-      bool: false,
-      valueSet: { value: 'hello', isTrue: 'true' },
-    };
-
-    expect(mfiTest(trueVal)).toEqual([]);
-    expect(mfiTest(falseVal)).toEqual(['valueSet']);
+    expect(
+      mfiTest({
+        key: 'key',
+        num: 96,
+        bool: false,
+        valueSet: { value: 'hello', isTrue: true },
+      }),
+    ).toEqual([]);
+    expect(
+      mfiTest({
+        key: 'key',
+        num: 96,
+        bool: false,
+        valueSet: { value: 'hello', isTrue: 'true' },
+      }),
+    ).toEqual(['valueSet.isTrue']);
+    expect(
+      mfiTest({
+        key: 'key',
+        num: 96,
+        bool: false,
+        valueSet: { value: true, isTrue: 'true' },
+      }),
+    ).toEqual(['valueSet.value', 'valueSet.isTrue']);
   });
 
   test('the value is correctly typeguarded', () => {
