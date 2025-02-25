@@ -20,6 +20,6 @@
   -e SAVED_FILE_PATH='/srv/blog/files' \
   -e GOOGLE_APPLICATION_CREDENTIALS='/srv/blog/firebase.json' \
   -v /path/to/local/files:/srv/blog/files \
-  --name methompson-blog-backend \
-  methompson-blog-backend
+  --name methompson_backend \
+  methompson_backend
 )
