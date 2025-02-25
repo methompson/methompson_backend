@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { DateTime } from 'luxon';
 
-import { Action } from '@/src/models/vice_bank/action';
+import { Action } from '@/src/vice_bank/models/action';
 import {
   DepositInputOptions,
   DepositResponse,
@@ -10,7 +10,7 @@ import {
 } from '@/src/vice_bank/types';
 import { ActionService } from './action.service';
 import { isNullOrUndefined, isRecord } from '@/src/utils/type_guards';
-import { Deposit } from '@/src/models/vice_bank/deposit';
+import { Deposit } from '@/src/vice_bank/models/deposit';
 
 @Injectable()
 export class InMemoryActionService implements ActionService {

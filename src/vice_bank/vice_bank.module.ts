@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { FactoryProvider, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import { LoggerModule } from '@/src/logger/logger.module';
@@ -26,7 +26,7 @@ import { InMemoryTaskService } from './services/task_service.memory';
 
 import { isString } from '@/src/utils/type_guards';
 
-const viceBankUserFactory = {
+const viceBankUserFactory: FactoryProvider = {
   provide: 'VICE_BANK_USER_SERVICE',
   useFactory: async (
     configService: ConfigService,
@@ -46,7 +46,7 @@ const viceBankUserFactory = {
   inject: [ConfigService],
 };
 
-const actionsFactory = {
+const actionsFactory: FactoryProvider = {
   provide: 'ACTION_SERVICE',
   useFactory: async (configService: ConfigService): Promise<ActionService> => {
     const type = configService.get('viceBankType');
@@ -64,7 +64,7 @@ const actionsFactory = {
   inject: [ConfigService],
 };
 
-const purchaseFactory = {
+const purchaseFactory: FactoryProvider = {
   provide: 'PURCHASE_SERVICE',
   useFactory: async (
     configService: ConfigService,
@@ -84,7 +84,7 @@ const purchaseFactory = {
   inject: [ConfigService],
 };
 
-const taskFactory = {
+const taskFactory: FactoryProvider = {
   provide: 'TASK_SERVICE',
   useFactory: async (configService: ConfigService): Promise<TaskService> => {
     const type = configService.get('viceBankType');

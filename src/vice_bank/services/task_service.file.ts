@@ -2,8 +2,8 @@ import { join } from 'path';
 import { Injectable } from '@nestjs/common';
 
 import { InMemoryTaskService } from './task_service.memory';
-import { Task } from '@/src/models/vice_bank/task';
-import { TaskDeposit } from '@/src/models/vice_bank/task_deposit';
+import { Task } from '@/src/vice_bank/models/task';
+import { TaskDeposit } from '@/src/vice_bank/models/task_deposit';
 import { FileServiceWriter } from '@/src/utils/file_service_writer';
 import { TaskDepositResponse } from '@/src/vice_bank/types';
 import { isRecord } from '@/src/utils/type_guards';

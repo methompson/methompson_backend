@@ -4,6 +4,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 
 import { mongodbConfiguration } from '@/src/config/mongodb_configuration';
 import { blogConfiguration } from '@/src/config/blog_configuration';
+import { budgetConfiguration } from './config/budget_configuration';
 import { logConfiguration } from '@/src/config/log_configuration';
 import { authConfiguration } from '@/src/config/auth_configuration';
 import { fileConfiguration } from '@/src/config/file_configuration';
@@ -17,6 +18,7 @@ import { FileUploadModule } from '@/src/file/file.module';
 import { NotesModule } from '@/src/notes/notes.module';
 import { noteConfiguration } from '@/src/config/note_configuration';
 import { ViceBankModule } from './vice_bank/vice_bank.module';
+import { BudgetModule } from './budget/budget.module';
 
 @Module({
   imports: [
@@ -25,6 +27,7 @@ import { ViceBankModule } from './vice_bank/vice_bank.module';
         fileConfiguration,
         mongodbConfiguration,
         blogConfiguration,
+        budgetConfiguration,
         viceBankConfiguration,
         logConfiguration,
         authConfiguration,
@@ -36,6 +39,7 @@ import { ViceBankModule } from './vice_bank/vice_bank.module';
     FileUploadModule,
     NotesModule,
     ViceBankModule,
+    BudgetModule,
     ScheduleModule.forRoot(),
   ],
 })

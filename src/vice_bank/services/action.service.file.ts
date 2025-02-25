@@ -2,9 +2,9 @@ import { join } from 'path';
 import { Injectable } from '@nestjs/common';
 
 import { InMemoryActionService } from '@/src/vice_bank/services/action.service.memory';
-import { Action } from '@/src/models/vice_bank/action';
+import { Action } from '@/src/vice_bank/models/action';
 import { FileServiceWriter } from '@/src/utils/file_service_writer';
-import { Deposit } from '@/src/models/vice_bank/deposit';
+import { Deposit } from '@/src/vice_bank/models/deposit';
 import { isRecord } from '@/src/utils/type_guards';
 import { DepositResponse } from '@/src/vice_bank/types';
 

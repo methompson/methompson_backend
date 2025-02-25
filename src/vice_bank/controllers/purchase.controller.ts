@@ -14,7 +14,7 @@ import { LoggerService } from '@/src/logger/logger.service';
 import { PurchaseService } from '@/src/vice_bank/services/purchase.service';
 import { ViceBankUserService } from '@/src/vice_bank/services/vice_bank_user.service';
 import { pageAndPagination } from '@/src/utils/page_and_pagination';
-import { Purchase, PurchaseJSON } from '@/src/models/vice_bank/purchase';
+import { Purchase, PurchaseJSON } from '@/src/vice_bank/models/purchase';
 import { InvalidInputError, NotFoundError } from '@/src/errors';
 import { isNullOrUndefined, isRecord, isString } from '@/src/utils/type_guards';
 import { commonErrorHandler } from '@/src/utils/common_error_handler';
@@ -22,7 +22,7 @@ import { type METIncomingMessage } from '@/src/utils/met_incoming_message';
 import {
   PurchasePrice,
   PurchasePriceJSON,
-} from '@/src/models/vice_bank/purchase_price';
+} from '@/src/vice_bank/models/purchase_price';
 
 interface GetPurchasesResponse {
   purchases: PurchaseJSON[];

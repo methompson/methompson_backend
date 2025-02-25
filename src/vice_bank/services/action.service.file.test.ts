@@ -1,8 +1,8 @@
 import { join } from 'path';
 
 import { FileActionService } from './action.service.file';
-import { Action, ActionJSON } from '@/src/models/vice_bank/action';
-import { Deposit, DepositJSON } from '@/src/models/vice_bank/deposit';
+import { Action, ActionJSON } from '@/src/vice_bank/models/action';
+import { Deposit, DepositJSON } from '@/src/vice_bank/models/deposit';
 import { FileServiceWriter } from '@/src/utils/file_service_writer';
 
 const vbUserId1 = 'vbUserId1';

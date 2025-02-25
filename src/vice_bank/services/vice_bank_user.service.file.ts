@@ -2,7 +2,7 @@ import { join } from 'path';
 import { Injectable } from '@nestjs/common';
 
 import { InMemoryViceBankUserService } from './vice_bank_user.service.memory';
-import { ViceBankUser } from '@/src/models/vice_bank/vice_bank_user';
+import { ViceBankUser } from '@/src/vice_bank/models/vice_bank_user';
 import { FileServiceWriter } from '@/src/utils/file_service_writer';
 
 const BASE_NAME = 'vice_bank_user_data';

@@ -1,10 +1,10 @@
-import { arrayToObject } from '@/src/utils/array_to_obj';
+import { listToObject } from '@/src/utils/array_to_obj';
 
 describe('arrayToObject', () => {
   test('converts number arrays to objects', () => {
     const numInput = [1, 2, 3, 4];
 
-    const map = arrayToObject(numInput, (num) => num);
+    const map = listToObject(numInput, (num) => num);
 
     expect(map[1]).toBe(1);
     expect(map[2]).toBe(2);
@@ -15,7 +15,7 @@ describe('arrayToObject', () => {
   test('converts string arrays to objects', () => {
     const strInput = ['1', '2', '3', '4'];
 
-    const map = arrayToObject(strInput, (str) => str);
+    const map = listToObject(strInput, (str) => str);
 
     expect(map['1']).toBe('1');
     expect(map['2']).toBe('2');
@@ -37,14 +37,14 @@ describe('arrayToObject', () => {
     const tc3 = new MyTestClass('name 3');
     const tc4 = new MyTestClass('name 4');
 
-    const map1 = arrayToObject([tc1, tc2, tc3, tc4], (c) => c.id);
+    const map1 = listToObject([tc1, tc2, tc3, tc4], (c) => c.id);
 
     expect(map1[tc1.id]).toBe(tc1);
     expect(map1[tc2.id]).toBe(tc2);
     expect(map1[tc3.id]).toBe(tc3);
     expect(map1[tc4.id]).toBe(tc4);
 
-    const map2 = arrayToObject([tc1, tc2, tc3, tc4], (c) => c.name);
+    const map2 = listToObject([tc1, tc2, tc3, tc4], (c) => c.name);
 
     expect(map2[tc1.name]).toBe(tc1);
     expect(map2[tc2.name]).toBe(tc2);

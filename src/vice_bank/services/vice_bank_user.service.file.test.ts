@@ -3,7 +3,7 @@ import { join } from 'path';
 import {
   ViceBankUser,
   ViceBankUserJSON,
-} from '@/src/models/vice_bank/vice_bank_user';
+} from '@/src/vice_bank/models/vice_bank_user';
 import { FileViceBankUserService } from './vice_bank_user.service.file';
 import { FileServiceWriter } from '@/src/utils/file_service_writer';
 

@@ -2,10 +2,10 @@ import { join } from 'path';
 import { Injectable } from '@nestjs/common';
 
 import { InMemoryPurchaseService } from './purchase.service.memory';
-import { Purchase } from '@/src/models/vice_bank/purchase';
+import { Purchase } from '@/src/vice_bank/models/purchase';
 import { FileServiceWriter } from '@/src/utils/file_service_writer';
 
-import { PurchasePrice } from '@/src/models/vice_bank/purchase_price';
+import { PurchasePrice } from '@/src/vice_bank/models/purchase_price';
 import { isRecord } from '@/src/utils/type_guards';
 
 const BASE_NAME = 'purchase_data';

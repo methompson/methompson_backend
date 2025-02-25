@@ -16,11 +16,11 @@ import { pageAndPagination } from '@/src/utils/page_and_pagination';
 import { commonErrorHandler } from '@/src/utils/common_error_handler';
 import { isNullOrUndefined, isRecord, isString } from '@/src/utils/type_guards';
 import { InvalidInputError, NotFoundError } from '@/src/errors';
-import { Task, TaskJSON } from '@/src/models/vice_bank/task';
+import { Task, TaskJSON } from '@/src/vice_bank/models/task';
 import {
   TaskDeposit,
   TaskDepositJSON,
-} from '@/src/models/vice_bank/task_deposit';
+} from '@/src/vice_bank/models/task_deposit';
 import { ViceBankUserService } from '@/src/vice_bank/services/vice_bank_user.service';
 
 interface GetTasksResponse {

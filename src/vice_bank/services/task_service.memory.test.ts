@@ -4,10 +4,10 @@ import * as uuid from 'uuid';
 import {
   TaskDeposit,
   TaskDepositJSON,
-} from '@/src/models/vice_bank/task_deposit';
+} from '@/src/vice_bank/models/task_deposit';
 import { InMemoryTaskService } from './task_service.memory';
 import { Frequency } from '@/src/vice_bank/types';
-import { Task, TaskJSON } from '@/src/models/vice_bank/task';
+import { Task, TaskJSON } from '@/src/vice_bank/models/task';
 
 jest.mock('uuid', () => {
   const v4 = jest.fn(() => 'uuidv4');

@@ -1,6 +1,6 @@
 import { isString } from '@/src/utils/type_guards';
-import { TaskDeposit } from '@/src/models/vice_bank/task_deposit';
-import { Deposit } from '@/src/models/vice_bank/deposit';
+import { TaskDeposit } from '@/src/vice_bank/models/task_deposit';
+import { Deposit } from '@/src/vice_bank/models/deposit';
 
 export interface GetPageOptions {
   page?: number;
@@ -24,7 +24,7 @@ export interface DepositInputOptions extends GetPageOptions {
   userId: string;
   startDate?: string;
   endDate?: string;
-  depositConversionId?: string;
+  actionId?: string;
 }
 
 export interface GetTaskOptions extends GetPageOptions {

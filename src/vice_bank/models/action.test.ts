@@ -34,6 +34,13 @@ describe('Action', () => {
       expect(result.minDeposit).toBe(3);
     });
 
+    test('toJSON can piped directly into fromJSON', () => {
+      const result1 = Action.fromJSON(validInput);
+      const result2 = Action.fromJSON(result1.toJSON());
+
+      expect(result1.toJSON()).toEqual(result2.toJSON());
+    });
+
     test('throws an error if values are missing from the input', () => {
       let invalidInput: Record<string, unknown> = { ...validInput };
 

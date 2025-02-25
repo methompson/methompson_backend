@@ -18,8 +18,8 @@ import { type METIncomingMessage } from '@/src/utils/met_incoming_message';
 import { pageAndPagination } from '@/src/utils/page_and_pagination';
 import { isNullOrUndefined, isRecord, isString } from '@/src/utils/type_guards';
 
-import { Action, ActionJSON } from '@/src/models/vice_bank/action';
-import { Deposit, DepositJSON } from '@/src/models/vice_bank/deposit';
+import { Action, ActionJSON } from '@/src/vice_bank/models/action';
+import { Deposit, DepositJSON } from '@/src/vice_bank/models/deposit';
 import { ActionService } from '@/src/vice_bank/services/action.service';
 import { ViceBankUserService } from '@/src/vice_bank/services/vice_bank_user.service';
 
@@ -96,7 +96,7 @@ export class ActionController {
       const { body } = request;
 
       if (!isRecord(body)) {
-        throw new InvalidInputError('Invalid Deposit Conversion Input');
+        throw new InvalidInputError('Invalid Action Input');
       }
 
       const action = Action.fromJSON(body.action);
@@ -115,7 +115,7 @@ export class ActionController {
       const { body } = request;
 
       if (!isRecord(body)) {
-        throw new InvalidInputError('Invalid Deposit Conversion Input');
+        throw new InvalidInputError('Invalid Action Input');
       }
 
       const action = Action.fromJSON(body.action);
@@ -134,7 +134,7 @@ export class ActionController {
       const { body } = request;
 
       if (!isRecord(body) || !isString(body.actionId)) {
-        throw new InvalidInputError('Invalid Deposit Conversion Input');
+        throw new InvalidInputError('Invalid Action Input');
       }
 
       const res = await this.actionService.deleteAction(body.actionId);
@@ -154,7 +154,7 @@ export class ActionController {
         throw new InvalidInputError('Invalid Query');
       }
 
-      let { startDate, endDate, depositConversionId } = request.query;
+      let { startDate, endDate, actionId } = request.query;
       const { userId } = request.query;
 
       if (!isString(userId)) {
@@ -163,9 +163,7 @@ export class ActionController {
 
       startDate = isString(startDate) ? startDate : undefined;
       endDate = isString(endDate) ? endDate : undefined;
-      depositConversionId = isString(depositConversionId)
-        ? depositConversionId
-        : undefined;
+      actionId = isString(actionId) ? actionId : undefined;
 
       const depositsResponse = await this.actionService.getDeposits({
         page,
@@ -173,7 +171,7 @@ export class ActionController {
         userId,
         startDate,
         endDate,
-        depositConversionId,
+        actionId,
       });
 
       const deposits = depositsResponse.map((deposit) => deposit.toJSON());

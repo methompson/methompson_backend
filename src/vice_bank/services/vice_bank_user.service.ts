@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { GetViceBankUsersOptions } from '@/src/vice_bank/types';
-import { ViceBankUser } from '@/src/models/vice_bank/vice_bank_user';
+import { ViceBankUser } from '@/src/vice_bank/models/vice_bank_user';
 
 @Injectable()
 export abstract class ViceBankUserService {

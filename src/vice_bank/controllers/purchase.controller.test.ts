@@ -1,18 +1,18 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { Request } from 'express';
 
-import { Purchase, PurchaseJSON } from '@/src/models/vice_bank/purchase';
+import { Purchase, PurchaseJSON } from '@/src/vice_bank/models/purchase';
 import { LoggerService } from '@/src/logger/logger.service';
 import { InMemoryPurchaseService } from '@/src/vice_bank/services/purchase.service.memory';
 import { PurchaseController } from './purchase.controller';
 import {
   ViceBankUser,
   ViceBankUserJSON,
-} from '@/src/models/vice_bank/vice_bank_user';
+} from '@/src/vice_bank/models/vice_bank_user';
 import {
   PurchasePrice,
   PurchasePriceJSON,
-} from '@/src/models/vice_bank/purchase_price';
+} from '@/src/vice_bank/models/purchase_price';
 import { InMemoryViceBankUserService } from '@/src/vice_bank/services/vice_bank_user.service.memory';
 import { NoAuthModel } from '@/src/models/auth_model';
 import { METIncomingMessage } from '@/src/utils/met_incoming_message';

@@ -1,15 +1,15 @@
 import { Request } from 'express';
 
-import { Action, ActionJSON } from '@/src/models/vice_bank/action';
+import { Action, ActionJSON } from '@/src/vice_bank/models/action';
 import { LoggerService } from '@/src/logger/logger.service';
 import { InMemoryActionService } from '@/src/vice_bank/services/action.service.memory';
 import { ActionController } from './action.controller';
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { Deposit, DepositJSON } from '@/src/models/vice_bank/deposit';
+import { Deposit, DepositJSON } from '@/src/vice_bank/models/deposit';
 import {
   ViceBankUser,
   ViceBankUserJSON,
-} from '@/src/models/vice_bank/vice_bank_user';
+} from '@/src/vice_bank/models/vice_bank_user';
 import { InMemoryViceBankUserService } from '@/src/vice_bank/services/vice_bank_user.service.memory';
 import { METIncomingMessage } from '@/src/utils/met_incoming_message';
 import { NoAuthModel } from '@/src/models/auth_model';
@@ -198,7 +198,7 @@ describe('ActionController', () => {
   });
 
   describe('addAction', () => {
-    test('adds a deposit conversion using the ActionsService', async () => {
+    test('adds an action using the ActionsService', async () => {
       const service = new InMemoryActionService();
       const loggerService = new LoggerService();
 
@@ -281,7 +281,7 @@ describe('ActionController', () => {
   });
 
   describe('updateAction', () => {
-    test('updates a deposit conversion using the ActionsService', async () => {
+    test('updates an action using the ActionsService', async () => {
       const service = new InMemoryActionService({ actions: [action1] });
       const loggerService = new LoggerService();
 
@@ -368,7 +368,7 @@ describe('ActionController', () => {
   });
 
   describe('deleteAction', () => {
-    test('deletes a deposit conversion using the ActionsService', async () => {
+    test('deletes an action using the ActionsService', async () => {
       const service = new InMemoryActionService({ actions: [action1] });
       const loggerService = new LoggerService();
 
@@ -473,7 +473,7 @@ describe('ActionController', () => {
         userId: vbUserId1,
         startDate: undefined,
         endDate: undefined,
-        depositConversionId: undefined,
+        acitonId: undefined,
       });
     });
 
@@ -506,7 +506,7 @@ describe('ActionController', () => {
         userId: vbUserId1,
         startDate: '2021-01-01',
         endDate: '2021-01-10',
-        depositConversionId: undefined,
+        actionId: undefined,
       });
     });
 

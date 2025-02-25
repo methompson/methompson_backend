@@ -13,7 +13,7 @@ import { RequestLogInterceptor } from '@/src/middleware/request_log.interceptor'
 import { ViceBankUserService } from '@/src/vice_bank/services/vice_bank_user.service';
 import { LoggerService } from '@/src/logger/logger.service';
 import { pageAndPagination } from '@/src/utils/page_and_pagination';
-import { ViceBankUser } from '@/src/models/vice_bank/vice_bank_user';
+import { ViceBankUser } from '@/src/vice_bank/models/vice_bank_user';
 import { isNullOrUndefined, isRecord, isString } from '@/src/utils/type_guards';
 import { InvalidInputError } from '@/src/errors';
 import { AuthRequiredIncerceptor } from '@/src/middleware/auth_interceptor';

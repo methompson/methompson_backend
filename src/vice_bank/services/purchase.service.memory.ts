@@ -6,10 +6,10 @@ import {
   PurchaseInputOptions,
   GetPageAndUserOptions,
 } from '@/src/vice_bank/types';
-import { Purchase } from '@/src/models/vice_bank/purchase';
+import { Purchase } from '@/src/vice_bank/models/purchase';
 import { PurchaseService } from './purchase.service';
 import { isNullOrUndefined, isRecord } from '@/src/utils/type_guards';
-import { PurchasePrice } from '@/src/models/vice_bank/purchase_price';
+import { PurchasePrice } from '@/src/vice_bank/models/purchase_price';
 
 @Injectable()
 export class InMemoryPurchaseService implements PurchaseService {

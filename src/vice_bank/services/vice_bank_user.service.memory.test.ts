@@ -3,7 +3,7 @@ import * as uuid from 'uuid';
 import {
   ViceBankUser,
   ViceBankUserJSON,
-} from '@/src/models/vice_bank/vice_bank_user';
+} from '@/src/vice_bank/models/vice_bank_user';
 import { InMemoryViceBankUserService } from './vice_bank_user.service.memory';
 import { isNullOrUndefined } from '@/src/utils/type_guards';
 

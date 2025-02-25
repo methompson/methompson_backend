@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { DateTime } from 'luxon';
 
 import { TaskService } from './task.service';
-import { Task } from '@/src/models/vice_bank/task';
+import { Task } from '@/src/vice_bank/models/task';
 import {
   TaskDepositResponse,
   Frequency,
@@ -11,7 +11,7 @@ import {
   GetTaskOptions,
 } from '@/src/vice_bank/types';
 import { isNullOrUndefined, isRecord } from '@/src/utils/type_guards';
-import { TaskDeposit } from '@/src/models/vice_bank/task_deposit';
+import { TaskDeposit } from '@/src/vice_bank/models/task_deposit';
 
 @Injectable()
 export class InMemoryTaskService implements TaskService {

@@ -2,15 +2,15 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 
 import { TaskController } from './task.controller';
 
-import { Task, TaskJSON } from '@/src/models/vice_bank/task';
+import { Task, TaskJSON } from '@/src/vice_bank/models/task';
 import {
   ViceBankUser,
   ViceBankUserJSON,
-} from '@/src/models/vice_bank/vice_bank_user';
+} from '@/src/vice_bank/models/vice_bank_user';
 import {
   TaskDeposit,
   TaskDepositJSON,
-} from '@/src/models/vice_bank/task_deposit';
+} from '@/src/vice_bank/models/task_deposit';
 import { NoAuthModel } from '@/src/models/auth_model';
 
 import { InMemoryTaskService } from '@/src/vice_bank/services/task_service.memory';

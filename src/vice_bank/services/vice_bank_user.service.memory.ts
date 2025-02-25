@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 
-import { ViceBankUser } from '@/src/models/vice_bank/vice_bank_user';
+import { ViceBankUser } from '@/src/vice_bank/models/vice_bank_user';
 import { isNullOrUndefined } from '@/src/utils/type_guards';
 import { ViceBankUserService } from './vice_bank_user.service';
 import { GetViceBankUsersOptions } from '@/src/vice_bank/types';
 import { NotFoundError } from '@/src/errors';
-import { arrayToObject } from '@/src/utils/array_to_obj';
+import { listToObject } from '@/src/utils/array_to_obj';
 
 @Injectable()
 export class InMemoryViceBankUserService implements ViceBankUserService {
@@ -15,7 +15,7 @@ export class InMemoryViceBankUserService implements ViceBankUserService {
 
   constructor(users?: ViceBankUser[]) {
     if (users) {
-      this._viceBankUsers = arrayToObject(users, (u) => u.id);
+      this._viceBankUsers = listToObject(users, (u) => u.id);
     }
   }
 
@@ -35,20 +35,6 @@ export class InMemoryViceBankUserService implements ViceBankUserService {
     return users.sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  convertListToRecord(
-    users: ViceBankUser[],
-  ): Record<string, Record<string, ViceBankUser>> {
-    const result: Record<string, Record<string, ViceBankUser>> = {};
-
-    for (const user of users) {
-      const usersByUserId = result[user.userId] ?? {};
-      usersByUserId[user.id] = user;
-      result[user.userId] = usersByUserId;
-    }
-
-    return result;
-  }
-
   async getViceBankUsers(
     input: GetViceBankUsersOptions,
   ): Promise<ViceBankUser[]> {
@@ -63,6 +49,7 @@ export class InMemoryViceBankUserService implements ViceBankUserService {
     const end = pagination * page;
 
     const users = filteredUsers.slice(skip, end);
+
     return users;
   }
 
