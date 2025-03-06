@@ -128,14 +128,24 @@ export class PurchaseController {
         );
       }
 
-      const currentTokens = user.currentTokens - newPurchase.purchasedQuantity;
+      // const purchaseDat = await this.purchasesService.getPurchasePrice(
+      //   newPurchase.purchasePriceId,
+      // );
+
+      const purchasePrice = await this.purchasesService.getPurchasePrice(
+        newPurchase.purchasePriceId,
+      );
+
+      const currentTokens =
+        user.currentTokens -
+        purchasePrice.price * newPurchase.purchasedQuantity;
 
       if (currentTokens < 0) {
         throw new InvalidInputError('Not enough tokens');
       }
 
       const userToUpdate = user.copyWith({
-        currentTokens: user.currentTokens - newPurchase.purchasedQuantity,
+        currentTokens: currentTokens,
       });
 
       const [purchase] = await Promise.all([

@@ -15,6 +15,7 @@ export interface PurchaseJSON {
   purchasedName: string;
   date: string;
   purchasedQuantity: number;
+  tokensSpent: number;
 }
 
 export class Purchase {
@@ -25,6 +26,7 @@ export class Purchase {
     protected _purchasedName: string,
     protected _date: DateTime<true>,
     protected _purchasedQuantity: number,
+    protected _tokensSpent: number,
   ) {}
 
   get id(): string {
@@ -51,6 +53,10 @@ export class Purchase {
     return this._purchasedName;
   }
 
+  get tokensSpent(): number {
+    return this._tokensSpent;
+  }
+
   toJSON(): PurchaseJSON {
     return {
       id: this.id,
@@ -59,6 +65,7 @@ export class Purchase {
       date: this.date.toISO(),
       purchasedQuantity: this.purchasedQuantity,
       purchasedName: this.purchasedName,
+      tokensSpent: this.tokensSpent,
     };
   }
 
@@ -80,6 +87,7 @@ export class Purchase {
       input.purchasedName,
       dateTime,
       input.purchasedQuantity,
+      input.tokensSpent,
     );
   }
 
@@ -102,6 +110,7 @@ export class Purchase {
     if (!isValidDateTimeString(input.date)) output.push('date');
     if (!isNumber(input.purchasedQuantity)) output.push('purchasedQuantity');
     if (!isString(input.purchasedName)) output.push('purchasedName');
+    if (!isNumber(input.tokensSpent)) output.push('tokensSpent');
 
     return output;
   }
