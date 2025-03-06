@@ -11,6 +11,7 @@ FROM node:alpine
 WORKDIR /srv/blog
 
 COPY ./artifacts/dist /srv/blog/dist
+COPY ./artifacts/node_modules /srv/blog/node_modules
 COPY ./artifacts/firebase.json /srv/blog/firebase.json
 COPY ./artifacts/package.json /srv/blog/package.json
 
